@@ -12,19 +12,20 @@
 #define PRINT
 
 using namespace std;
-int simLimit = 10000;//模擬幾次
+int simLimit = 10000;   //蕞蕞
 int p1Wins, p2Wins, draw;
 
 void MvsM(){
 	State state;
 	int step = 1;
 	int r = rand() % MNK::G_SIZE;
-	state.do_move(r);//第一手隨機下
+	state.do_move(r);   //蕞蕞蕞
 	//state.do_move(112);
 	//state.do_move(38);
 	//state.do_move(199);
 	//state.do_move(53);
 	//state.do_move(200);
+    
 #ifdef PRINT
 	cout << state << endl;
 	double startTime, finishTime;
@@ -35,7 +36,7 @@ void MvsM(){
 #ifdef PRINT
 		startTime = clock();
 #endif
-		//先手
+        //蕞
 		if (step % 2 == 0){ 
 			auto move = PURE::MCTS(state, simLimit);
 #ifdef PRINT
@@ -43,7 +44,7 @@ void MvsM(){
 #endif
 			state.do_move(move);
 		}
-		//後手
+        //蕞
 		else{ 
 			auto move = MCTSS::MCTS(state, simLimit);
 #ifdef PRINT
@@ -78,7 +79,7 @@ void MvsM(){
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	int games = 1;//自動對戰i場
+	int games = 1; //蕞蕞蕞
 	p1Wins = 0;
 	p2Wins = 0;
 
