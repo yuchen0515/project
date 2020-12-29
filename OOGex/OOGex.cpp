@@ -12,14 +12,14 @@
 #define PRINT
 
 using namespace std;
-int simLimit = 10000;   //真真
+int simLimit = 10000;   //多多多多
 int p1Wins, p2Wins, draw;
 
 void MvsM(){
 	State state;
 	int step = 1;
 	int r = rand() % MNK::G_SIZE;
-	state.do_move(r);   //真真真
+	state.do_move(r);   //多多多多多多
 	//state.do_move(112);
 	//state.do_move(38);
 	//state.do_move(199);
@@ -36,7 +36,7 @@ void MvsM(){
 #ifdef PRINT
 		startTime = clock();
 #endif
-        //真
+        //多多
 		if (step % 2 == 0){ 
 			auto move = PURE::MCTS(state, simLimit);
 #ifdef PRINT
@@ -44,7 +44,7 @@ void MvsM(){
 #endif
 			state.do_move(move);
 		}
-        //真
+        //多多
 		else{ 
 			auto move = MCTSS::MCTS(state, simLimit);
 #ifdef PRINT
@@ -79,7 +79,7 @@ void MvsM(){
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	int games = 1; //真真真
+	int games = 1; //多多多多多多
 	p1Wins = 0;
 	p2Wins = 0;
 
