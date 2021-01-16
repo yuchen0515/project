@@ -19,10 +19,15 @@ bool loadMedia(SDL_Surface **gHelloWorld, char *str);
 bool loadMedia(SDL_Texture **gTexture, char *str);
 void setup_bmp_size(SDL_Rect *dest, int32_t x, int32_t y, int32_t w, int32_t h);
 SDL_Texture *loadTexture(char *str);
+bool match_rect_xy(int32_t x, int32_t y, SDL_Rect rect);
+pair<int32_t, int32_t> return_mouse_index(int32_t x, int32_t y);
 
 
+int32_t mouse_X = 0;
+int32_t mouse_Y = 0;
 SDL_Window *window = NULL;
 SDL_Surface *screenSurface = NULL;
+pair<int32_t, int32_t> mouse_index;
 
 //The window renderer
 SDL_Renderer *gRenderer = NULL;
@@ -37,10 +42,42 @@ SDL_Texture *gTextureSliver= NULL;
 SDL_Texture *gTextureBishop= NULL;
 SDL_Texture *gTexturePawn= NULL;
 SDL_Texture *gTextureRook= NULL;
+SDL_Texture *gTextureAlphaChess= NULL;
 
 SDL_Rect No_Move[2];
-SDL_Rect Chess_Dect[10];
+SDL_Rect Chess_Dect[5][5];
 SDL_Point Chess_Size = (SDL_Point){25, 30};
+
+//0: upper, 1: lower
+//
+//1: king, 2: rook, 3: bishop, 4: gold
+//5: sliver, 6: pawn
+//7 ~ 12: captive 1~6
+//
+int32_t exist[2][5][5] = 
+{
+    {
+        {2, 0, 0, 0, 0}, 
+        {3, 0, 0, 0, 0},
+        {5, 0, 0, 0, 0},
+        {4, 0, 0, 0, 0},
+        {1, 6, 0, 0, 0}
+    },
+
+    { 
+        {0, 0, 0, 6, 2},
+        {0, 0, 0, 0, 3},
+        {0, 0, 0, 0, 5},
+        {0, 0, 0, 0, 4},
+        {0, 0, 0, 0, 1}
+    }
+};
+
+//pair<int32_t, int32_t> position[2][12] = 
+//{
+//    { make_pair(4, 0), make_pair(0, 0), make_pair(1, 0), make_pair(3, 0), make_pair(2, 0), make_pair(4, 1) },
+//    { make_pair(0, 4), make_pair(4, 4), make_pair(3, 4), make_pair(1, 4), make_pair(2, 4), make_pair(0, 3) }
+//};
 
 int main(){
 
@@ -69,6 +106,7 @@ int main(){
         loadMedia(&gTextureBishop , (char *)"bishop.bmp");   
         loadMedia(&gTexturePawn   , (char *)"pawn.bmp"); 
         loadMedia(&gTextureRook   , (char *)"rook.bmp"); 
+        loadMedia(&gTextureAlphaChess, (char *)"alphachess.bmp"); 
         //SDL_BlitScaled(screenBackground, NULL, screenSurface, &dest);
         //SDL_UpdateWindowSurface(window);
 
@@ -96,6 +134,29 @@ int main(){
                     if (e.key.keysym.sym == SDLK_ESCAPE)
                         quit = true;
 
+                    if (SDL_MOUSEBUTTONDOWN == e.type){
+                        if (SDL_BUTTON_LEFT == e.button.button)
+                        {
+                            mouse_X = e.button.x;
+                            mouse_Y = e.button.y;
+                            printf("x, y %d %d ...............\n", mouse_X, mouse_Y);
+
+                        }
+                        else if(SDL_BUTTON_RIGHT == e.button.button)
+                        {
+                            mouse_X = e.button.x;
+                            mouse_Y = e.button.y;
+                            printf("x, y %d %d ...............\n", mouse_X, mouse_Y);
+                        }
+                        printf("index_x: %d, index_y: %d\n", mouse_index.first, mouse_index.second);
+                    }
+                    else if (SDL_MOUSEMOTION == e.type)
+                    {
+                        //mouse_X = e.button.x;
+                        //mouse_Y = e.button.y;
+                        //printf("x, y %d %d ...............\n", mouse_X, mouse_Y);
+                    }
+                    mouse_index = return_mouse_index(mouse_X, mouse_Y);
                 }
                 //Clear screen
                 SDL_RenderClear( gRenderer );
@@ -107,8 +168,25 @@ int main(){
                 SDL_RenderCopy(gRenderer, gTextureBoard, NULL, &No_Move[1]);
 
 
-                SDL_RenderCopyEx(gRenderer, gTextureRook, NULL, &Chess_Dect[0], 180, &Chess_Size, SDL_FLIP_NONE);
-                SDL_RenderCopyEx(gRenderer, gTextureBishop, NULL, &Chess_Dect[1], 180, &Chess_Size, SDL_FLIP_NONE);
+                SDL_RenderCopyEx(gRenderer, gTextureRook, NULL, &Chess_Dect[0][0], 180, &Chess_Size, SDL_FLIP_NONE);
+                SDL_RenderCopyEx(gRenderer, gTextureBishop, NULL, &Chess_Dect[1][0], 180, &Chess_Size, SDL_FLIP_NONE);
+                SDL_RenderCopyEx(gRenderer, gTextureSliver, NULL, &Chess_Dect[2][0], 180, &Chess_Size, SDL_FLIP_NONE);
+                SDL_RenderCopyEx(gRenderer, gTextureGold, NULL, &Chess_Dect[3][0], 180, &Chess_Size, SDL_FLIP_NONE);
+                SDL_RenderCopyEx(gRenderer, gTextureKing, NULL, &Chess_Dect[4][0], 180, &Chess_Size, SDL_FLIP_NONE);
+                SDL_RenderCopyEx(gRenderer, gTexturePawn, NULL, &Chess_Dect[4][1], 180, &Chess_Size, SDL_FLIP_NONE);
+
+                SDL_RenderCopy(gRenderer, gTextureRook, NULL, &Chess_Dect[4][4]);
+                SDL_RenderCopy(gRenderer, gTextureBishop, NULL, &Chess_Dect[3][4]);
+                SDL_RenderCopy(gRenderer, gTextureSliver, NULL, &Chess_Dect[2][4]);
+                SDL_RenderCopy(gRenderer, gTextureGold, NULL, &Chess_Dect[1][4]); 
+                SDL_RenderCopy(gRenderer, gTextureKing, NULL, &Chess_Dect[0][4]); 
+                SDL_RenderCopy(gRenderer, gTexturePawn, NULL, &Chess_Dect[0][3]); 
+
+                if (exist[1][mouse_index.first][mouse_index.second] > 0)
+                    SDL_RenderCopy(gRenderer, gTextureAlphaChess, NULL, &Chess_Dect[mouse_index.first][mouse_index.second]); 
+                else if (exist[0][mouse_index.first][mouse_index.second] > 0)
+                    SDL_RenderCopyEx(gRenderer, gTextureAlphaChess, NULL, &Chess_Dect[mouse_index.first][mouse_index.second], 180, &Chess_Size, SDL_FLIP_NONE); 
+
 
                 //Update screen
                 SDL_RenderPresent( gRenderer );
@@ -124,14 +202,32 @@ int main(){
 
 bool init(){
 
-    setup_bmp_size(&No_Move[0], 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    setup_bmp_size(&No_Move[1], 160, 140, 480, 960);
+    setup_bmp_size(&No_Move[0], 0, 0, SCREEN_WIDTH*1.2, SCREEN_HEIGHT);
+    setup_bmp_size(&No_Move[1], 140, 140, 380, 380);
 
-    //Rook
-    setup_bmp_size(&Chess_Dect[0], 0, 0, 125, 250);
+    for (int32_t i = 0 ; i < 5 ; i++){
+        for (int32_t j = 0 ; j < 5 ; j++){
+            setup_bmp_size(&Chess_Dect[i][j], 155 + 77 * i, 152 + 75 * j, 125, 250);
+        }
+    }
 
-    //bishop
-    setup_bmp_size(&Chess_Dect[1], 140, 160, 130, 260);
+    /*
+    for (int32_t i = 0 ; i < 5 ; i++){
+        //<upper>
+        //Rook //bishop //sliver //gold //king
+        setup_bmp_size(&Chess_Dect[i], 155 + 77 * i, 152, 125, 250);
+    }
+    //pawn
+    setup_bmp_size(&Chess_Dect[5], 155 + 77 * 4, 152 + 75 * 1, 125, 250);
+
+    for (int32_t i = 4 ; i >= 0 ; i--){
+        //<lower>
+        //king //gold //sliver //bishop //rook
+        setup_bmp_size(&Chess_Dect[(4-i)+6], 155 + 77 * i, 152 + 75 * 4, 125, 250);
+    }
+    setup_bmp_size(&Chess_Dect[6*2-1], 155 + 77 * 0, 152 + 75 * 3, 125, 250);
+    */
+
     //
 
     //The window we'll be rendering to
@@ -174,7 +270,7 @@ bool init(){
         return 0;
     }
     //Initialize renderer color
-    SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
+    SDL_SetRenderDrawColor( gRenderer, 255, 255, 255, 255 );
 
     ////Initialize PNG loading
     //int imgFlags = IMG_INIT_PNG;
@@ -185,6 +281,19 @@ bool init(){
     //}
 
     return 1;
+}
+
+bool match_rect_xy(int32_t x, int32_t y, SDL_Rect rect){
+    if ((x >= rect.x && x <= rect.x + rect.w) && (y >= rect.y && rect.y + rect.h))
+        return 1;
+    return 0;
+}
+
+pair<int32_t, int32_t> return_mouse_index(int32_t x, int32_t y){
+    int32_t index_x = (x - 140) / 77;
+    int32_t index_y = (y - 140) / 75;
+
+    return make_pair(index_x, index_y);
 }
 
 void setup_bmp_size(SDL_Rect *dest, int32_t x, int32_t y, int32_t w, int32_t h){
