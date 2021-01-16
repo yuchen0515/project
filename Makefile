@@ -1,2 +1,3 @@
 all:
-	gcc testforsdl.c -o testforsdl `sdl2-config --cflags --libs`
+	g++ testforsdl.cpp -o testforsdl `sdl2-config --cflags --libs`
+	./testforsdl
