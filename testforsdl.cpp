@@ -11,6 +11,8 @@ const int32_t SCREEN_HEIGHT = 640;
 
 //declare function
 SDL_Surface *loadSurface(char *str);
+SDL_Surface *screenBoard= NULL;
+
 bool init();
 void close();
 bool loadMedia(SDL_Surface **gHelloWorld, char *str);
@@ -21,7 +23,6 @@ SDL_Texture *loadTexture(char *str);
 
 SDL_Window *window = NULL;
 SDL_Surface *screenSurface = NULL;
-SDL_Surface *screenBoard= NULL;
 
 //The window renderer
 SDL_Renderer *gRenderer = NULL;
@@ -37,7 +38,9 @@ SDL_Texture *gTextureBishop= NULL;
 SDL_Texture *gTexturePawn= NULL;
 SDL_Texture *gTextureRook= NULL;
 
-
+SDL_Rect No_Move[2];
+SDL_Rect Chess_Dect[10];
+SDL_Point Chess_Size = (SDL_Point){25, 30};
 
 int main(){
 
@@ -57,7 +60,6 @@ int main(){
 
         //loadMedia(&screenBackground, (char *)"background.bmp");
 
-        SDL_Rect dest;
 
         loadMedia(&gTextureBackground, (char *)"background.bmp");
         loadMedia(&gTextureKing   , (char *)"king.bmp");
@@ -94,20 +96,22 @@ int main(){
                     if (e.key.keysym.sym == SDLK_ESCAPE)
                         quit = true;
 
-                    //Clear screen
-                    SDL_RenderClear( gRenderer );
-
-                    //Render texture to screen
-                    setup_bmp_size(&dest, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-                    SDL_RenderCopy(gRenderer, gTextureBackground, NULL, &dest);
-
-                    //Apply the image
-                    setup_bmp_size(&dest, 160, 140, 480, 960);
-                    SDL_RenderCopy(gRenderer, gTextureBoard, NULL, &dest);
-
-                    //Update screen
-                    SDL_RenderPresent( gRenderer );
                 }
+                //Clear screen
+                SDL_RenderClear( gRenderer );
+
+                //Render texture to screen
+                SDL_RenderCopy(gRenderer, gTextureBackground, NULL, &No_Move[0]);
+
+                //Apply the image
+                SDL_RenderCopy(gRenderer, gTextureBoard, NULL, &No_Move[1]);
+
+
+                SDL_RenderCopyEx(gRenderer, gTextureRook, NULL, &Chess_Dect[0], 180, &Chess_Size, SDL_FLIP_NONE);
+                SDL_RenderCopyEx(gRenderer, gTextureBishop, NULL, &Chess_Dect[1], 180, &Chess_Size, SDL_FLIP_NONE);
+
+                //Update screen
+                SDL_RenderPresent( gRenderer );
             }
         }
     }
@@ -118,71 +122,18 @@ int main(){
     return 0;
 }
 
-void setup_bmp_size(SDL_Rect *dest, int32_t x, int32_t y, int32_t w, int32_t h){
-    dest->x = x;
-    dest->y = y;
-    dest->w = w;
-    dest->h = h;
-}
-
-
-void close()
-{
-    //Free loaded image
-    SDL_DestroyTexture( gTextureBoard );
-    gTextureBoard = NULL;
-
-    //Deallocate surface
-    SDL_FreeSurface(screenBoard);
-    screenBoard = NULL;
-
-    //Destroy window
-    SDL_DestroyRenderer( gRenderer );
-    SDL_DestroyWindow(window);
-    window = NULL;
-    gRenderer = NULL;
-
-    //Quit SDL subsystems
-    SDL_Quit();
-}
-
-bool loadMedia(SDL_Surface **gHelloWorld, char *str)
-{
-    //Loading success flag
-    bool success = true;
-
-    //Load splash image
-    *gHelloWorld = loadSurface(str);
-
-    if (*gHelloWorld == NULL )
-    {
-        printf("Unable to load image %s!\n", str);
-        printf("SDL Error: %s\n", SDL_GetError());
-        success = false;
-    }
-
-    return success;
-}
-
-bool loadMedia(SDL_Texture **gTexture, char *str)
-{
-    //Loading success flag
-    bool success = true;
-
-    //Load splash image
-    *gTexture= loadTexture(str);
-
-    if (*gTexture == NULL )
-    {
-        printf("Unable to load image %s!\n", str);
-        printf("SDL Error: %s\n", SDL_GetError());
-        success = false;
-    }
-
-    return success;
-}
-
 bool init(){
+
+    setup_bmp_size(&No_Move[0], 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    setup_bmp_size(&No_Move[1], 160, 140, 480, 960);
+
+    //Rook
+    setup_bmp_size(&Chess_Dect[0], 0, 0, 125, 250);
+
+    //bishop
+    setup_bmp_size(&Chess_Dect[1], 140, 160, 130, 260);
+    //
+
     //The window we'll be rendering to
     //The surface contained by the window
     //Initialize SDL
@@ -197,7 +148,6 @@ bool init(){
     {
         printf( "Warning: Linear texture filtering not enabled!" );
     }
-
 
 
     //Create window
@@ -237,8 +187,48 @@ bool init(){
     return 1;
 }
 
-SDL_Surface* loadSurface( char *str )
-{
+void setup_bmp_size(SDL_Rect *dest, int32_t x, int32_t y, int32_t w, int32_t h){
+    dest->x = x;
+    dest->y = y;
+    dest->w = w;
+    dest->h = h;
+}
+
+bool loadMedia(SDL_Surface **gHelloWorld, char *str){
+    //Loading success flag
+    bool success = true;
+
+    //Load splash image
+    *gHelloWorld = loadSurface(str);
+
+    if (*gHelloWorld == NULL )
+    {
+        printf("Unable to load image %s!\n", str);
+        printf("SDL Error: %s\n", SDL_GetError());
+        success = false;
+    }
+
+    return success;
+}
+
+bool loadMedia(SDL_Texture **gTexture, char *str){
+    //Loading success flag
+    bool success = true;
+
+    //Load splash image
+    *gTexture= loadTexture(str);
+
+    if (*gTexture == NULL )
+    {
+        printf("Unable to load image %s!\n", str);
+        printf("SDL Error: %s\n", SDL_GetError());
+        success = false;
+    }
+
+    return success;
+}
+
+SDL_Surface* loadSurface( char *str ){
     //The final optimized image
     SDL_Surface* optimizedSurface = NULL;
 
@@ -264,8 +254,7 @@ SDL_Surface* loadSurface( char *str )
     return optimizedSurface;
 }
 
-SDL_Texture *loadTexture(char *str)
-{
+SDL_Texture *loadTexture(char *str){
     //The final texture
     SDL_Texture* newTexture = NULL;
 
@@ -290,4 +279,23 @@ SDL_Texture *loadTexture(char *str)
     }
 
     return newTexture;
+}
+
+void close(){
+    //Free loaded image
+    SDL_DestroyTexture( gTextureBoard );
+    gTextureBoard = NULL;
+
+    //Deallocate surface
+    SDL_FreeSurface(screenBoard);
+    screenBoard = NULL;
+
+    //Destroy window
+    SDL_DestroyRenderer( gRenderer );
+    SDL_DestroyWindow(window);
+    window = NULL;
+    gRenderer = NULL;
+
+    //Quit SDL subsystems
+    SDL_Quit();
 }
