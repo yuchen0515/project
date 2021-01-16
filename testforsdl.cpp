@@ -21,6 +21,8 @@ void setup_bmp_size(SDL_Rect *dest, int32_t x, int32_t y, int32_t w, int32_t h);
 SDL_Texture *loadTexture(char *str);
 bool match_rect_xy(int32_t x, int32_t y, SDL_Rect rect);
 pair<int32_t, int32_t> return_mouse_index(int32_t x, int32_t y);
+SDL_Rect *return_lattice_rect(int32_t x, int32_t y);
+void Show_Chess();
 
 
 int32_t mouse_X = 0;
@@ -28,6 +30,7 @@ int32_t mouse_Y = 0;
 SDL_Window *window = NULL;
 SDL_Surface *screenSurface = NULL;
 pair<int32_t, int32_t> mouse_index;
+SDL_Rect temp;
 
 //The window renderer
 SDL_Renderer *gRenderer = NULL;
@@ -43,6 +46,8 @@ SDL_Texture *gTextureBishop= NULL;
 SDL_Texture *gTexturePawn= NULL;
 SDL_Texture *gTextureRook= NULL;
 SDL_Texture *gTextureAlphaChess= NULL;
+SDL_Texture *gTextureLatticeCover= NULL;
+SDL_Texture *gTextureShow= NULL;
 
 SDL_Rect No_Move[2];
 SDL_Rect Chess_Dect[5][5];
@@ -72,6 +77,8 @@ int32_t exist[2][5][5] =
         {0, 0, 0, 0, 1}
     }
 };
+
+int32_t walking[5][5];
 
 //pair<int32_t, int32_t> position[2][12] = 
 //{
@@ -107,6 +114,7 @@ int main(){
         loadMedia(&gTexturePawn   , (char *)"pawn.bmp"); 
         loadMedia(&gTextureRook   , (char *)"rook.bmp"); 
         loadMedia(&gTextureAlphaChess, (char *)"alphachess.bmp"); 
+        loadMedia(&gTextureLatticeCover, (char *)"latticecover.bmp"); 
         //SDL_BlitScaled(screenBackground, NULL, screenSurface, &dest);
         //SDL_UpdateWindowSurface(window);
 
@@ -168,25 +176,19 @@ int main(){
                 SDL_RenderCopy(gRenderer, gTextureBoard, NULL, &No_Move[1]);
 
 
-                SDL_RenderCopyEx(gRenderer, gTextureRook, NULL, &Chess_Dect[0][0], 180, &Chess_Size, SDL_FLIP_NONE);
-                SDL_RenderCopyEx(gRenderer, gTextureBishop, NULL, &Chess_Dect[1][0], 180, &Chess_Size, SDL_FLIP_NONE);
-                SDL_RenderCopyEx(gRenderer, gTextureSliver, NULL, &Chess_Dect[2][0], 180, &Chess_Size, SDL_FLIP_NONE);
-                SDL_RenderCopyEx(gRenderer, gTextureGold, NULL, &Chess_Dect[3][0], 180, &Chess_Size, SDL_FLIP_NONE);
-                SDL_RenderCopyEx(gRenderer, gTextureKing, NULL, &Chess_Dect[4][0], 180, &Chess_Size, SDL_FLIP_NONE);
-                SDL_RenderCopyEx(gRenderer, gTexturePawn, NULL, &Chess_Dect[4][1], 180, &Chess_Size, SDL_FLIP_NONE);
 
-                SDL_RenderCopy(gRenderer, gTextureRook, NULL, &Chess_Dect[4][4]);
-                SDL_RenderCopy(gRenderer, gTextureBishop, NULL, &Chess_Dect[3][4]);
-                SDL_RenderCopy(gRenderer, gTextureSliver, NULL, &Chess_Dect[2][4]);
-                SDL_RenderCopy(gRenderer, gTextureGold, NULL, &Chess_Dect[1][4]); 
-                SDL_RenderCopy(gRenderer, gTextureKing, NULL, &Chess_Dect[0][4]); 
-                SDL_RenderCopy(gRenderer, gTexturePawn, NULL, &Chess_Dect[0][3]); 
+                //cover
+                SDL_RenderCopy(gRenderer, gTextureLatticeCover, NULL, return_lattice_rect(0, 0));
 
-                if (exist[1][mouse_index.first][mouse_index.second] > 0)
-                    SDL_RenderCopy(gRenderer, gTextureAlphaChess, NULL, &Chess_Dect[mouse_index.first][mouse_index.second]); 
-                else if (exist[0][mouse_index.first][mouse_index.second] > 0)
-                    SDL_RenderCopyEx(gRenderer, gTextureAlphaChess, NULL, &Chess_Dect[mouse_index.first][mouse_index.second], 180, &Chess_Size, SDL_FLIP_NONE); 
 
+                Show_Chess();
+
+                if (mouse_index.first >= 0 && mouse_index.first <= 4 && mouse_index.second >= 0 && mouse_index.second <= 4){
+                    if (exist[1][mouse_index.first][mouse_index.second] > 0)
+                        SDL_RenderCopy(gRenderer, gTextureAlphaChess, NULL, &Chess_Dect[mouse_index.first][mouse_index.second]); 
+                    else if (exist[0][mouse_index.first][mouse_index.second] > 0)
+                        SDL_RenderCopyEx(gRenderer, gTextureAlphaChess, NULL, &Chess_Dect[mouse_index.first][mouse_index.second], 180, &Chess_Size, SDL_FLIP_NONE); 
+                }
 
                 //Update screen
                 SDL_RenderPresent( gRenderer );
@@ -202,6 +204,7 @@ int main(){
 
 bool init(){
 
+    memset(walking, 0, sizeof(walking));
     setup_bmp_size(&No_Move[0], 0, 0, SCREEN_WIDTH*1.2, SCREEN_HEIGHT);
     setup_bmp_size(&No_Move[1], 140, 140, 380, 380);
 
@@ -211,22 +214,6 @@ bool init(){
         }
     }
 
-    /*
-    for (int32_t i = 0 ; i < 5 ; i++){
-        //<upper>
-        //Rook //bishop //sliver //gold //king
-        setup_bmp_size(&Chess_Dect[i], 155 + 77 * i, 152, 125, 250);
-    }
-    //pawn
-    setup_bmp_size(&Chess_Dect[5], 155 + 77 * 4, 152 + 75 * 1, 125, 250);
-
-    for (int32_t i = 4 ; i >= 0 ; i--){
-        //<lower>
-        //king //gold //sliver //bishop //rook
-        setup_bmp_size(&Chess_Dect[(4-i)+6], 155 + 77 * i, 152 + 75 * 4, 125, 250);
-    }
-    setup_bmp_size(&Chess_Dect[6*2-1], 155 + 77 * 0, 152 + 75 * 3, 125, 250);
-    */
 
     //
 
@@ -281,6 +268,61 @@ bool init(){
     //}
 
     return 1;
+}
+
+void Show_Chess(){
+    for (int32_t i = 0 ; i < 2 ; i++){
+        for (int32_t j = 0 ; j < 5 ; j++){
+            for (int32_t k = 0 ; k < 5 ; k++){
+                switch (exist[i][j][k]){
+                    case 1:
+                        gTextureShow = gTextureKing;
+                        break;
+                    case 2:
+                        gTextureShow = gTextureRook;
+                        break;
+                    case 3:
+                        gTextureShow = gTextureBishop;
+                        break;
+                    case 4:
+                        gTextureShow = gTextureGold;
+                        break;
+                    case 5:
+                        gTextureShow = gTextureSliver;
+                        break;
+                    case 6:
+                        gTextureShow = gTexturePawn;
+                        break;
+
+                    default:
+                        gTextureShow = NULL;
+
+                }
+
+                if (gTextureShow != NULL){
+                    if (i == 0)
+                        SDL_RenderCopyEx(gRenderer, gTextureShow, NULL, &Chess_Dect[j][k], 180, &Chess_Size, SDL_FLIP_NONE);
+                    else if (i == 1)
+                        SDL_RenderCopy(gRenderer, gTextureShow, NULL, &Chess_Dect[j][k]);
+                }
+
+            }
+        }
+    }
+}
+
+void show_walking(pair<int32_t, int32_t> temp){
+
+}
+
+
+SDL_Rect *return_lattice_rect(int32_t x, int32_t y){
+    temp.x = 140 + 77 * x;
+    temp.y = 140 + 75 * y;
+    temp.w = 76;
+    temp.h = 76;
+
+    return &temp;
 }
 
 bool match_rect_xy(int32_t x, int32_t y, SDL_Rect rect){
