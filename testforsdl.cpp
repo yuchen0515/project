@@ -10,7 +10,7 @@ const int32_t SCREEN_WIDTH = 640;
 const int32_t SCREEN_HEIGHT = 640;
 
 //declare function
-SDL_Surface *loadSurface(string path);
+SDL_Surface *loadSurface(char *str);
 bool init();
 void close();
 bool loadMedia(SDL_Surface **gHelloWorld, char *str);
@@ -21,6 +21,7 @@ SDL_Window *window = NULL;
 SDL_Surface *screenSurface = NULL;
 SDL_Surface *screenBoard= NULL;
 SDL_Surface *screenBackground= NULL;
+SDL_Renderer *gRenderer = NULL;
 
 
 
@@ -96,6 +97,7 @@ void setup_bmp_size(SDL_Rect *dest, int32_t x, int32_t y, int32_t w, int32_t h){
     dest->h = h;
 }
 
+
 void close()
 {
     //Deallocate surface
@@ -116,7 +118,7 @@ bool loadMedia(SDL_Surface **gHelloWorld, char *str)
     bool success = true;
 
     //Load splash image
-    *gHelloWorld = SDL_LoadBMP(str);
+    *gHelloWorld = loadSurface(str);
 
     if (*gHelloWorld == NULL )
     {
@@ -154,4 +156,31 @@ bool init(){
         return 0;
     }
     return 1;
+}
+
+SDL_Surface* loadSurface( char *str )
+{
+	//The final optimized image
+	SDL_Surface* optimizedSurface = NULL;
+
+	//Load image at specified path
+	SDL_Surface* loadedSurface = SDL_LoadBMP(str);
+	if( loadedSurface == NULL )
+	{
+		printf( "Unable to load image %s! SDL Error: %s\n", str, SDL_GetError() );
+	}
+	else
+	{
+		//Convert surface to screen format
+		optimizedSurface = SDL_ConvertSurface(loadedSurface, screenSurface->format, 0 );
+		if( optimizedSurface == NULL )
+		{
+			printf( "Unable to optimize image %s! SDL Error: %s\n", str, SDL_GetError() );
+		}
+
+		//Get rid of old loaded surface
+		SDL_FreeSurface( loadedSurface );
+	}
+
+	return optimizedSurface;
 }
