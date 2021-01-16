@@ -1,6 +1,5 @@
 #include <iostream>
 #include <string>
-#include <map>
 #include <SDL_image.h>
 #include <SDL.h>
 
@@ -10,21 +9,13 @@ using namespace std;
 const int32_t SCREEN_WIDTH = 640;
 const int32_t SCREEN_HEIGHT = 640;
 
-struct cmp_str
-{
-   bool operator()(char const *a, char const *b) const
-   {
-      return std::strcmp(a, b) < 0;
-   }
-};
-
 //declare function
 SDL_Surface *loadSurface(char *str);
 bool init();
 void close();
 bool loadMedia(SDL_Surface **gHelloWorld, char *str);
 bool loadMedia(SDL_Texture **gTexture, char *str);
-void setup_bmp_size(map<string, SDL_Rect> *dest, string str, int32_t x, int32_t y, int32_t w, int32_t h);
+void setup_bmp_size(SDL_Rect *dest, int32_t x, int32_t y, int32_t w, int32_t h);
 SDL_Texture *loadTexture(char *str);
 
 
@@ -37,18 +28,16 @@ SDL_Renderer *gRenderer = NULL;
 
 //current dusokated textyre
 SDL_Texture *gTextureBoard = NULL;
-SDL_Texture *gTextureBackground = NULL;
+SDL_Texture *gTextureBackground= NULL;
 SDL_Texture *gTextureKing= NULL;
 SDL_Texture *gTextureJade= NULL;
-SDL_Texture *gTextureGold = NULL;
+SDL_Texture *gTextureGold= NULL;
 SDL_Texture *gTextureSliver= NULL;
-SDL_Texture *gTexturePawn= NULL;
 SDL_Texture *gTextureBishop= NULL;
+SDL_Texture *gTexturePawn= NULL;
 SDL_Texture *gTextureRook= NULL;
 
 
-
-map<string , SDL_Rect> dest;
 
 int main(){
 
@@ -68,15 +57,16 @@ int main(){
 
         //loadMedia(&screenBackground, (char *)"background.bmp");
 
+        SDL_Rect dest;
 
         loadMedia(&gTextureBackground, (char *)"background.bmp");
-        loadMedia (&gTextureKing,   (char *)"king.bmp");
-        loadMedia (&gTextureJade,   (char *)"jade.bmp");        
-        loadMedia (&gTextureGold,   (char *)"gold.bmp");        
-        loadMedia (&gTextureSliver, (char *)"sliver.bmp");          
-        loadMedia (&gTexturePawn,   (char *)"pawn.bmp");        
-        loadMedia (&gTextureBishop, (char *)"bishop.bmp");          
-        loadMedia (&gTextureRook,   (char *)"rook.bmp");    
+        loadMedia(&gTextureKing   , (char *)"king.bmp");
+        loadMedia(&gTextureJade   , (char *)"Jade.bmp"); 
+        loadMedia(&gTextureGold   , (char *)"gold.bmp"); 
+        loadMedia(&gTextureSliver , (char *)"sliver.bmp");   
+        loadMedia(&gTextureBishop , (char *)"bishop.bmp");   
+        loadMedia(&gTexturePawn   , (char *)"pawn.bmp"); 
+        loadMedia(&gTextureRook   , (char *)"rook.bmp"); 
         //SDL_BlitScaled(screenBackground, NULL, screenSurface, &dest);
         //SDL_UpdateWindowSurface(window);
 
@@ -108,15 +98,15 @@ int main(){
                     SDL_RenderClear( gRenderer );
 
                     //Render texture to screen
-                    //setup_bmp_size(&dest, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-                    SDL_RenderCopy(gRenderer, gTextureBackground, NULL, &dest["background"]);
+                    setup_bmp_size(&dest, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+                    SDL_RenderCopy(gRenderer, gTextureBackground, NULL, &dest);
 
                     //Apply the image
-                    //setup_bmp_size(&dest, 160, 140, 480, 960);
-                    SDL_RenderCopy(gRenderer, gTextureBoard, NULL, &dest["board"]);
+                    setup_bmp_size(&dest, 160, 140, 480, 960);
+                    SDL_RenderCopy(gRenderer, gTextureBoard, NULL, &dest);
 
                     //Update screen
-                    SDL_RenderPresent(gRenderer);
+                    SDL_RenderPresent( gRenderer );
                 }
             }
         }
@@ -128,8 +118,11 @@ int main(){
     return 0;
 }
 
-void setup_bmp_size(map<string , SDL_Rect> *dest, string str, int32_t x, int32_t y, int32_t w, int32_t h){
-    (*dest["background"]).second= (SDL_Rect){x, y, w, h};
+void setup_bmp_size(SDL_Rect *dest, int32_t x, int32_t y, int32_t w, int32_t h){
+    dest->x = x;
+    dest->y = y;
+    dest->w = w;
+    dest->h = h;
 }
 
 
@@ -206,8 +199,6 @@ bool init(){
     }
 
 
-    setup_bmp_size(&dest, "background", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    setup_bmp_size(&dest, "board", 160, 140, 480, 960);
 
     //Create window
     window = \
