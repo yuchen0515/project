@@ -1,3 +1,3 @@
 all:
-	gcc testforsdl.cpp -o testforsdl `sdl2-config --cflags --libs`
-	./testforsdl
+	gcc main.cpp -o main `sdl2-config --cflags --libs`
+	./main
