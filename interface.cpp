@@ -1,7 +1,4 @@
-#include <iostream>
-#include <string>
-#include <SDL_image.h>
-#include <SDL.h>
+#include "interface.h"
 
 using namespace std;
 
@@ -9,36 +6,10 @@ using namespace std;
 const int32_t SCREEN_WIDTH = 640;
 const int32_t SCREEN_HEIGHT = 640;
 
-//declare function
-SDL_Surface *loadSurface(char *str);
 SDL_Surface *screenBoard= NULL;
-
-bool init();
-void InitMedia();
-void InitPosition();
-void InitExist();
-void close();
-bool loadMedia(SDL_Surface **gHelloWorld, char *str);
-bool loadMedia(SDL_Texture **gTexture, char *str);
-void setup_bmp_size(SDL_Rect *dest, int32_t x, int32_t y, int32_t w, int32_t h);
-SDL_Texture *loadTexture(char *str);
-bool match_rect_xy(int32_t x, int32_t y, SDL_Rect rect);
-pair<int32_t, int32_t> return_mouse_index(int32_t x, int32_t y);
-SDL_Rect *return_lattice_rect(int32_t x, int32_t y);
-void Show_Chess();
-void Determine_Draw(int32_t kind, int32_t Isupper);
-int32_t check_bound_xy(int32_t cur_x, int32_t cur_y, int32_t add_x, int32_t add_y, int32_t upper);
-void show_walking(pair<int32_t, int32_t> temp);
-
-
-int32_t mouse_X = 0, mouse_Y = 0;
-SDL_Window *window = NULL;
 SDL_Surface *screenSurface = NULL;
-pair<int32_t, int32_t> mouse_index = make_pair(0, 0);
+SDL_Window *window = NULL;
 SDL_Rect temp;
-
-//The window renderer
-SDL_Renderer *gRenderer = NULL;
 
 //current dusokated textyre
 SDL_Texture *gTextureBoard = NULL;
@@ -58,10 +29,6 @@ SDL_Texture *gTextureAlphaChess= NULL;
 SDL_Texture *gTextureLatticeCover= NULL;
 SDL_Texture *gTextureShow= NULL;
 
-SDL_Rect No_Move[2];
-SDL_Rect Chess_Dect[5][5];
-SDL_Point Chess_Size = (SDL_Point){25, 30};
-
 //0: upper, 1: lower
 //
 //1: king, 2: rook, 3: bishop, 4: gold
@@ -72,120 +39,18 @@ SDL_Point Chess_Size = (SDL_Point){25, 30};
 //
 int32_t exist[2][5][7];
 
+
 int32_t walking[5][5];
 
-//pair<int32_t, int32_t> position[2][12] = 
-//{
-//    { make_pair(4, 0), make_pair(0, 0), make_pair(1, 0), make_pair(3, 0), make_pair(2, 0), make_pair(4, 1) },
-//    { make_pair(0, 4), make_pair(4, 4), make_pair(3, 4), make_pair(1, 4), make_pair(2, 4), make_pair(0, 3) }
-//};
+//The window renderer
+SDL_Renderer *gRenderer = NULL;
 
-int main(){
+pair<int32_t, int32_t> mouse_index = make_pair(0, 0);
+int32_t mouse_X = 0, mouse_Y = 0;
 
-    //Start up SDL and create window
-    if( !init() )
-    {
-        printf( "Failed to initialize!\n" );
-    }
-    else
-    {
-        //Get window surface
-        
-        //screenSurface = SDL_GetWindowSurface(window);
-        ////Fill the surface green
-        //SDL_FillRect(screenSurface, NULL, SDL_MapRGBA(screenSurface->format, 255, 255, 255, 255));
-        //SDL_UpdateWindowSurface(window);
-
-        //loadMedia(&screenBackground, (char *)"background.bmp");
-
-        InitMedia();
-
-        //SDL_BlitScaled(screenBackground, NULL, screenSurface, &dest);
-        //SDL_UpdateWindowSurface(window);
-
-        //Load media
-        if( !loadMedia(&gTextureBoard, (char *)"board.bmp") )
-        {
-            printf( "Failed to load media!\n" );
-        }
-        else
-        {
-
-            //SDL_BlitScaled(screenBoard, NULL, screenSurface, &dest);
-            //Update the surface
-            SDL_UpdateWindowSurface(window);
-            //Wait two seconds
-            SDL_Event e;
-
-            bool quit = false;
-            while (!quit){
-                while (SDL_PollEvent(&e)){
-
-                    if (e.type == SDL_QUIT)
-                        quit = true;
-
-                    if (e.key.keysym.sym == SDLK_ESCAPE)
-                        quit = true;
-
-                    if (SDL_MOUSEBUTTONDOWN == e.type){
-                        if (SDL_BUTTON_LEFT == e.button.button)
-                        {
-                            mouse_X = e.button.x;
-                            mouse_Y = e.button.y;
-                            printf("x, y %d %d ...............\n", mouse_X, mouse_Y);
-
-                        }
-                        else if(SDL_BUTTON_RIGHT == e.button.button)
-                        {
-                            mouse_X = e.button.x;
-                            mouse_Y = e.button.y;
-                            printf("x, y %d %d ...............\n", mouse_X, mouse_Y);
-                        }
-                        printf("index_x: %d, index_y: %d\n", mouse_index.first, mouse_index.second);
-                    }
-                    else if (SDL_MOUSEMOTION == e.type)
-                    {
-                        //mouse_X = e.button.x;
-                        //mouse_Y = e.button.y;
-                        //printf("x, y %d %d ...............\n", mouse_X, mouse_Y);
-                    }
-                    mouse_index = return_mouse_index(mouse_X, mouse_Y);
-                }
-                //Clear screen
-                SDL_RenderClear( gRenderer );
-
-                //Render texture to screen
-                SDL_RenderCopy(gRenderer, gTextureBackground, NULL, &No_Move[0]);
-
-                //Apply the image
-                SDL_RenderCopy(gRenderer, gTextureBoard, NULL, &No_Move[1]);
-
-
-
-                //cover
-                show_walking(mouse_index);
-
-
-                Show_Chess();
-
-                if (mouse_index.first >= 0 && mouse_index.first <= 4 && mouse_index.second >= 0 && mouse_index.second <= 4){
-                    if (exist[1][mouse_index.first][mouse_index.second] > 0)
-                        SDL_RenderCopy(gRenderer, gTextureAlphaChess, NULL, &Chess_Dect[mouse_index.first][mouse_index.second]); 
-                    else if (exist[0][mouse_index.first][mouse_index.second] > 0)
-                        SDL_RenderCopyEx(gRenderer, gTextureAlphaChess, NULL, &Chess_Dect[mouse_index.first][mouse_index.second], 180, &Chess_Size, SDL_FLIP_NONE); 
-                }
-
-                //Update screen
-                SDL_RenderPresent( gRenderer );
-            }
-        }
-    }
-
-
-    close();
-
-    return 0;
-}
+SDL_Rect No_Move[2];
+SDL_Rect Chess_Dect[5][5];
+SDL_Point Chess_Size = (SDL_Point){25, 30};
 
 void InitMedia(){
     loadMedia(&gTextureBackground, (char *)"background.bmp");
