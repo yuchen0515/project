@@ -74,6 +74,7 @@ int main(){
         {
             //Update the surface
             SDL_UpdateWindowSurface(window);
+
             //Wait two seconds
             SDL_Event e;
 
@@ -151,7 +152,6 @@ int main(){
                         PrintBugMessageBoard();
 
                     }
-
 
                 }
 

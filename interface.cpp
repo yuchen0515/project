@@ -23,19 +23,12 @@ void InitMedia(){
 void InitExist(){
     memset(exist, 0, sizeof(exist));
 
-    exist[0][0][0] = 2;
-    exist[0][1][0] = 3;
-    exist[0][2][0] = 5;
-    exist[0][3][0] = 4;
-    exist[0][4][0] = 1;
-    exist[0][4][1] = 6;
-
-    exist[1][4][4] = 2;
-    exist[1][3][4] = 3;
-    exist[1][2][4] = 5;
-    exist[1][1][4] = 4;
-    exist[1][0][4] = 1;
-    exist[1][0][3] = 6;
+    exist[0][0][0] = exist[1][4][4] = 2;
+    exist[0][1][0] = exist[1][3][4] = 3;
+    exist[0][2][0] = exist[1][2][4] = 5;
+    exist[0][3][0] = exist[1][1][4] = 4;
+    exist[0][4][0] = exist[1][0][4] = 1;
+    exist[0][4][1] = exist[1][0][3] = 6;
 
     memset(walking, 0, sizeof(walking));
     MouseIndex = make_pair(-1, -1);
@@ -196,6 +189,7 @@ void MoveChess(pair<int32_t, int32_t> ori, pair<int32_t, int32_t> des){
 }
 
 void PrintBugMessageBoard(){
+    system("clear");
     for (int32_t k = 0 ; k < 2 ; k++){
         printf("------------\n");
         for (int32_t i = 0 ; i < 7 ; i ++){
@@ -356,10 +350,10 @@ void show_walking(pair<int32_t, int32_t> temp){
         }
     }
 
-    if (check_bound_xy(temp.first, temp.second, 1, direction, Isupper)){
+    if (check_bound_xy(temp.first, temp.second, 1, -direction, Isupper)){
         if (kind == 1 || kind == 5 || kind == 7 || kind == 8){
-            SDL_RenderCopy(gRenderer, gTextureLatticeCover, NULL, return_lattice_rect(temp.first + 1, temp.second + direction));
-            walking[temp.first + 1][temp.second + direction] = 1;
+            SDL_RenderCopy(gRenderer, gTextureLatticeCover, NULL, return_lattice_rect(temp.first + 1, temp.second - direction));
+            walking[temp.first + 1][temp.second - direction] = 1;
         }
     }
 
