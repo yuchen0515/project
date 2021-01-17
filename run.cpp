@@ -47,15 +47,16 @@ pair<int32_t, int32_t> MouseIndex = make_pair(-1, -1);
 pair<int32_t, int32_t> MouseIndexTemp = make_pair(-1, -1);
 int32_t MouseX = 0, MouseY = 0;
 bool bClickChess = false;
+bool KingDead = false;
 
 SDL_Rect NoMove[2];
-SDL_Rect ChessDect[5][5];
+SDL_Rect ChessDect[5][9];
 SDL_Point ChessSize = (SDL_Point){25, 30};
 
 int main(){
 
     //Start up SDL and create window
-    if( !init() )
+    if(!init())
     {
         printf( "Failed to initialize!\n" );
     }
@@ -92,6 +93,17 @@ int main(){
                     if (e.key.keysym.sym == SDLK_ESCAPE)
                         quit = true;
 
+                    if (e.key.keysym.sym == SDLK_a){
+                        InitExist();
+                        KingDead = false;
+                    }
+
+                    if (KingDead == true){
+
+                        usleep(50000);
+                        continue;
+                    }
+
                     if (SDL_MOUSEBUTTONDOWN == e.type){
                         if (SDL_BUTTON_LEFT == e.button.button)
                         {
@@ -101,17 +113,18 @@ int main(){
                             MouseIndex = return_MouseIndex(MouseX, MouseY);
                             printf("x, y: %d %d ...............\n", MouseX, MouseY);
 
-                            if (bClickChess && (MouseIndex.first != MouseIndexTemp.second || MouseIndex.second != MouseIndexTemp.second)){
+                            if (bClickChess && (MouseIndex.first != MouseIndexTemp.first|| MouseIndex.second != MouseIndexTemp.second)){
                                 MoveChess(MouseIndexTemp, MouseIndex);
                                 bClickChess = false;
-                                //printf("click: %d\n", bClickChess);
-                            }else{
 
-                            if (ClickCover(MouseIndex))
-                                bClickChess = true;
-                            else
+                                if (DetectKingExist() == 0)
+                                    KingDead = true;
+                            }
+                            else if (ClickCover(MouseIndex) && bClickChess == true && (MouseIndex.first == MouseIndexTemp.first && MouseIndex.second == MouseIndexTemp.second)){
                                 bClickChess = false;
                             }
+                            else
+                                bClickChess = ClickCover(MouseIndex) ? 1 : 0;
                         }
                         else if(SDL_BUTTON_RIGHT == e.button.button)
                         {
@@ -120,17 +133,18 @@ int main(){
                             MouseY = e.button.y;
                             MouseIndex = return_MouseIndex(MouseX, MouseY);
                             printf("x, y: %d %d ...............\n", MouseX, MouseY);
-                            if (bClickChess && (MouseIndex.first != MouseIndexTemp.second || MouseIndex.second != MouseIndexTemp.second)){
+                            if (bClickChess && (MouseIndex.first != MouseIndexTemp.first|| MouseIndex.second != MouseIndexTemp.second)){
                                 MoveChess(MouseIndexTemp, MouseIndex);
                                 bClickChess = false;
-                                //printf("click: %d\n", bClickChess);
-                            }else{
 
-                            if (ClickCover(MouseIndex))
-                                bClickChess = true;
-                            else
+                                if (DetectKingExist() == 0)
+                                    KingDead = true;
+                            }
+                            else if (ClickCover(MouseIndex) && bClickChess == true && (MouseIndex.first == MouseIndexTemp.first && MouseIndex.second == MouseIndexTemp.second)){
                                 bClickChess = false;
                             }
+                            else
+                                bClickChess = ClickCover(MouseIndex) ? 1 : 0;
                         }
                         printf("index_x: %d, index_y: %d\n", MouseIndex.first, MouseIndex.second);
 
@@ -146,13 +160,10 @@ int main(){
                 //Apply the image
                 SDL_RenderCopy(gRenderer, gTextureBoard, NULL, &NoMove[1]);
 
-                if (bClickChess == false){
-
+                if (bClickChess == false)
                     show_walking(make_pair(-1, -1));
-                }else
+                else
                     show_walking(MouseIndex);
-
-
 
                 Show_Chess();
 

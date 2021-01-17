@@ -38,6 +38,23 @@ void InitExist(){
     exist[1][0][3] = 6;
 
     memset(walking, 0, sizeof(walking));
+    MouseIndex = make_pair(-1, -1);
+}
+
+bool DetectKingExist(){
+    int32_t exist_king = 0;
+    for (int32_t i = 0 ; i < 2 ; i++){
+        for (int32_t j = 0 ; j < 5 ; j++){
+            for (int32_t k = 0 ; k < 5 ; k++){
+                if (exist[i][j][k] == 1)
+                    exist_king += 1;
+            }
+        }
+    }
+    if (exist_king == 2)
+        return 1;
+
+    return 0;
 }
 
 void InitPosition(){
@@ -47,6 +64,18 @@ void InitPosition(){
     for (int32_t i = 0 ; i < 5 ; i++){
         for (int32_t j = 0 ; j < 5 ; j++){
             setup_bmp_size(&ChessDect[i][j], 155 + 77 * i, 152 + 75 * j, 125, 250);
+        }
+    }
+
+    for (int32_t i = 0 ; i <= 5 ; i++){
+        for (int32_t j = 5 ; j <= 6 ; j++){
+            setup_bmp_size(&ChessDect[i][j], 155 + 77 * i, 152 - 75 * (j-4), 125, 250);
+        }
+    }
+
+    for (int32_t i = 0 ; i <= 5 ; i++){
+        for (int32_t j = 7 ; j <= 8 ; j++){
+            setup_bmp_size(&ChessDect[i][j], 155 + 77 * i, 152 + 75 * (j - 2), 125, 250);
         }
     }
 }
@@ -131,10 +160,10 @@ void MoveChess(pair<int32_t, int32_t> ori, pair<int32_t, int32_t> des){
     int32_t IsChess = 0;
     int32_t walk_check = walking[des.first][des.second];
 
-    printf("ori: %d %d\n", ori.first, ori.second);
-    printf("des: %d %d\n", des.first, des.second);
-    printf("kind: %d, kind_des: %d\n", kind, kind_des);
-    printf("walk_check: %d\n", walking[des.first][des.second]);
+    //printf("ori: %d %d\n", ori.first, ori.second);
+    //printf("des: %d %d\n", des.first, des.second);
+    //printf("kind: %d, kind_des: %d\n", kind, kind_des);
+    //printf("walk_check: %d\n", walking[des.first][des.second]);
 
     if (kind == 1 && exist[1][ori.first][ori.second] == 0)
         return;
@@ -142,21 +171,19 @@ void MoveChess(pair<int32_t, int32_t> ori, pair<int32_t, int32_t> des){
     if (walk_check == 0)
         return;
 
-    if (kind_des == 1){
-        if (exist[kind == 1 ? 0 : 1][des.first][des.second] > 1)
-            IsChess = 1;
-    }
-    else if (kind == 0)
+    if (exist[kind == 1 ? 0 : 1][des.first][des.second] > 1)
+        IsChess = 1;
+
+    if (kind_des != 1 && kind == 0)
         return ;
 
-    printf("check\n");
 
     if (IsChess){
-        CaptivePush(kind, exist[kind][des.first][des.second]);
+        CaptivePush(kind, exist[kind == 1 ? 0 : 1][des.first][des.second]);
     }
 
     exist[kind][des.first][des.second]=\
-                exist[kind][ori.first][ori.second];
+                                       exist[kind][ori.first][ori.second];
     exist[kind][ori.first][ori.second] = 0;
     exist[kind == 1 ? 0 : 1][des.first][des.second] = 0;
 
@@ -171,7 +198,7 @@ void MoveChess(pair<int32_t, int32_t> ori, pair<int32_t, int32_t> des){
 void PrintBugMessageBoard(){
     for (int32_t k = 0 ; k < 2 ; k++){
         printf("------------\n");
-        for (int32_t i = 0 ; i < 5 ; i ++){
+        for (int32_t i = 0 ; i < 7 ; i ++){
             for (int32_t j = 0 ; j < 5 ; j ++){
                 printf("%d ", exist[k][j][i]);
 
@@ -226,8 +253,12 @@ void Determine_Draw(int32_t kind, int32_t Isupper, int32_t j, int32_t k){
     if (gTextureShow != NULL){
         if (Isupper == 1)
             SDL_RenderCopyEx(gRenderer, gTextureShow, NULL, &ChessDect[j][k], 180, &ChessSize, SDL_FLIP_NONE);
-        else if (Isupper == 0)
-            SDL_RenderCopy(gRenderer, gTextureShow, NULL, &ChessDect[j][k]);
+        else if (Isupper == 0){
+            if ( k < 5 )
+                SDL_RenderCopy(gRenderer, gTextureShow, NULL, &ChessDect[j][k]);
+            else if ( k < 8)
+                SDL_RenderCopy(gRenderer, gTextureShow, NULL, &ChessDect[j][k+2]);
+        }
     }
 
 }
@@ -250,7 +281,7 @@ bool ClickCover(pair<int32_t, int32_t> fMouseIndex){
 void Show_Chess(){
     for (int32_t i = 0 ; i < 2 ; i++){
         for (int32_t j = 0 ; j < 5 ; j++){
-            for (int32_t k = 0 ; k < 5 ; k++){
+            for (int32_t k = 0 ; k < 7 ; k++){
                 Determine_Draw(exist[i][j][k], (1-i), j, k);
             }
         }

@@ -54,10 +54,11 @@ extern pair<int32_t, int32_t> MouseIndex;
 extern pair<int32_t, int32_t> MouseIndexTemp;
 extern int32_t MouseX, MouseY;
 extern bool bClickChess;
+extern bool KingDead;
 
 
 extern SDL_Rect NoMove[2];
-extern SDL_Rect ChessDect[5][5];
+extern SDL_Rect ChessDect[5][9];
 extern SDL_Point ChessSize;
 
 //declare function
@@ -81,6 +82,7 @@ bool ClickCover(pair<int32_t, int32_t> fMouseIndex);
 void MoveChess(pair<int32_t, int32_t> ori, pair<int32_t, int32_t> des);
 void CaptivePush(int32_t kind, int32_t chess);
 void PrintBugMessageBoard();
+bool DetectKingExist();
 
 
 pair<int32_t, int32_t> return_MouseIndex(int32_t x, int32_t y);
