@@ -2,55 +2,6 @@
 
 using namespace std;
 
-//Screen dimension constants  螢幕寬高設定
-const int32_t SCREEN_WIDTH = 640;
-const int32_t SCREEN_HEIGHT = 640;
-
-SDL_Surface *screenBoard= NULL;
-SDL_Surface *screenSurface = NULL;
-SDL_Window *window = NULL;
-SDL_Rect temp;
-
-//current dusokated textyre
-SDL_Texture *gTextureBoard = NULL;
-SDL_Texture *gTextureBackground= NULL;
-SDL_Texture *gTextureKing= NULL;
-SDL_Texture *gTextureJade= NULL;
-SDL_Texture *gTextureGold= NULL;
-SDL_Texture *gTextureSliver= NULL;
-SDL_Texture *gTextureSliverUp= NULL;
-SDL_Texture *gTextureBishop= NULL;
-SDL_Texture *gTextureBishopUp= NULL;
-SDL_Texture *gTexturePawn= NULL;
-SDL_Texture *gTexturePawnUp= NULL;
-SDL_Texture *gTextureRook= NULL;
-SDL_Texture *gTextureRookUp= NULL;
-SDL_Texture *gTextureAlphaChess= NULL;
-SDL_Texture *gTextureLatticeCover= NULL;
-SDL_Texture *gTextureShow= NULL;
-
-//0: upper, 1: lower
-//
-//1: king, 2: rook, 3: bishop, 4: gold
-//5: sliver, 6: pawn
-//7: rook (up), 8: bishop (up), 9: reserve
-//10: sliver (up), 11: pawn(up)
-//12 ~ 17: captive 1~6
-//
-int32_t exist[2][5][7];
-int32_t walking[5][5];
-
-//The window renderer
-SDL_Renderer *gRenderer = NULL;
-
-pair<int32_t, int32_t> MouseIndex = make_pair(-1, -1);
-pair<int32_t, int32_t> MouseIndexTemp = make_pair(-1, -1);
-int32_t MouseX = 0, MouseY = 0;
-bool bClickChess = false;
-
-SDL_Rect NoMove[2];
-SDL_Rect ChessDect[5][5];
-SDL_Point ChessSize = (SDL_Point){25, 30};
 
 void InitMedia(){
     loadMedia(&gTextureBackground, (char *)"background.bmp");
@@ -209,6 +160,12 @@ void MoveChess(pair<int32_t, int32_t> ori, pair<int32_t, int32_t> des){
     exist[kind][ori.first][ori.second] = 0;
     exist[kind == 1 ? 0 : 1][des.first][des.second] = 0;
 
+    if ((ori.second == 3 * (kind == 1 ? 0 : 1) || ori.second == 1 + 3 * (kind == 1 ? 0 : 1)) && (des.second == 3 * (kind == 1 ? 0 : 1) || des.second == 1 + 3 * (kind == 1 ? 0 : 1))){
+        int32_t chess = exist[kind][des.first][des.second];
+        if ((chess >= 2 && chess <= 6)  && chess != 4)
+            exist[kind][des.first][des.second] += 5;
+    }
+
 }
 
 void PrintBugMessageBoard(){
@@ -221,8 +178,8 @@ void PrintBugMessageBoard(){
             }
             printf("\n");
         }
-        printf("------------\n");
     }
+    printf("------------\n");
 
 }
 
@@ -249,10 +206,21 @@ void Determine_Draw(int32_t kind, int32_t Isupper, int32_t j, int32_t k){
         case 6:
             gTextureShow = gTexturePawn;
             break;
+        case 7:
+            gTextureShow = gTextureRookUp;
+            break;
+        case 8:
+            gTextureShow = gTextureBishopUp;
+            break;
+        case 10:
+            gTextureShow = gTextureSliverUp;
+            break;
+        case 11:
+            gTextureShow = gTexturePawnUp;
+            break;
 
         default:
             gTextureShow = NULL;
-
     }
 
     if (gTextureShow != NULL){
@@ -309,56 +277,56 @@ void show_walking(pair<int32_t, int32_t> temp){
     int32_t direction = Isupper ? 1 : -1;
 
     if (check_bound_xy(temp.first, temp.second, -1, direction, Isupper)){
-        if (kind == 1 || kind == 4 || kind == 5){
+        if (kind == 1 || kind == 4 || kind == 5 || kind == 7 || kind == 8 || kind == 10 || kind == 11){
             SDL_RenderCopy(gRenderer, gTextureLatticeCover, NULL, return_lattice_rect(temp.first - 1, temp.second + direction ));
             walking[temp.first-1][temp.second + direction] = 1;
         }
     }
 
     if (check_bound_xy(temp.first, temp.second, 0, direction, Isupper)){
-        if (kind == 1 || kind == 4 || kind == 5 || kind == 6){
+        if (kind == 1 || (kind >= 4 && kind <= 8) || kind == 10 || kind == 11){
             SDL_RenderCopy(gRenderer, gTextureLatticeCover, NULL, return_lattice_rect(temp.first, temp.second + direction ));
             walking[temp.first][temp.second + direction] = 1;
         }
     }
 
     if (check_bound_xy(temp.first, temp.second, 1, direction, Isupper)){
-        if (kind == 1 || kind == 4 || kind == 5){
+        if (kind == 1 || kind == 4 || kind == 5 || kind == 7 || kind == 8 || kind == 10 || kind == 11){
             SDL_RenderCopy(gRenderer, gTextureLatticeCover, NULL, return_lattice_rect(temp.first + 1, temp.second + direction ));
             walking[temp.first + 1][temp.second + direction] = 1;
         }
     }
 
     if (check_bound_xy(temp.first, temp.second, -1, 0, Isupper)){
-        if (kind == 1 || kind == 4){
+        if (kind == 1 || kind == 4 || kind == 7 || kind == 8 || kind == 10 || kind == 11){
             SDL_RenderCopy(gRenderer, gTextureLatticeCover, NULL, return_lattice_rect(temp.first - 1, temp.second));
             walking[temp.first - 1][temp.second] = 1;
         }
     }
 
     if (check_bound_xy(temp.first, temp.second, 1, 0, Isupper)){
-        if (kind == 1 || kind == 4){
+        if (kind == 1 || kind == 4 || kind == 7 || kind == 8 || kind == 10 || kind == 11){
             SDL_RenderCopy(gRenderer, gTextureLatticeCover, NULL, return_lattice_rect(temp.first + 1, temp.second));
             walking[temp.first + 1][temp.second] = 1;
         }
     }
 
     if (check_bound_xy(temp.first, temp.second, -1, -1 * direction, Isupper)){
-        if (kind == 1 || kind == 5){
+        if (kind == 1 || kind == 5 || kind == 7 || kind == 8){
             SDL_RenderCopy(gRenderer, gTextureLatticeCover, NULL, return_lattice_rect(temp.first - 1, temp.second - direction));
             walking[temp.first - 1][temp.second - direction] = 1;
         }
     }
 
     if (check_bound_xy(temp.first, temp.second, 0, -1 * direction, Isupper)){
-        if (kind == 1 || kind == 4){
+        if (kind == 1 || kind == 4 || kind == 7 || kind == 8 || kind == 10 || kind == 11){
             SDL_RenderCopy(gRenderer, gTextureLatticeCover, NULL, return_lattice_rect(temp.first, temp.second - direction));
             walking[temp.first][temp.second - direction] = 1;
         }
     }
 
     if (check_bound_xy(temp.first, temp.second, 1, direction, Isupper)){
-        if (kind == 1 || kind == 5){
+        if (kind == 1 || kind == 5 || kind == 7 || kind == 8){
             SDL_RenderCopy(gRenderer, gTextureLatticeCover, NULL, return_lattice_rect(temp.first + 1, temp.second + direction));
             walking[temp.first + 1][temp.second + direction] = 1;
         }
@@ -376,11 +344,11 @@ void show_walking(pair<int32_t, int32_t> temp){
         {-1, 0}
     };
 
-    if (kind != 2 && kind != 3)
+    if (kind != 2 && kind != 3 && kind -5 != 2 && kind-5 != 3)
         return;
 
 
-    for (int32_t i = (kind == 3) ? 0 : 1 ; i < 8 ; i += 2){
+    for (int32_t i = (kind == 3 || kind == 8) ? 0 : 1 ; i < 8 ; i += 2){
         int32_t level = 1;
         while (1){
             if (check_bound_xy(temp.first, temp.second, dec[i][0] * level, dec[i][1] * level, Isupper) == 0)
