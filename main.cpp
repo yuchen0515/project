@@ -14,6 +14,8 @@ SDL_Surface *loadSurface(char *str);
 SDL_Surface *screenBoard= NULL;
 
 bool init();
+void InitMedia();
+void InitExist();
 void close();
 bool loadMedia(SDL_Surface **gHelloWorld, char *str);
 bool loadMedia(SDL_Texture **gTexture, char *str);
@@ -45,9 +47,13 @@ SDL_Texture *gTextureKing= NULL;
 SDL_Texture *gTextureJade= NULL;
 SDL_Texture *gTextureGold= NULL;
 SDL_Texture *gTextureSliver= NULL;
+SDL_Texture *gTextureSliverUp= NULL;
 SDL_Texture *gTextureBishop= NULL;
+SDL_Texture *gTextureBishopUp= NULL;
 SDL_Texture *gTexturePawn= NULL;
+SDL_Texture *gTexturePawnUp= NULL;
 SDL_Texture *gTextureRook= NULL;
+SDL_Texture *gTextureRookUp= NULL;
 SDL_Texture *gTextureAlphaChess= NULL;
 SDL_Texture *gTextureLatticeCover= NULL;
 SDL_Texture *gTextureShow= NULL;
@@ -60,26 +66,11 @@ SDL_Point Chess_Size = (SDL_Point){25, 30};
 //
 //1: king, 2: rook, 3: bishop, 4: gold
 //5: sliver, 6: pawn
-//7 ~ 12: captive 1~6
+//7: rook (up), 8: bishop (up), 9: reserve
+//10: sliver (up), 11: pawn(up)
+//12 ~ 17: captive 1~6
 //
-int32_t exist[2][5][5] = 
-{
-    {
-        {2, 0, 0, 0, 0}, 
-        {3, 0, 0, 0, 0},
-        {5, 0, 0, 0, 0},
-        {4, 0, 0, 0, 0},
-        {1, 6, 0, 0, 0}
-    },
-
-    { 
-        {0, 0, 0, 6, 2},
-        {0, 0, 0, 0, 3},
-        {0, 0, 0, 0, 5},
-        {0, 0, 0, 0, 4},
-        {0, 0, 0, 0, 1}
-    }
-};
+int32_t exist[2][5][5];
 
 int32_t walking[5][5];
 
@@ -107,17 +98,8 @@ int main(){
 
         //loadMedia(&screenBackground, (char *)"background.bmp");
 
+        InitMedia();
 
-        loadMedia(&gTextureBackground, (char *)"background.bmp");
-        loadMedia(&gTextureKing   , (char *)"king.bmp");
-        loadMedia(&gTextureJade   , (char *)"Jade.bmp"); 
-        loadMedia(&gTextureGold   , (char *)"gold.bmp"); 
-        loadMedia(&gTextureSliver , (char *)"sliver.bmp");   
-        loadMedia(&gTextureBishop , (char *)"bishop.bmp");   
-        loadMedia(&gTexturePawn   , (char *)"pawn.bmp"); 
-        loadMedia(&gTextureRook   , (char *)"rook.bmp"); 
-        loadMedia(&gTextureAlphaChess, (char *)"alphachess.bmp"); 
-        loadMedia(&gTextureLatticeCover, (char *)"latticecover.bmp"); 
         //SDL_BlitScaled(screenBackground, NULL, screenSurface, &dest);
         //SDL_UpdateWindowSurface(window);
 
@@ -205,11 +187,48 @@ int main(){
     return 0;
 }
 
+void InitMedia(){
+    loadMedia(&gTextureBackground, (char *)"background.bmp");
+    loadMedia(&gTextureKing   , (char *)"king.bmp");
+    loadMedia(&gTextureJade   , (char *)"Jade.bmp"); 
+    loadMedia(&gTextureGold   , (char *)"gold.bmp"); 
+    loadMedia(&gTextureSliver , (char *)"sliver.bmp");   
+    loadMedia(&gTextureSliverUp , (char *)"sliverup.bmp");   
+    loadMedia(&gTextureBishop , (char *)"bishop.bmp");   
+    loadMedia(&gTextureBishopUp , (char *)"bishopup.bmp");   
+    loadMedia(&gTexturePawn   , (char *)"pawn.bmp"); 
+    loadMedia(&gTexturePawnUp   , (char *)"pawnup.bmp"); 
+    loadMedia(&gTextureRook   , (char *)"rook.bmp"); 
+    loadMedia(&gTextureRookUp   , (char *)"rookup.bmp"); 
+    loadMedia(&gTextureAlphaChess, (char *)"alphachess.bmp"); 
+    loadMedia(&gTextureLatticeCover, (char *)"latticecover.bmp"); 
+}
+
+void InitExist(){
+    memset(exist, 0, sizeof(exist));
+
+    exist[0][0][0] = 2;
+    exist[0][1][0] = 3;
+    exist[0][2][0] = 5;
+    exist[0][3][0] = 4;
+    exist[0][4][0] = 1;
+    exist[0][4][1] = 6;
+
+    exist[1][4][4] = 2;
+    exist[1][3][4] = 3;
+    exist[1][2][4] = 5;
+    exist[1][1][4] = 4;
+    exist[1][0][4] = 1;
+    exist[1][0][3] = 6;
+}
+
 bool init(){
 
     memset(walking, 0, sizeof(walking));
     setup_bmp_size(&No_Move[0], 0, 0, SCREEN_WIDTH*1.2, SCREEN_HEIGHT);
     setup_bmp_size(&No_Move[1], 140, 140, 380, 380);
+
+    InitExist();
 
     for (int32_t i = 0 ; i < 5 ; i++){
         for (int32_t j = 0 ; j < 5 ; j++){
