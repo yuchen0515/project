@@ -52,49 +52,49 @@ int main(){
                     if (SDL_MOUSEBUTTONDOWN == e.type){
                         if (SDL_BUTTON_LEFT == e.button.button)
                         {
-                            mouse_X = e.button.x;
-                            mouse_Y = e.button.y;
-                            printf("x, y %d %d ...............\n", mouse_X, mouse_Y);
+                            MouseX = e.button.x;
+                            MouseY = e.button.y;
+                            printf("x, y %d %d ...............\n", MouseX, MouseY);
 
                         }
                         else if(SDL_BUTTON_RIGHT == e.button.button)
                         {
-                            mouse_X = e.button.x;
-                            mouse_Y = e.button.y;
-                            printf("x, y %d %d ...............\n", mouse_X, mouse_Y);
+                            MouseX = e.button.x;
+                            MouseY = e.button.y;
+                            printf("x, y %d %d ...............\n", MouseX, MouseY);
                         }
-                        printf("index_x: %d, index_y: %d\n", mouse_index.first, mouse_index.second);
+                        printf("index_x: %d, index_y: %d\n", MouseIndex.first, MouseIndex.second);
                     }
                     else if (SDL_MOUSEMOTION == e.type)
                     {
-                        //mouse_X = e.button.x;
-                        //mouse_Y = e.button.y;
-                        //printf("x, y %d %d ...............\n", mouse_X, mouse_Y);
+                        //MouseX = e.button.x;
+                        //MouseY = e.button.y;
+                        //printf("x, y %d %d ...............\n", MouseX, MouseY);
                     }
-                    mouse_index = return_mouse_index(mouse_X, mouse_Y);
+                    MouseIndex = return_MouseIndex(MouseX, MouseY);
                 }
                 //Clear screen
                 SDL_RenderClear( gRenderer );
 
                 //Render texture to screen
-                SDL_RenderCopy(gRenderer, gTextureBackground, NULL, &No_Move[0]);
+                SDL_RenderCopy(gRenderer, gTextureBackground, NULL, &NoMove[0]);
 
                 //Apply the image
-                SDL_RenderCopy(gRenderer, gTextureBoard, NULL, &No_Move[1]);
+                SDL_RenderCopy(gRenderer, gTextureBoard, NULL, &NoMove[1]);
 
 
 
                 //cover
-                show_walking(mouse_index);
+                show_walking(MouseIndex);
 
 
                 Show_Chess();
 
-                if (mouse_index.first >= 0 && mouse_index.first <= 4 && mouse_index.second >= 0 && mouse_index.second <= 4){
-                    if (exist[1][mouse_index.first][mouse_index.second] > 0)
-                        SDL_RenderCopy(gRenderer, gTextureAlphaChess, NULL, &Chess_Dect[mouse_index.first][mouse_index.second]); 
-                    else if (exist[0][mouse_index.first][mouse_index.second] > 0)
-                        SDL_RenderCopyEx(gRenderer, gTextureAlphaChess, NULL, &Chess_Dect[mouse_index.first][mouse_index.second], 180, &Chess_Size, SDL_FLIP_NONE); 
+                if (MouseIndex.first >= 0 && MouseIndex.first <= 4 && MouseIndex.second >= 0 && MouseIndex.second <= 4){
+                    if (exist[1][MouseIndex.first][MouseIndex.second] > 0)
+                        SDL_RenderCopy(gRenderer, gTextureAlphaChess, NULL, &ChessDect[MouseIndex.first][MouseIndex.second]); 
+                    else if (exist[0][MouseIndex.first][MouseIndex.second] > 0)
+                        SDL_RenderCopyEx(gRenderer, gTextureAlphaChess, NULL, &ChessDect[MouseIndex.first][MouseIndex.second], 180, &ChessSize, SDL_FLIP_NONE); 
                 }
 
                 //Update screen

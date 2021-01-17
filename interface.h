@@ -49,13 +49,13 @@ extern int32_t walking[5][5];
 //The window renderer
 extern SDL_Renderer *gRenderer;
 
-extern pair<int32_t, int32_t> mouse_index;
-extern int32_t mouse_X, mouse_Y;
+extern pair<int32_t, int32_t> MouseIndex;
+extern int32_t MouseX, MouseY;
 
 
-extern SDL_Rect No_Move[2];
-extern SDL_Rect Chess_Dect[5][5];
-extern SDL_Point Chess_Size;
+extern SDL_Rect NoMove[2];
+extern SDL_Rect ChessDect[5][5];
+extern SDL_Point ChessSize;
 
 //declare function
 SDL_Surface *loadSurface(char *str);
@@ -76,7 +76,7 @@ void Determine_Draw(int32_t kind, int32_t Isupper);
 SDL_Rect *return_lattice_rect(int32_t x, int32_t y);
 
 
-pair<int32_t, int32_t> return_mouse_index(int32_t x, int32_t y);
+pair<int32_t, int32_t> return_MouseIndex(int32_t x, int32_t y);
 void setup_bmp_size(SDL_Rect *dest, int32_t x, int32_t y, int32_t w, int32_t h);
 bool match_rect_xy(int32_t x, int32_t y, SDL_Rect rect);
 int32_t check_bound_xy(int32_t cur_x, int32_t cur_y, int32_t add_x, int32_t add_y, int32_t upper);

@@ -38,19 +38,17 @@ SDL_Texture *gTextureShow= NULL;
 //12 ~ 17: captive 1~6
 //
 int32_t exist[2][5][7];
-
-
 int32_t walking[5][5];
 
 //The window renderer
 SDL_Renderer *gRenderer = NULL;
 
-pair<int32_t, int32_t> mouse_index = make_pair(0, 0);
-int32_t mouse_X = 0, mouse_Y = 0;
+pair<int32_t, int32_t> MouseIndex = make_pair(0, 0);
+int32_t MouseX = 0, MouseY = 0;
 
-SDL_Rect No_Move[2];
-SDL_Rect Chess_Dect[5][5];
-SDL_Point Chess_Size = (SDL_Point){25, 30};
+SDL_Rect NoMove[2];
+SDL_Rect ChessDect[5][5];
+SDL_Point ChessSize = (SDL_Point){25, 30};
 
 void InitMedia(){
     loadMedia(&gTextureBackground, (char *)"background.bmp");
@@ -90,12 +88,12 @@ void InitExist(){
 }
 
 void InitPosition(){
-    setup_bmp_size(&No_Move[0], 0, 0, SCREEN_WIDTH*1.2, SCREEN_HEIGHT);
-    setup_bmp_size(&No_Move[1], 140, 140, 380, 380);
+    setup_bmp_size(&NoMove[0], 0, 0, SCREEN_WIDTH*1.2, SCREEN_HEIGHT);
+    setup_bmp_size(&NoMove[1], 140, 140, 380, 380);
 
     for (int32_t i = 0 ; i < 5 ; i++){
         for (int32_t j = 0 ; j < 5 ; j++){
-            setup_bmp_size(&Chess_Dect[i][j], 155 + 77 * i, 152 + 75 * j, 125, 250);
+            setup_bmp_size(&ChessDect[i][j], 155 + 77 * i, 152 + 75 * j, 125, 250);
         }
     }
 }
@@ -191,9 +189,9 @@ void Determine_Draw(int32_t kind, int32_t Isupper, int32_t j, int32_t k){
 
     if (gTextureShow != NULL){
         if (Isupper == 1)
-            SDL_RenderCopyEx(gRenderer, gTextureShow, NULL, &Chess_Dect[j][k], 180, &Chess_Size, SDL_FLIP_NONE);
+            SDL_RenderCopyEx(gRenderer, gTextureShow, NULL, &ChessDect[j][k], 180, &ChessSize, SDL_FLIP_NONE);
         else if (Isupper == 0)
-            SDL_RenderCopy(gRenderer, gTextureShow, NULL, &Chess_Dect[j][k]);
+            SDL_RenderCopy(gRenderer, gTextureShow, NULL, &ChessDect[j][k]);
     }
 
 }
@@ -352,9 +350,9 @@ bool match_rect_xy(int32_t x, int32_t y, SDL_Rect rect){
     return 0;
 }
 
-pair<int32_t, int32_t> return_mouse_index(int32_t x, int32_t y){
+pair<int32_t, int32_t> return_MouseIndex(int32_t x, int32_t y){
     int32_t index_x = (x - 140) / 77;
-    int32_t index_y = (y - 140) / 75;
+    int32_t index_y = (y - 140) / 77;
 
     return make_pair(index_x, index_y);
 }
