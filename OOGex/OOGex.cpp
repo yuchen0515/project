@@ -11,15 +11,14 @@
 
 #define PRINT
 
-using namespace std;
-int simLimit = 10000;   //¿¿¿¿
+using namespace std; int simLimit = 10000;   //æ¨¡æ“¬æ¬¡æ•¸
 int p1Wins, p2Wins, draw;
 
 void MvsM(){
 	State state;
 	int step = 1;
 	int r = rand() % MNK::G_SIZE;
-	state.do_move(r);   //¿¿¿¿¿¿
+	state.do_move(r);   //ç¬¬ä¸€æ‰‹éš¨æ©Ÿä¸‹
 	//state.do_move(112);
 	//state.do_move(38);
 	//state.do_move(199);
@@ -36,7 +35,7 @@ void MvsM(){
 #ifdef PRINT
 		startTime = clock();
 #endif
-        //¿¿
+        //å…ˆæ‰‹
 		if (step % 2 == 0){ 
 			auto move = PURE::MCTS(state, simLimit);
 #ifdef PRINT
@@ -44,7 +43,7 @@ void MvsM(){
 #endif
 			state.do_move(move);
 		}
-        //¿¿
+        //å¾Œæ‰‹
 		else{ 
 			auto move = MCTSS::MCTS(state, simLimit);
 #ifdef PRINT
@@ -77,9 +76,9 @@ void MvsM(){
 }
 
 
-int _tmain(int argc, _TCHAR* argv[])
+int _tmain(int argc, char *argv)
 {
-	int games = 1; //¿¿¿¿¿¿
+	int games = 1; //è‡ªå‹•å°æˆ°ä¸€å ´
 	p1Wins = 0;
 	p2Wins = 0;
 
@@ -89,7 +88,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		cout << "Game " << i << ": Player 1 won " << p1Wins << " games, Player 2 won " << p2Wins << " games." << endl;
 	}
 
-	system("PAUSE");
+    char temp;
+    scanf("%c", &temp);
+	//system("PAUSE");
+    
 	return 0;
 }
 
