@@ -449,9 +449,6 @@ void show_walking(pair<int32_t, int32_t> temp){
             level += 1;
 
         }
-
-
-
     }
 }
 
@@ -477,7 +474,7 @@ int32_t check_bound_xy(int32_t cur_x, int32_t cur_y, int32_t add_x, int32_t add_
 
 SDL_Rect *return_lattice_rect(int32_t x, int32_t y){
     temp.x = 140 + 77 * x;
-    temp.y = 140 + 75 * y;
+    temp.y = 140 + 77 * y;
     temp.w = 76;
     temp.h = 76;
 
