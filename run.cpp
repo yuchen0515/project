@@ -11,19 +11,8 @@ int main(){
     }
     else
     {
-        //Get window surface
-        
-        //screenSurface = SDL_GetWindowSurface(window);
-        ////Fill the surface green
-        //SDL_FillRect(screenSurface, NULL, SDL_MapRGBA(screenSurface->format, 255, 255, 255, 255));
-        //SDL_UpdateWindowSurface(window);
-
-        //loadMedia(&screenBackground, (char *)"background.bmp");
-
         InitMedia();
 
-        //SDL_BlitScaled(screenBackground, NULL, screenSurface, &dest);
-        //SDL_UpdateWindowSurface(window);
 
         //Load media
         if( !loadMedia(&gTextureBoard, (char *)"board.bmp") )
@@ -32,8 +21,6 @@ int main(){
         }
         else
         {
-
-            //SDL_BlitScaled(screenBoard, NULL, screenSurface, &dest);
             //Update the surface
             SDL_UpdateWindowSurface(window);
             //Wait two seconds
@@ -41,6 +28,12 @@ int main(){
 
             bool quit = false;
             while (!quit){
+                //Clear screen
+                SDL_RenderClear( gRenderer );
+
+                //cover
+                show_walking(MouseIndex);
+
                 while (SDL_PollEvent(&e)){
 
                     if (e.type == SDL_QUIT)
@@ -52,53 +45,73 @@ int main(){
                     if (SDL_MOUSEBUTTONDOWN == e.type){
                         if (SDL_BUTTON_LEFT == e.button.button)
                         {
+                            MouseIndexTemp = MouseIndex;
                             MouseX = e.button.x;
                             MouseY = e.button.y;
-                            printf("x, y %d %d ...............\n", MouseX, MouseY);
+                            MouseIndex = return_MouseIndex(MouseX, MouseY);
+                            printf("x, y: %d %d ...............\n", MouseX, MouseY);
 
+                            if (bClickChess && (MouseIndex.first != MouseIndexTemp.second || MouseIndex.second != MouseIndexTemp.second)){
+                                MoveChess(MouseIndexTemp, MouseIndex);
+                                bClickChess = false;
+                                //printf("click: %d\n", bClickChess);
+                            }else{
+
+                            if (ClickCover(MouseIndex))
+                                bClickChess = true;
+                            else
+                                bClickChess = false;
+                            }
                         }
                         else if(SDL_BUTTON_RIGHT == e.button.button)
                         {
+                            MouseIndexTemp = MouseIndex;
                             MouseX = e.button.x;
                             MouseY = e.button.y;
-                            printf("x, y %d %d ...............\n", MouseX, MouseY);
+                            MouseIndex = return_MouseIndex(MouseX, MouseY);
+                            printf("x, y: %d %d ...............\n", MouseX, MouseY);
+                            if (bClickChess && (MouseIndex.first != MouseIndexTemp.second || MouseIndex.second != MouseIndexTemp.second)){
+                                MoveChess(MouseIndexTemp, MouseIndex);
+                                bClickChess = false;
+                                //printf("click: %d\n", bClickChess);
+                            }else{
+
+                            if (ClickCover(MouseIndex))
+                                bClickChess = true;
+                            else
+                                bClickChess = false;
+                            }
                         }
                         printf("index_x: %d, index_y: %d\n", MouseIndex.first, MouseIndex.second);
+
+                        PrintBugMessageBoard();
+
                     }
-                    else if (SDL_MOUSEMOTION == e.type)
-                    {
-                        //MouseX = e.button.x;
-                        //MouseY = e.button.y;
-                        //printf("x, y %d %d ...............\n", MouseX, MouseY);
-                    }
-                    MouseIndex = return_MouseIndex(MouseX, MouseY);
+
+
                 }
-                //Clear screen
-                SDL_RenderClear( gRenderer );
 
                 //Render texture to screen
                 SDL_RenderCopy(gRenderer, gTextureBackground, NULL, &NoMove[0]);
-
                 //Apply the image
                 SDL_RenderCopy(gRenderer, gTextureBoard, NULL, &NoMove[1]);
 
+                if (bClickChess == false){
 
+                    show_walking(make_pair(-1, -1));
+                }else
+                    show_walking(MouseIndex);
 
-                //cover
-                show_walking(MouseIndex);
 
 
                 Show_Chess();
 
-                if (MouseIndex.first >= 0 && MouseIndex.first <= 4 && MouseIndex.second >= 0 && MouseIndex.second <= 4){
-                    if (exist[1][MouseIndex.first][MouseIndex.second] > 0)
-                        SDL_RenderCopy(gRenderer, gTextureAlphaChess, NULL, &ChessDect[MouseIndex.first][MouseIndex.second]); 
-                    else if (exist[0][MouseIndex.first][MouseIndex.second] > 0)
-                        SDL_RenderCopyEx(gRenderer, gTextureAlphaChess, NULL, &ChessDect[MouseIndex.first][MouseIndex.second], 180, &ChessSize, SDL_FLIP_NONE); 
-                }
+                ClickCover(MouseIndex);
+
 
                 //Update screen
                 SDL_RenderPresent( gRenderer );
+
             }
         }
     }
@@ -108,4 +121,3 @@ int main(){
 
     return 0;
 }
-

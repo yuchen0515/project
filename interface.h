@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <string.h>
+#include <unistd.h>
 #include <SDL.h>
 #include <SDL_image.h>
 
@@ -50,7 +51,9 @@ extern int32_t walking[5][5];
 extern SDL_Renderer *gRenderer;
 
 extern pair<int32_t, int32_t> MouseIndex;
+extern pair<int32_t, int32_t> MouseIndexTemp;
 extern int32_t MouseX, MouseY;
+extern bool bClickChess;
 
 
 extern SDL_Rect NoMove[2];
@@ -74,6 +77,10 @@ void Show_Chess();
 void show_walking(pair<int32_t, int32_t> temp);
 void Determine_Draw(int32_t kind, int32_t Isupper);
 SDL_Rect *return_lattice_rect(int32_t x, int32_t y);
+bool ClickCover(pair<int32_t, int32_t> fMouseIndex);
+void MoveChess(pair<int32_t, int32_t> ori, pair<int32_t, int32_t> des);
+void CaptivePush(int32_t kind, int32_t chess);
+void PrintBugMessageBoard();
 
 
 pair<int32_t, int32_t> return_MouseIndex(int32_t x, int32_t y);

@@ -43,8 +43,10 @@ int32_t walking[5][5];
 //The window renderer
 SDL_Renderer *gRenderer = NULL;
 
-pair<int32_t, int32_t> MouseIndex = make_pair(0, 0);
+pair<int32_t, int32_t> MouseIndex = make_pair(-1, -1);
+pair<int32_t, int32_t> MouseIndexTemp = make_pair(-1, -1);
 int32_t MouseX = 0, MouseY = 0;
+bool bClickChess = false;
 
 SDL_Rect NoMove[2];
 SDL_Rect ChessDect[5][5];
@@ -144,18 +146,84 @@ bool init(){
         printf( "Renderer could not be created! SDL Error: %s\n", SDL_GetError() );
         return 0;
     }
+
     //Initialize renderer color
     SDL_SetRenderDrawColor( gRenderer, 255, 255, 255, 255 );
 
-    ////Initialize PNG loading
-    //int imgFlags = IMG_INIT_PNG;
-    //if( !( IMG_Init( imgFlags ) & imgFlags ) )
-    //{
-    //    printf( "SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError() );
-    //    success = false;
-    //}
-
     return 1;
+}
+
+
+void CaptivePush(int32_t kind, int32_t chess){
+    static int32_t push_stat[2][2] = 
+    {
+        {0, 5},
+        {0, 5}
+    };
+
+    if (chess >= 7 && chess <= 12)
+        chess -= 5;
+
+    for (int32_t i = 0 ; i < 2 ; i++){
+        if (push_stat[i][0] >= 5){
+            push_stat[i][0] = 0;
+            push_stat[i][1] += 1;
+        }
+    }
+
+    exist[kind][push_stat[kind][0]++][push_stat[kind][1]] = chess;
+}
+
+void MoveChess(pair<int32_t, int32_t> ori, pair<int32_t, int32_t> des){
+    int32_t kind = exist[0][ori.first][ori.second] > 0 ? 0 : 1;
+    int32_t kind_des = exist[0][des.first][des.second] > 0 ? 0 : 1;
+    int32_t IsChess = 0;
+    int32_t walk_check = walking[des.first][des.second];
+
+    printf("ori: %d %d\n", ori.first, ori.second);
+    printf("des: %d %d\n", des.first, des.second);
+    printf("kind: %d, kind_des: %d\n", kind, kind_des);
+    printf("walk_check: %d\n", walking[des.first][des.second]);
+
+    if (kind == 1 && exist[1][ori.first][ori.second] == 0)
+        return;
+
+    if (walk_check == 0)
+        return;
+
+    if (kind_des == 1){
+        if (exist[kind == 1 ? 0 : 1][des.first][des.second] > 1)
+            IsChess = 1;
+    }
+    else if (kind == 0)
+        return ;
+
+    printf("check\n");
+
+    if (IsChess){
+        CaptivePush(kind, exist[kind][des.first][des.second]);
+    }
+
+    exist[kind][des.first][des.second]=\
+                exist[kind][ori.first][ori.second];
+    exist[kind][ori.first][ori.second] = 0;
+    exist[kind == 1 ? 0 : 1][des.first][des.second] = 0;
+
+}
+
+void PrintBugMessageBoard(){
+    for (int32_t k = 0 ; k < 2 ; k++){
+        printf("------------\n");
+        for (int32_t i = 0 ; i < 5 ; i ++){
+            for (int32_t j = 0 ; j < 5 ; j ++){
+                printf("%d ", exist[k][j][i]);
+
+            }
+            printf("\n");
+        }
+        printf("------------\n");
+    }
+
 }
 
 void Determine_Draw(int32_t kind, int32_t Isupper, int32_t j, int32_t k){
@@ -194,6 +262,21 @@ void Determine_Draw(int32_t kind, int32_t Isupper, int32_t j, int32_t k){
             SDL_RenderCopy(gRenderer, gTextureShow, NULL, &ChessDect[j][k]);
     }
 
+}
+
+bool ClickCover(pair<int32_t, int32_t> fMouseIndex){
+    if (fMouseIndex.first >= 0 && fMouseIndex.first <= 4 && fMouseIndex.second >= 0 && fMouseIndex.second <= 4){
+
+        if (exist[1][fMouseIndex.first][fMouseIndex.second] > 0)
+            SDL_RenderCopy(gRenderer, gTextureAlphaChess, NULL, &ChessDect[fMouseIndex.first][fMouseIndex.second]); 
+
+        else if (exist[0][fMouseIndex.first][fMouseIndex.second] > 0)
+            SDL_RenderCopyEx(gRenderer, gTextureAlphaChess, NULL, &ChessDect[fMouseIndex.first][fMouseIndex.second], 180, &ChessSize, SDL_FLIP_NONE); 
+
+        return 1;
+    }
+
+    return 0;
 }
 
 void Show_Chess(){
