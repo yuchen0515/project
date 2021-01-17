@@ -15,6 +15,7 @@ SDL_Surface *screenBoard= NULL;
 
 bool init();
 void InitMedia();
+void InitPosition();
 void InitExist();
 void close();
 bool loadMedia(SDL_Surface **gHelloWorld, char *str);
@@ -30,8 +31,7 @@ int32_t check_bound_xy(int32_t cur_x, int32_t cur_y, int32_t add_x, int32_t add_
 void show_walking(pair<int32_t, int32_t> temp);
 
 
-int32_t mouse_X = 0;
-int32_t mouse_Y = 0;
+int32_t mouse_X = 0, mouse_Y = 0;
 SDL_Window *window = NULL;
 SDL_Surface *screenSurface = NULL;
 pair<int32_t, int32_t> mouse_index = make_pair(0, 0);
@@ -70,7 +70,7 @@ SDL_Point Chess_Size = (SDL_Point){25, 30};
 //10: sliver (up), 11: pawn(up)
 //12 ~ 17: captive 1~6
 //
-int32_t exist[2][5][5];
+int32_t exist[2][5][7];
 
 int32_t walking[5][5];
 
@@ -220,22 +220,25 @@ void InitExist(){
     exist[1][1][4] = 4;
     exist[1][0][4] = 1;
     exist[1][0][3] = 6;
-}
-
-bool init(){
 
     memset(walking, 0, sizeof(walking));
+}
+
+void InitPosition(){
     setup_bmp_size(&No_Move[0], 0, 0, SCREEN_WIDTH*1.2, SCREEN_HEIGHT);
     setup_bmp_size(&No_Move[1], 140, 140, 380, 380);
-
-    InitExist();
 
     for (int32_t i = 0 ; i < 5 ; i++){
         for (int32_t j = 0 ; j < 5 ; j++){
             setup_bmp_size(&Chess_Dect[i][j], 155 + 77 * i, 152 + 75 * j, 125, 250);
         }
     }
+}
 
+bool init(){
+
+    InitExist();
+    InitPosition();
 
     //
 
@@ -295,7 +298,10 @@ bool init(){
 void Determine_Draw(int32_t kind, int32_t Isupper, int32_t j, int32_t k){
     switch (kind){
         case 1:
-            gTextureShow = gTextureKing;
+            if (Isupper)
+                gTextureShow = gTextureKing;
+            else if (!Isupper)
+                gTextureShow = gTextureJade;
             break;
         case 2:
             gTextureShow = gTextureRook;
