@@ -2,6 +2,9 @@
 * Author: Yu-Chen Lin 林育辰
 * Instructor: Shun-Shii Lin 林順喜教授
 
+## 投影片
+* [Available](https://docs.google.com/presentation/d/16CuZX9PbxWSvQEs8notf7pUVr0hBSYzq?rtpof=true&authuser=40771131h%40gapps.ntnu.edu.tw&usp=drive_fs)
+
 ## Demo
 
 ![Demo-video](https://github.com/yuchen0515/project/blob/interface/project-demo.gif?raw=true)
@@ -15,8 +18,6 @@
 * MCTS：全名為 蒙地卡羅樹搜尋法 (Monte Carlo tree search)，是目前廣泛運用於電腦對局、基於CNN(卷積神經網路)圖像辨識的搜索法
 * 5五將棋：其原身為日本將棋，為 9*9 之棋盤，而後延伸出 5*5 棋盤，共有王、金、銀、角、飛和步六種兵種的對局遊戲
 
-## 投影片
-* [Available](https://drive.google.com/file/d/15xmxUe53vtOfELZHTQ-y0jZjKj0RA7Mp/view?usp=sharing)
 
 
 ---
@@ -207,7 +208,7 @@
 <center><font size=2>5</font></center>
 <div style="page-break-after:always;"></div>
 
-
+---
 
 ##### 伍、研究方法與步驟
 
@@ -300,33 +301,7 @@
 
 <center><font size=2>9</font></center>
 
-```mermaid
-gantt
-dateFormat  YYYY-MM-DD
-title 時程表
-excludes weekdays 2020-09-01
-
-section 初期
-
-請益學長姐            :done,    des1, 2020-09-01, 31d
-碩博班研究計畫觀摩	   :done,    des2, 2020-09-14, 62d
-
-section 中期
-討論&文獻探討			 :active,  des3, 2020-10-07, 62d
-終端機棋規實作			 :active,  des3, 2020-11-01, 70d
-迫著空間定義&研究       :active, des6, 2020-11-21, 31d
-學會使用MCTs          :  des5, 2020-11-23, 62d
-
-
-
-section 後期
-搜索程式 & 棋力測試  : des6, 2021-01-01, 30d
-
-section 其他研究相關
-
-MuZero資料與搜集		  :         des4, after des3, 50d
-
-```
+---
 
 ##### 柒、參考文獻
 
