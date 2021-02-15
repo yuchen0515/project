@@ -79,7 +79,7 @@
 
 ​		而在上述步驟中，遍歷節點倚靠的是「選擇最大化某個量」來實現「可能的最佳選擇」，因此過程中必須「最大化」每一輪的預期收益，一般以 *UCB (Upper Confidence Bounds* 為主要方式：
 
-![](https://i.imgur.com/zFcngxJ.png =30%x)
+![](https://i.imgur.com/zFcngxJ.png)
 
 
 + $u_i$：節點預估值
@@ -116,7 +116,7 @@
 
 ​		Bitboard 是透過 $1$ 和 $0$ 兩種狀態，貯存盤面之狀況，並以遮罩加上位元運算，藉此能快速產生走步、棋盤資訊，故受廣為使用。而於本研究中，5 五將棋共有十二隻棋子，針對每個棋子，共有 $25$ bits 去儲存此棋於棋盤上位置之狀況，其餘 $7$ bits，用以儲存升變、陣營等資訊，而在 [1] 中，提及使用 *Bitboard* 時，常需在棋盤編號以及 *unsigned integer* 作轉換，直接將 *Bitboard* 轉換的整數並不是我們所需要的值，在該研究實作中，運用了 *perfect hash* 使 $\text{0~31}$ 能夠對應到相對的位置。
 
-![](https://i.imgur.com/pb62myw.png =70%x)
+![](https://i.imgur.com/pb62myw.png)
 
 
 
@@ -127,7 +127,7 @@
 
 ​		該文獻處理方式是對於「搜索給予層數」作限制，如只有前三層會有打入步，而其後之打入狀況則不考慮，其原因在於若能連續兩子打入使對方的王將處於劣勢的話，途中對方亦可以打入的方式破除局面，但我們期望能在進行這「三手」後形成「對敵方王將產生高壓力」的局面，這是在搜索過程中期望優先搜索到的。
 
-![](https://i.imgur.com/U3OrhA6.png =60%x)
+![](https://i.imgur.com/U3OrhA6.png)
 
 
 
@@ -158,7 +158,7 @@
 
 ​		[2]參考文獻提到了必勝攻擊 (Winning Attack) ，也是本研究的「迫著空間」其中一個特例，即若有「必勝走步可以執行時」，就立即執行必勝落子，會在走步產生時率先處理出這樣的走步，此方式亦可避免 *MCTs* 做多餘的搜尋運算，而之所以有這樣的「必勝攻擊」想法，關鍵在於 *MCTs* 會選擇 *UCT* 值最高的節點，表示被選擇的節點與其下之子樹之「平均價值」是當前較高的，但不一定是「絕對」價值最好的，以人類對弈認知上，所謂的必勝攻擊即為「絕對價值最好的」一步棋，但 *MCTs* 卻有很大的概率不會走「必勝攻擊」的走步，這不僅會延長棋局，更有可能被對手翻盤，因此當我們在產生走步時，會在「即將勝利的盤面」下，將合法的走步規則篩選成「必勝走步」才是合法的，就可以在產生走步階段得到我們要的結果，而文獻[2]中提及此內容，附圖如下：
 
-![](https://i.imgur.com/DD3Nkag.png =60%x)
+![](https://i.imgur.com/DD3Nkag.png)
 
 
 <center><font size=2>4</font></center>
@@ -173,35 +173,35 @@
 
 ​		SDL是一套開放原始碼的「跨平台多媒體開發函式庫」，基於C語言所開發，其可控制圖像、聲音等功能，並可應用在開發三種不同作業系統 (Linux、MacOS和Window) 平台上的應用軟體，包括「雷神之鎚4」此款商業遊戲即透過SDL所開發，該款工具預計使用於本專題的 GUI介面上。
 
-![](https://i.imgur.com/CqnWrsO.png =15%x)
+![](https://i.imgur.com/CqnWrsO.png)
 
 
 ###### 4.2 iTerm2
 
 ​    	iTerm2 為 MacOS作業系統上的一款終端機模擬工具，功能大致與Ubuntu的終端機大抵相同，可進行各式操作，例如透過Ranger瀏覽資料夾、用vim, emacs編輯文件，以git進行版本控制等操作。
 
-![](https://i.imgur.com/nV8rkPZ.png =15%x)
+![](https://i.imgur.com/nV8rkPZ.png)
 
 
 ###### 4.3 Vim
 
 ​		Vim為傳統文字編輯器之一，有「編輯器之神」之美稱，並以極為陡峭的學習曲線聞名，其愛好者稱其「眼到即手到」便可對其效率略知一二，仰賴鍵盤因此需搭配複雜多變的快捷鍵，可讓使用者聚焦於鍵盤之操作，故效率甚高。
 
-![](https://i.imgur.com/pL6T6H6.png =15%x)
+![](https://i.imgur.com/pL6T6H6.png)
 
 
 ###### 4.4 Git
 
 ​		Git是非常有名的版本控制系統，以其分散式的版本控制形式深受人們愛戴，預計於本專題逐一擴展功能時使用，並善加運用Branch開發新功能，最終推上Github，善盡開源之義務。
 
-![](https://i.imgur.com/VBwH8xs.png =15%x)
+![](https://i.imgur.com/VBwH8xs.png)
 
 
 ###### 4.5 GCC
 
 ​		GCC為C語言主要使用的編譯器，將以Vim配合Git撰寫專題程式碼，再以GCC編譯之，必要時會透過SSH連接至Ubuntu環境作業。
 
-![](https://i.imgur.com/RpeIu6Q.png =15%x)
+![](https://i.imgur.com/RpeIu6Q.png)
 
 
 <center><font size=2>5</font></center>
@@ -215,7 +215,7 @@
 
 ​		透過 SDL 製作對弈介面，並可選擇以人工、電腦方式對局，將此架構撰寫好後，便可從電腦端輸入對局計算之結果。下圖為本專題於 SDL之運算機制。
 
-![](https://i.imgur.com/0sOn0r0.png =60%x)
+![](https://i.imgur.com/0sOn0r0.png)
 
 
 
@@ -227,7 +227,7 @@
 <center><font size=2>6</font></center>
 <div style="page-break-after:always;"></div>
 
-![](https://i.imgur.com/SOyClvn.png =65%x)
+![](https://i.imgur.com/SOyClvn.png)
 
 
 
@@ -255,7 +255,7 @@
 
 ###### 5.4 開發流程
 
-![](https://i.imgur.com/guuYxTG.png =55%x)
+![](https://i.imgur.com/guuYxTG.png)
 
 
 ​		在前期的規劃裡，則如上圖，橘色處為已完成、黃色處為正在進行，除了本研究所提及的「迫著空間」加速MCTs的方式外，在文獻探討的範疇中同時會探討AlphaZero以及近期由DeepMind所開發的MuZero，嘗試從中思考出有何能加速MCTs的算法。
