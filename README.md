@@ -25,7 +25,11 @@
 
 <center><font size=6><b>迫著空間加速MCTs算法之 5 五將棋應用</b></font></center>
 
+<br>
+
 <center><font size=3><b>林育辰</b> <i>Yu-Chen Lin</i></font></center>
+
+<br>
 
 <center><font size=><b>指導教授：林順喜</b> <i>Shun-Shii Lin</i></font></center>
 
@@ -45,6 +49,8 @@
 
 
 
+---
+
 ##### 貳、研究動機與研究問題
 
 ​		對局競賽中，許多對弈項目所限制決策秒數甚低，以致於「背景運算」無較大改進空間，一般以列表、窮舉等方式以盼降低其運算時間，而若欲以「背景運算」擴展己方之運算時間，則若其他玩家決策時間短，實則無增加多少可運用時間。
@@ -55,6 +61,8 @@
 
 <center><font size=2>1</font></center>
 <div style="page-break-after:always;"></div>
+
+---
 
 ##### 参、文獻回顧與探討
 
@@ -71,10 +79,8 @@
 
 ​		而在上述步驟中，遍歷節點倚靠的是「選擇最大化某個量」來實現「可能的最佳選擇」，因此過程中必須「最大化」每一輪的預期收益，一般以 *UCB (Upper Confidence Bounds* 為主要方式：
 
+![](https://i.imgur.com/zFcngxJ.png)
 
-$$
-u_i + C \times \sqrt{\frac{\ln N}{n_1}}
-$$
 
 + $u_i$：節點預估值
 + $n_i$：節點拜訪次數
@@ -110,7 +116,8 @@ $$
 
 ​		Bitboard 是透過 $1$ 和 $0$ 兩種狀態，貯存盤面之狀況，並以遮罩加上位元運算，藉此能快速產生走步、棋盤資訊，故受廣為使用。而於本研究中，5 五將棋共有十二隻棋子，針對每個棋子，共有 $25$ bits 去儲存此棋於棋盤上位置之狀況，其餘 $7$ bits，用以儲存升變、陣營等資訊，而在 [1] 中，提及使用 *Bitboard* 時，常需在棋盤編號以及 *unsigned integer* 作轉換，直接將 *Bitboard* 轉換的整數並不是我們所需要的值，在該研究實作中，運用了 *perfect hash* 使 $\text{0~31}$ 能夠對應到相對的位置。
 
- <img src="/Users/mathlin/Library/Application%20Support/typora-user-images/image-20201204223241125.png" alt="image-20201204223241125" style="zoom: 33%;" />
+![](https://i.imgur.com/pb62myw.png)
+
 
 
 
@@ -120,7 +127,7 @@ $$
 
 ​		該文獻處理方式是對於「搜索給予層數」作限制，如只有前三層會有打入步，而其後之打入狀況則不考慮，其原因在於若能連續兩子打入使對方的王將處於劣勢的話，途中對方亦可以打入的方式破除局面，但我們期望能在進行這「三手」後形成「對敵方王將產生高壓力」的局面，這是在搜索過程中期望優先搜索到的。
 
-<img src="/Users/mathlin/Library/Application%20Support/typora-user-images/image-20201204224059614.png" alt="image-20201204224059614" style="zoom: 50%;" />
+![](https://i.imgur.com/U3OrhA6.png)
 
 
 
@@ -151,10 +158,14 @@ $$
 
 ​		[2]參考文獻提到了必勝攻擊 (Winning Attack) ，也是本研究的「迫著空間」其中一個特例，即若有「必勝走步可以執行時」，就立即執行必勝落子，會在走步產生時率先處理出這樣的走步，此方式亦可避免 *MCTs* 做多餘的搜尋運算，而之所以有這樣的「必勝攻擊」想法，關鍵在於 *MCTs* 會選擇 *UCT* 值最高的節點，表示被選擇的節點與其下之子樹之「平均價值」是當前較高的，但不一定是「絕對」價值最好的，以人類對弈認知上，所謂的必勝攻擊即為「絕對價值最好的」一步棋，但 *MCTs* 卻有很大的概率不會走「必勝攻擊」的走步，這不僅會延長棋局，更有可能被對手翻盤，因此當我們在產生走步時，會在「即將勝利的盤面」下，將合法的走步規則篩選成「必勝走步」才是合法的，就可以在產生走步階段得到我們要的結果，而文獻[2]中提及此內容，附圖如下：
 
-<img src="/Users/mathlin/Library/Application%20Support/typora-user-images/image-20201204230243229.png" alt="image-20201204230243229" style="zoom: 25%;" />
+![](https://i.imgur.com/DD3Nkag.png)
+
 
 <center><font size=2>4</font></center>
 <div style="page-break-after:always;"></div>
+
+---
+
 
 ##### 肆、開發工具
 
@@ -162,41 +173,36 @@ $$
 
 ​		SDL是一套開放原始碼的「跨平台多媒體開發函式庫」，基於C語言所開發，其可控制圖像、聲音等功能，並可應用在開發三種不同作業系統 (Linux、MacOS和Window) 平台上的應用軟體，包括「雷神之鎚4」此款商業遊戲即透過SDL所開發，該款工具預計使用於本專題的 GUI介面上。
 
-<img src="/Users/mathlin/Library/Application%20Support/typora-user-images/image-20201118020147600.png" alt="image-20201118020147600" style="zoom: 25%;" />
+![](https://i.imgur.com/CqnWrsO.png)
 
-<center><font size=2><b>圖一</b> SDL</font></center>
 
 ###### 4.2 iTerm2
 
 ​    	iTerm2 為 MacOS作業系統上的一款終端機模擬工具，功能大致與Ubuntu的終端機大抵相同，可進行各式操作，例如透過Ranger瀏覽資料夾、用vim, emacs編輯文件，以git進行版本控制等操作。
 
-<img src="/Users/mathlin/Library/Application%20Support/typora-user-images/image-20201118020208182.png" style="zoom: 33%;" />
+![](https://i.imgur.com/nV8rkPZ.png)
 
-<center><font size=2><b>圖二</b> iTerm2</font></center>
 
 ###### 4.3 Vim
 
 ​		Vim為傳統文字編輯器之一，有「編輯器之神」之美稱，並以極為陡峭的學習曲線聞名，其愛好者稱其「眼到即手到」便可對其效率略知一二，仰賴鍵盤因此需搭配複雜多變的快捷鍵，可讓使用者聚焦於鍵盤之操作，故效率甚高。
 
-<img src="/Users/mathlin/Library/Application%20Support/typora-user-images/image-20201118020545468.png" alt="image-20201118020545468" style="zoom: 33%;" />
+![](https://i.imgur.com/pL6T6H6.png)
 
-<center><font size=2><b>圖三</b> Vim</font></center>
 
 ###### 4.4 Git
 
 ​		Git是非常有名的版本控制系統，以其分散式的版本控制形式深受人們愛戴，預計於本專題逐一擴展功能時使用，並善加運用Branch開發新功能，最終推上Github，善盡開源之義務。
 
-<img src="/Users/mathlin/Library/Application%20Support/typora-user-images/image-20201118020805232.png" alt="image-20201118020805232" style="zoom: 25%;" />
+![](https://i.imgur.com/VBwH8xs.png)
 
-<center><font size=2><b>圖四</b> Git</font></center>
 
 ###### 4.5 GCC
 
 ​		GCC為C語言主要使用的編譯器，將以Vim配合Git撰寫專題程式碼，再以GCC編譯之，必要時會透過SSH連接至Ubuntu環境作業。
 
-<img src="/Users/mathlin/Library/Application%20Support/typora-user-images/image-20201118021013499.png" alt="image-20201118021013499" style="zoom: 05%;" />
+![](https://i.imgur.com/RpeIu6Q.png)
 
-<center><font size=2><b>圖五</b> GCC</font></center>
 
 <center><font size=2>5</font></center>
 <div style="page-break-after:always;"></div>
@@ -209,7 +215,8 @@ $$
 
 ​		透過 SDL 製作對弈介面，並可選擇以人工、電腦方式對局，將此架構撰寫好後，便可從電腦端輸入對局計算之結果。下圖為本專題於 SDL之運算機制。
 
-<img src="/Users/mathlin/Library/Application%20Support/typora-user-images/image-20210118100601135.png" alt="image-20210118100601135" style="zoom:50%;" />
+![](https://i.imgur.com/0sOn0r0.png)
+
 
 
 
@@ -220,9 +227,7 @@ $$
 <center><font size=2>6</font></center>
 <div style="page-break-after:always;"></div>
 
-<img src="/Users/mathlin/Library/Application%20Support/typora-user-images/image-20210118101120034.png" alt="image-20210118101120034" style="zoom:20%;" />
-
-<center><font size=2><b>圖六</b> 遊戲畫面 </font></center>
+![](https://i.imgur.com/SOyClvn.png)
 
 
 
@@ -234,9 +239,8 @@ $$
 
 ​		以常見的 MCTs 算法，在取得 **合法走步** 時 定義迫著空間再傳入 MCTs 中計算，能有效剪枝。
 
-<img src="/Users/mathlin/Library/Application%20Support/typora-user-images/image-20210118094701520.png" alt="image-20210118094701520" style="zoom: 30%;" />
+![](https://i.imgur.com/t8aoj26.png)
 
-<center><font size=2><b>圖七</b> 與原先MCTs的差別 </font></center>
 
 > 上圖呈現了一般MCTs與使用迫著空間之MCTs之不同處，最大的差異在於取得 **合法走步** 階段，就已先計算好 **迫著空間** 走步。
 
@@ -251,29 +255,8 @@ $$
 
 ###### 5.4 開發流程
 
-```mermaid
-graph LR;
-	專題方向 --> 文獻探討與討論;
-	文獻探討與討論 --MCTs--> 文獻探討與討論;
-	文獻探討與討論 --AlphaZero--> 文獻探討與討論;
-	文獻探討與討論 --MuZero--> 文獻探討與討論;
-	文獻探討與討論 --改良--> 迫著空間[<內部> 迫著空間];
-	文獻探討與討論 --> 棋規[<外觀> 棋規實作];
-	棋規 --> 終端機版本;
-	終端機版本 --SDL--> 使用者介面;
-	迫著空間 --定義--> 搜索程式; 
-	搜索程式 --測試--> 迫著空間;
-	使用者介面 --提升GUI便利性--> 統合;
-	搜索程式 --棋力測試--> 統合;
-	classDef someclass fill:#f96;
-	classDef NowClass fill:Yellow;
-	專題方向:::someclass;
-	文獻探討與討論:::someclass;
-	棋規:::someclass;
-	搜索程式:::NowClass
-	迫著空間:::someclass;
-	使用者介面:::NowClass;
-```
+![](https://i.imgur.com/guuYxTG.png)
+
 
 ​		在前期的規劃裡，則如上圖，橘色處為已完成、黃色處為正在進行，除了本研究所提及的「迫著空間」加速MCTs的方式外，在文獻探討的範疇中同時會探討AlphaZero以及近期由DeepMind所開發的MuZero，嘗試從中思考出有何能加速MCTs的算法。
 
@@ -297,7 +280,7 @@ graph LR;
 
 
 
-<img src="/Users/mathlin/Library/Application%20Support/typora-user-images/image-20201204231843347.png" alt="image-20201204231843347" style="zoom: 33%;" />
+![](https://i.imgur.com/lpTtD4s.png)
 
 
 
