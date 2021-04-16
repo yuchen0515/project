@@ -17,18 +17,6 @@ typedef int Move;
 enum class Result : int { Unknown = 0, Black = 1, White = 2, Draw = 3 };
 
 class State {
-    std::vector<std::vector<char>> board;
-    //std::vector<std::vector<char>> move_mask;
-    //std::vector<std::vector<char>> threat_space;
-    int player_to_move = int(Result::Black);
-    int num_rows = MNK::M_SIZE;
-    int num_cols = MNK::N_SIZE;
-    int last_col = -1;
-    int last_row = -1;
-    Result result = Result::Unknown;
-
-    bool check_connect();
-
 public:
     static const Move no_move;
     static const char player_markers[3];
@@ -45,6 +33,19 @@ public:
     std::vector<Move> get_moves() const;
     std::vector<Move> get_threat_moves() const;
     void print(std::ostream& os) const;
+
+private:
+    std::vector<std::vector<char>> board;
+    //std::vector<std::vector<char>> move_mask;
+    //std::vector<std::vector<char>> threat_space;
+    int player_to_move = int(Result::Black);
+    int num_rows = MNK::M_SIZE;
+    int num_cols = MNK::N_SIZE;
+    int last_col = -1;
+    int last_row = -1;
+    Result result = Result::Unknown;
+
+    bool check_connect();
 };
 
 std::ostream& operator<<(std::ostream& os, const State& state);
