@@ -16,7 +16,7 @@
 class Interface {
     public:
         // Declare function
-        SDL_Surface *loadSurface(char *str);
+        SDL_Surface *loadSurface(char const *str);
 
         bool init();
         void close();
@@ -26,66 +26,66 @@ class Interface {
 
         bool loadMedia(
                 SDL_Surface **gHelloWorld,
-                char *str);
+                char const *str);
 
         bool loadMedia(
                 SDL_Texture **gTexture,
-                char *str);
+                char const *str);
 
-        SDL_Texture *loadTexture(char *str);
+        SDL_Texture *loadTexture(char const *str);
 
         void Show_Chess();
 
         void show_walking(
-                std::pair<int32_t, int32_t> temp);
+                const std::pair<int32_t, int32_t> temp);
 
         void Determine_Draw(
-                int32_t kind,
-                int32_t Isupper,
-                int32_t j,
-                int32_t k);
+                const int32_t kind,
+                const int32_t Isupper,
+                const int32_t j,
+                const int32_t k);
 
-        SDL_Rect *return_lattice_rect(
-                int32_t x,
-                int32_t y);
+        SDL_Rect* return_lattice_rect(
+                const int32_t x,
+                const int32_t y);
 
         bool ClickCover(
-                std::pair<int32_t, int32_t> fMouseIndex);
+                const std::pair<int32_t, int32_t> fMouseIndex) const;
 
         void MoveChess(
                 std::pair<int32_t, int32_t> ori,
                 std::pair<int32_t, int32_t> des);
 
         void CaptivePush(
-                int32_t kind,
+                const int32_t kind,
                 int32_t chess);
 
-        void PrintBugMessageBoard();
+        void PrintBugMessageBoard() const;
         bool DetectKingExist();
 
 
         std::pair<int32_t, int32_t> return_MouseIndex(
-                int32_t x,
-                int32_t y);
+                const int32_t x,
+                const int32_t y) const;
 
         void setup_bmp_size(
                 SDL_Rect *dest,
-                int32_t x,
-                int32_t y,
-                int32_t w,
-                int32_t h);
+                const int32_t x,
+                const int32_t y,
+                const int32_t w,
+                const int32_t h) const;
 
         bool match_rect_xy(
-                int32_t x,
-                int32_t y,
-                SDL_Rect rect);
+                const int32_t& x,
+                const int32_t& y,
+                const SDL_Rect& rect) const;
 
         int32_t check_bound_xy(
-                int32_t cur_x,
-                int32_t cur_y,
-                int32_t add_x,
-                int32_t add_y,
-                int32_t upper);
+                const int32_t cur_x,
+                const int32_t cur_y,
+                const int32_t add_x,
+                const int32_t add_y,
+                const int32_t upper) const;
 
         void run();
 
@@ -93,6 +93,9 @@ class Interface {
         // Screen dimension constants  螢幕寬高設定
         const int32_t SCREEN_WIDTH = 640;
         const int32_t SCREEN_HEIGHT = 640;
+        static constexpr int32_t M_ = 5;
+        static constexpr int32_t N_ = 5;
+        static constexpr int32_t PLAYER_NUMBER_ = 2;
 
         SDL_Surface *screenBoard = nullptr;
         SDL_Surface *screenSurface = nullptr;
@@ -125,21 +128,22 @@ class Interface {
         // 10: sliver (up), 11: pawn(up)
         // 12 ~ 17: captive 1~6
         //
-        int32_t exist[2][5][7] = {0};
-        int32_t walking[5][5] = {0};
+        int32_t exist[PLAYER_NUMBER_][N_][7] = {0};
+        int32_t walking[M_][N_] = {0};
 
         // The window renderer
         SDL_Renderer *gRenderer = nullptr;
 
-        std::pair<int32_t, int32_t> MouseIndex = std::make_pair(-1, -1);
-        std::pair<int32_t, int32_t> MouseIndexTemp = std::make_pair(-1, -1);
-        int32_t MouseX = 0, MouseY = 0;
-        bool bClickChess = false;
-        bool KingDead = false;
+        std::pair<int32_t, int32_t> mouseIndex_ = std::make_pair(-1, -1);
+        std::pair<int32_t, int32_t> mouseIndexTemp_ = std::make_pair(-1, -1);
+        int32_t mouseX_ = 0;
+        int32_t mouseY_ = 0;
+        bool isClickChess_ = false;
+        bool isKingDead_ = false;
 
-        SDL_Rect NoMove[2];
-        SDL_Rect ChessDect[6][9];
-        SDL_Point ChessSize = (SDL_Point){25, 30};
+        SDL_Rect texPosition_[2];
+        SDL_Rect chessDect_[6][9];
+        SDL_Point chessSize_ = (SDL_Point){25, 30};
 
         enum chessType_ {
             KING_ = 1,
