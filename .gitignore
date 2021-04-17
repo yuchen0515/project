@@ -2,8 +2,4 @@
 *.mov
 *.pdf
 *.o
-<<<<<<< HEAD
-./code/OOGex/
-=======
-./code/OOGex/*
->>>>>>> combine-mcts
+code/OOGex/*
