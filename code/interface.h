@@ -1,7 +1,7 @@
 /* Copyright 2021
  * 林育辰 Yu-Chen Lin
- * 國立臺灣師範大學
- * 資訊工程學系
+ * 國立臺灣師範大學 National Taiwan Normal University
+ * 資訊工程學系 Computer Science and Information Engineering
  */
 
 #pragma once
