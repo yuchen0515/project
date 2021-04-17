@@ -6,7 +6,9 @@
 
 #include "interface.h"
 
-void InitMedia() {
+#define PRINT
+
+void Interface::InitMedia() {
     loadMedia(
             &gTextureBackground,
             const_cast<char *> ("../image/background.bmp"));
@@ -51,7 +53,7 @@ void InitMedia() {
             const_cast<char *> ("../image/latticecover.bmp"));
 }
 
-void InitExist() {
+void Interface::InitExist() {
     memset(exist, 0, sizeof(exist));
 
     exist[0][0][0] = exist[1][4][4] = 2;
@@ -65,7 +67,7 @@ void InitExist() {
     MouseIndex = std::make_pair(-1, -1);
 }
 
-bool DetectKingExist() {
+bool Interface::DetectKingExist() {
     int32_t exist_king = 0;
     for (int32_t i = 0 ; i < 2 ; i++) {
         for (int32_t j = 0 ; j < 5 ; j++) {
@@ -82,7 +84,7 @@ bool DetectKingExist() {
     return false;
 }
 
-void InitPosition() {
+void Interface::InitPosition() {
     setup_bmp_size(&NoMove[0], 0, 0, SCREEN_WIDTH * 1.2, SCREEN_HEIGHT);
     setup_bmp_size(&NoMove[1], 140, 140, 380, 380);
 
@@ -120,7 +122,7 @@ void InitPosition() {
     }
 }
 
-bool init() {
+bool Interface::init() {
     InitExist();
     InitPosition();
 
@@ -174,7 +176,7 @@ bool init() {
 }
 
 
-void CaptivePush(int32_t kind, int32_t chess) {
+void Interface::CaptivePush(int32_t kind, int32_t chess) {
     static int32_t push_stat[2][2] = {
         {0, 5},
         {0, 5}
@@ -195,7 +197,7 @@ void CaptivePush(int32_t kind, int32_t chess) {
     push_stat[kind][0] += 1;
 }
 
-void MoveChess(
+void Interface::MoveChess(
         std::pair<int32_t, int32_t> ori,
         std::pair<int32_t, int32_t> des) {
     int32_t kind = exist[0][ori.first][ori.second] > 0 ? 0 : 1;
@@ -247,7 +249,7 @@ void MoveChess(
     }
 }
 
-void PrintBugMessageBoard() {
+void Interface::PrintBugMessageBoard() {
     system("clear");
     for (int32_t k = 0 ; k < 2 ; k++) {
         std::cout << "------------" << std::endl;
@@ -261,52 +263,41 @@ void PrintBugMessageBoard() {
     std::cout << "------------" << std::endl;
 }
 
-void Determine_Draw(int32_t kind, int32_t Isupper, int32_t j, int32_t k) {
-    enum chessType {
-        KING = 1,
-        ROOK,
-        BISHOP,
-        GOLD,
-        SLIVER,
-        PAWN,
-        ROOKUP,
-        BISHOPUP,
-        SLIVERUP,
-        PAWNUP = 10 };
+void Interface::Determine_Draw(int32_t kind, int32_t Isupper, int32_t j, int32_t k) {
 
     switch (kind) {
-        case KING:
+        case KING_:
             if (Isupper) {
                 gTextureShow = gTextureKing;
             } else if (Isupper == 0) {
                 gTextureShow = gTextureJade;
             }
             break;
-        case ROOK:
+        case ROOK_:
             gTextureShow = gTextureRook;
             break;
-        case BISHOP:
+        case BISHOP_:
             gTextureShow = gTextureBishop;
             break;
-        case GOLD:
+        case GOLD_:
             gTextureShow = gTextureGold;
             break;
-        case SLIVER:
+        case SLIVER_:
             gTextureShow = gTextureSliver;
             break;
-        case PAWN:
+        case PAWN_:
             gTextureShow = gTexturePawn;
             break;
-        case ROOKUP:
+        case ROOKUP_:
             gTextureShow = gTextureRookUp;
             break;
-        case BISHOPUP:
+        case BISHOPUP_:
             gTextureShow = gTextureBishopUp;
             break;
-        case SLIVERUP:
+        case SLIVERUP_:
             gTextureShow = gTextureSliverUp;
             break;
-        case PAWNUP:
+        case PAWNUP_:
             gTextureShow = gTexturePawnUp;
             break;
 
@@ -342,7 +333,7 @@ void Determine_Draw(int32_t kind, int32_t Isupper, int32_t j, int32_t k) {
     }
 }
 
-bool ClickCover(std::pair<int32_t, int32_t> fMouseIndex) {
+bool Interface::ClickCover(std::pair<int32_t, int32_t> fMouseIndex) {
     if (fMouseIndex.first >= 0
             && fMouseIndex.first <= 4
             && fMouseIndex.second >= 0
@@ -367,7 +358,7 @@ bool ClickCover(std::pair<int32_t, int32_t> fMouseIndex) {
     return false;
 }
 
-void Show_Chess() {
+void Interface::Show_Chess() {
     for (int32_t i = 0 ; i < 2 ; i++) {
         for (int32_t j = 0 ; j < 5 ; j++) {
             for (int32_t k = 0 ; k < 7 ; k++) {
@@ -377,7 +368,7 @@ void Show_Chess() {
     }
 }
 
-void show_walking(std::pair<int32_t, int32_t> temp) {
+void Interface::show_walking(std::pair<int32_t, int32_t> temp) {
     memset(walking, 0, sizeof(walking));
 
     int32_t Isupper = 0, kind = 0;
@@ -561,7 +552,7 @@ void show_walking(std::pair<int32_t, int32_t> temp) {
     }
 }
 
-int32_t check_bound_xy(
+int32_t Interface::check_bound_xy(
         int32_t cur_x,
         int32_t cur_y,
         int32_t add_x,
@@ -589,7 +580,7 @@ int32_t check_bound_xy(
 }
 
 
-SDL_Rect *return_lattice_rect(int32_t x, int32_t y) {
+SDL_Rect* Interface::return_lattice_rect(int32_t x, int32_t y) {
     temp.x = 140 + 77 * x;
     temp.y = 140 + 77 * y;
     temp.w = 76;
@@ -598,7 +589,7 @@ SDL_Rect *return_lattice_rect(int32_t x, int32_t y) {
     return &temp;
 }
 
-bool match_rect_xy(int32_t x, int32_t y, SDL_Rect rect) {
+bool Interface::match_rect_xy(int32_t x, int32_t y, SDL_Rect rect) {
     if ((x >= rect.x && x <= rect.x + rect.w)
             && (y >= rect.y && rect.y + rect.h)) {
         return true;
@@ -606,14 +597,14 @@ bool match_rect_xy(int32_t x, int32_t y, SDL_Rect rect) {
     return false;
 }
 
-std::pair<int32_t, int32_t> return_MouseIndex(int32_t x, int32_t y) {
+std::pair<int32_t, int32_t> Interface::return_MouseIndex(int32_t x, int32_t y) {
     int32_t index_x = (x - 140) / 77;
     int32_t index_y = (y - 140) / 77;
 
     return std::make_pair(index_x, index_y);
 }
 
-void setup_bmp_size(
+void Interface::setup_bmp_size(
         SDL_Rect *dest,
         int32_t x,
         int32_t y,
@@ -625,7 +616,7 @@ void setup_bmp_size(
     dest->h = h;
 }
 
-bool loadMedia(SDL_Surface **gHelloWorld, char *str) {
+bool Interface::loadMedia(SDL_Surface **gHelloWorld, char *str) {
     // Loading success flag
     bool success = true;
 
@@ -641,7 +632,7 @@ bool loadMedia(SDL_Surface **gHelloWorld, char *str) {
     return success;
 }
 
-bool loadMedia(SDL_Texture **gTexture, char *str) {
+bool Interface::loadMedia(SDL_Texture **gTexture, char *str) {
     // Loading success flag
     bool success = true;
 
@@ -657,7 +648,7 @@ bool loadMedia(SDL_Texture **gTexture, char *str) {
     return success;
 }
 
-SDL_Surface* loadSurface(char *str) {
+SDL_Surface* Interface::loadSurface(char *str) {
     // The final optimized image
     SDL_Surface* optimizedSurface = nullptr;
 
@@ -682,7 +673,7 @@ SDL_Surface* loadSurface(char *str) {
     return optimizedSurface;
 }
 
-SDL_Texture *loadTexture(char *str) {
+SDL_Texture* Interface::loadTexture(char *str) {
     // The final texture
     SDL_Texture* newTexture = nullptr;
 
@@ -705,7 +696,7 @@ SDL_Texture *loadTexture(char *str) {
     return newTexture;
 }
 
-void close() {
+void Interface::close() {
     // Free loaded image
     SDL_DestroyTexture(gTextureBoard);
     gTextureBoard = nullptr;
@@ -722,4 +713,127 @@ void close() {
 
     // Quit SDL subsystems
     SDL_Quit();
+}
+
+void Interface::run(){
+    // Start up SDL and create window
+    if (init() == false) {
+        std::cout << "Failed to initialize!" << std::endl;
+    } else {
+        InitMedia();
+
+        // Load media
+        if (loadMedia(&gTextureBoard,
+                    const_cast<char *> ("../image/board.bmp")) == false) {
+            std::cout << "Failed to load media!" << std::endl;
+        } else {
+            // Update the surface
+            SDL_UpdateWindowSurface(window);
+
+            // Wait two seconds
+            SDL_Event e;
+
+            bool quit = false;
+
+            while (quit == false) {
+                // Clear screen
+                SDL_RenderClear(gRenderer);
+
+                // cover
+                show_walking(MouseIndex);
+
+                while (SDL_PollEvent(&e)) {
+                    if (e.type == SDL_QUIT) {
+                        quit = true;
+                    }
+
+                    if (e.key.keysym.sym == SDLK_ESCAPE) {
+                        quit = true;
+                    }
+
+                    if (e.key.keysym.sym == SDLK_a) {
+                        InitExist();
+                        KingDead = false;
+                    }
+
+                    if (KingDead == true) {
+                        usleep(50000);
+                        continue;
+                    }
+
+                    if (SDL_MOUSEBUTTONDOWN == e.type) {
+                        if (SDL_BUTTON_LEFT == e.button.button) {
+                            MouseIndexTemp = MouseIndex;
+                            MouseX = e.button.x;
+                            MouseY = e.button.y;
+                            MouseIndex = return_MouseIndex(MouseX, MouseY);
+#ifdef PRINT
+                            std::cout << "x, y: " << MouseX;
+                            std::cout << " " << MouseY;
+                            std::cout << "..............." << std::endl;
+#endif
+
+                            if (bClickChess && (MouseIndex.first != MouseIndexTemp.first || MouseIndex.second != MouseIndexTemp.second)) {
+                                MoveChess(MouseIndexTemp, MouseIndex);
+                                bClickChess = false;
+
+                                if (DetectKingExist() == 0) {
+                                    KingDead = true;
+                                }
+                            } else if (ClickCover(MouseIndex) && bClickChess == true && (MouseIndex.first == MouseIndexTemp.first && MouseIndex.second == MouseIndexTemp.second)) {
+                                bClickChess = false;
+                            } else {
+                                bClickChess = ClickCover(MouseIndex) ? 1 : 0;
+                            }
+                        } else if (SDL_BUTTON_RIGHT == e.button.button) {
+                            MouseIndexTemp = MouseIndex;
+                            MouseX = e.button.x;
+                            MouseY = e.button.y;
+                            MouseIndex = return_MouseIndex(MouseX, MouseY);
+#ifdef PRINT
+                            std::cout << "x, y: " << MouseX;
+                            std::cout << " " << MouseY;
+                            std::cout << "..............." << std::endl;
+#endif
+                            if (bClickChess && (MouseIndex.first != MouseIndexTemp.first|| MouseIndex.second != MouseIndexTemp.second)) {
+                                MoveChess(MouseIndexTemp, MouseIndex);
+                                bClickChess = false;
+
+                                if (DetectKingExist() == 0) {
+                                    KingDead = true;
+                                }
+                            } else if (ClickCover(MouseIndex) && bClickChess == true && (MouseIndex.first == MouseIndexTemp.first && MouseIndex.second == MouseIndexTemp.second)) {
+                                bClickChess = false;
+                            } else {
+                                bClickChess = ClickCover(MouseIndex) ? 1 : 0;
+                            }
+                        }
+                        std::cout << "index_x: " << MouseIndex.first << ", ";
+                        std::cout << MouseIndex.second << std::endl;
+
+                        PrintBugMessageBoard();
+                    }
+                }
+
+                // Render texture to screen
+                SDL_RenderCopy(gRenderer, gTextureBackground, NULL, &NoMove[0]);
+                // Apply the image
+                SDL_RenderCopy(gRenderer, gTextureBoard, NULL, &NoMove[1]);
+
+                if (bClickChess == false) {
+                    show_walking(std::make_pair(-1, -1));
+                } else {
+                    show_walking(MouseIndex);
+                }
+
+                Show_Chess();
+
+                ClickCover(MouseIndex);
+
+                // Update screen
+                SDL_RenderPresent(gRenderer);
+            }
+        }
+    }
+    close();
 }
