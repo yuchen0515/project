@@ -1,3 +1,4 @@
+#include <time.h>
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -9,7 +10,6 @@
 #include <iomanip>
 #include <string>
 //#include <stdlib.h>
-#include <time.h>
 //#include <omp.h>
 #include "stdafx.h"
 #include "mcts.h"
@@ -80,7 +80,9 @@ Node* Node::Select(State& state) {
         double best_value = -2.0;
         Node* best_child = nullptr;
         for (auto child : node->children) {
-            double uct = static_cast<double> (child->V) / child->N + sqrt(2.0 * log(static_cast<double> (node->N)) / child->N);
+            double uct =
+                static_cast<double> (child->V) / child->N \
+                + sqrt(2.0 * log(static_cast<double> (node->N)) / child->N);
             if (uct > best_value) {
                 best_value = uct;
                 best_child = child;

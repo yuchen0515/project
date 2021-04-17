@@ -4,11 +4,11 @@
 #include "game.h"
 
 namespace PURE {
-	Move MCTS(State state, int simLimit);
+	Move MCTS(State state, int32_t simLimit);
 }
 
 namespace MCTSS {
-	Move MCTS(State state, int simLimit);
+	Move MCTS(State state, int32_t simLimit);
 }
 
 #endif

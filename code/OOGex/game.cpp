@@ -113,11 +113,17 @@ bool State::has_moves() const {
     return false;
 }
 
-bool State::is_end() const { return result != Result::Unknown; }
+bool State::is_end() const {
+    return result != Result::Unknown;
+}
 
-bool State::is_draw() const { return result == Result::Draw; }
+bool State::is_draw() const {
+    return result == Result::Draw;
+}
 
-int State::who_turns() const { return player_to_move; }
+int State::who_turns() const {
+    return player_to_move;
+}
 
 //定義迫著，這裡X與0分開寫
 bool State::isThreatX(Move move) const {
@@ -128,18 +134,16 @@ bool State::isThreatX(Move move) const {
     // X X X
     // check left side for X
     int left = 0;
-    for (int col = j - 1; col >= j - threatDis && col >= 0 && board[i][col] == player_markers[1]; --col){
+    for (int col = j - 1; col >= j - threatDis && col >= 0 && board[i][col] == player_markers[1]; --col) {
         left++;
     }
     // check right side for X
     int right = 0;
-    for (int col = j + 1; col <= j + threatDis && col < num_cols && board[i][col] == player_markers[1]; ++col){
-
+    for (int col = j + 1; col <= j + threatDis && col < num_cols && board[i][col] == player_markers[1]; ++col) {
         right++;
-
     }
 
-    if (left + right >= threatCon){
+    if (left + right >= threatCon) {
         return true;
     }
 
@@ -148,20 +152,16 @@ bool State::isThreatX(Move move) const {
     // X
     // check up side for X
     int up = 0;
-    for (int row = i - 1; row >= i - threatDis && row >= 0 && board[row][j] == player_markers[1]; --row){
-
+    for (int row = i - 1; row >= i - threatDis && row >= 0 && board[row][j] == player_markers[1]; --row) {
         up++;
-
     }
     // check down side for X
     int down = 0;
-    for (int row = i + 1; row <= i + threatDis && row < num_rows && board[row][j] == player_markers[1]; ++row){
-
+    for (int row = i + 1; row <= i + threatDis && row < num_rows && board[row][j] == player_markers[1]; ++row) {
         down++;
-
     }
 
-    if (up + down >= threatCon){
+    if (up + down >= threatCon) {
         return true;
     }
 
@@ -173,21 +173,19 @@ bool State::isThreatX(Move move) const {
     for (int row = i - 1, col = j - 1;
             row >= i - threatDis && row >= 0 && col >= j - threatDis && col >= 0 && board[row][col] == player_markers[1];
             --row, --col){
-
         upperLeft++;
-
     }
     // check lower right for X
     int lowerRight = 0;
     for (int row = i + 1, col = j + 1;
             row <= i + threatDis && row < num_rows && col <= j + threatDis && col < num_cols && board[row][col] == player_markers[1];
-            ++row, ++col){
+            ++row, ++col) {
 
         lowerRight++;
 
     }
 
-    if (upperLeft + lowerRight >= threatCon){
+    if (upperLeft + lowerRight >= threatCon) {
         return true;
     }
 
@@ -198,22 +196,18 @@ bool State::isThreatX(Move move) const {
     int lowerLeft = 0;
     for (int row = i + 1, col = j - 1;
             row <= i + threatDis && row < num_rows && col >= j - threatDis && col >= 0 && board[row][col] == player_markers[1];
-            ++row, --col){
-
+            ++row, --col) {
         lowerLeft++;
-
     }
     // check upper right for X
     int upperRight = 0;
     for (int row = i - 1, col = j + 1;
             row >= i - threatDis && row >= 0 && col <= j + threatDis && col < num_cols && board[row][col] == player_markers[1];
-            --row, ++col){
-
+            --row, ++col) {
         upperRight++;
-
     }
 
-    if (lowerLeft + upperRight >= threatCon){
+    if (lowerLeft + upperRight >= threatCon) {
         return true;
     }
 
@@ -228,17 +222,13 @@ bool State::isThreatO(Move move) const {
     // O O O
     // check left side for O
     int left = 0;
-    for (int col = j - 1; col >= j - threatDis && col >= 0 && board[i][col] == player_markers[2]; --col){
-
+    for (int col = j - 1; col >= j - threatDis && col >= 0 && board[i][col] == player_markers[2]; --col) {
         left++;
-
     }
     // check right side for O
     int right = 0;
-    for (int col = j + 1; col <= j + threatDis && col < num_cols && board[i][col] == player_markers[2]; ++col){
-
+    for (int col = j + 1; col <= j + threatDis && col < num_cols && board[i][col] == player_markers[2]; ++col) {
         right++;
-
     }
 
     if (left + right >= threatCon){
@@ -250,7 +240,7 @@ bool State::isThreatO(Move move) const {
     // O
     // check up side for O
     int up = 0;
-    for (int row = i - 1; row >= i - threatDis && row >= 0 && board[row][j] == player_markers[2]; --row){
+    for (int row = i - 1; row >= i - threatDis && row >= 0 && board[row][j] == player_markers[2]; --row) {
 
         up++;
 
@@ -258,12 +248,10 @@ bool State::isThreatO(Move move) const {
     // check down side for O
     int down = 0;
     for (int row = i + 1; row <= i + threatDis && row < num_rows && board[row][j] == player_markers[2]; ++row){
-
         down++;
-
     }
 
-    if (up + down >= threatCon){
+    if (up + down >= threatCon) {
         return true;
     }
 
@@ -274,22 +262,18 @@ bool State::isThreatO(Move move) const {
     int upperLeft = 0;
     for (int row = i - 1, col = j - 1;
             row >= i - threatDis && row >= 0 && col >= j - threatDis && col >= 0 && board[row][col] == player_markers[2];
-            --row, --col){
-
+            --row, --col) {
         upperLeft++;
-
     }
     // check lower right for O
     int lowerRight = 0;
     for (int row = i + 1, col = j + 1;
             row <= i + threatDis && row < num_rows && col <= j + threatDis && col < num_cols && board[row][col] == player_markers[2];
-            ++row, ++col){
-
+            ++row, ++col) {
         lowerRight++;
-
     }
 
-    if (upperLeft + lowerRight >= threatCon){
+    if (upperLeft + lowerRight >= threatCon) {
         return true;
     }
 
@@ -300,22 +284,18 @@ bool State::isThreatO(Move move) const {
     int lowerLeft = 0;
     for (int row = i + 1, col = j - 1;
             row <= i + threatDis && row < num_rows && col >= j - threatDis && col >= 0 && board[row][col] == player_markers[2];
-            ++row, --col){
-
+            ++row, --col) {
         lowerLeft++;
-
     }
     // check upper right for O
     int upperRight = 0;
     for (int row = i - 1, col = j + 1;
             row >= i - threatDis && row >= 0 && col <= j + threatDis && col < num_cols && board[row][col] == player_markers[2];
-            --row, ++col){
-
+            --row, ++col) {
         upperRight++;
-
     }
 
-    if (lowerLeft + upperRight >= threatCon){
+    if (lowerLeft + upperRight >= threatCon) {
         return true;
     }
 
@@ -325,7 +305,9 @@ bool State::isThreatO(Move move) const {
 //取得一般合法走步
 vector<Move> State::get_moves() const {
     vector<Move> moves;
-    if (is_end()) return moves;
+    if (is_end() == true) {
+        return moves;
+    }
 
     for (int grid = 0; grid < MNK::G_SIZE; grid++) {
         if (can_move(grid)) {
@@ -339,23 +321,25 @@ vector<Move> State::get_moves() const {
 ////取得迫著空間走步
 vector<Move> State::get_threat_moves() const {
     vector<Move> moves;
-    if (is_end()) return moves;
+    if (is_end()) {
+        return moves;
+    }
 
     //check threat
-    for (int grid = 0; grid < MNK::G_SIZE; grid++){
+    for (int grid = 0; grid < MNK::G_SIZE; grid++) {
         if (can_move(grid)) {
-            if (isThreatX(grid)){
+            if (isThreatX(grid)) {
                 moves.push_back(grid);
                 continue;
             }
-            if (isThreatO(grid)){
+            if (isThreatO(grid)) {
                 moves.push_back(grid);
             }
         }
     }
 
     //no threat space
-    if (moves.size() == 0){
+    if (moves.size() == 0) {
         for (int grid = 0; grid < MNK::G_SIZE; grid++) {
             if (can_move(grid)) {
                 moves.push_back(grid);
