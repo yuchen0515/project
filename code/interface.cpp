@@ -368,7 +368,7 @@ void Interface::Show_Chess() {
     }
 }
 
-void Interface::show_walking(const std::pair<int32_t, int32_t> temp) {
+void Interface::make_walking(const std::pair<int32_t, int32_t> temp) {
     std::fill(walking.begin(), walking.end(), std::vector<int32_t>(N_, 0));
 
     int32_t Isupper = 0, kind = 0;
@@ -387,61 +387,45 @@ void Interface::show_walking(const std::pair<int32_t, int32_t> temp) {
     int32_t direction = Isupper ? 1 : -1;
 
     if (check_bound_xy(fir, sec, -1, direction, Isupper)) {
-        if (kind == 1
-                || kind == 4
-                || kind == 5
-                || kind == 7
-                || kind == 8
-                || kind == 10
-                || kind == 11) {
-            SDL_RenderCopy(
-                    gRenderer,
-                    gTextureLatticeCover,
-                    nullptr,
-                    return_lattice_rect(fir - 1, sec + direction));
+        if (kind == KING_
+                || kind == GOLD_
+                || kind == SLIVER_
+                || kind == ROOKUP_
+                || kind == BISHOPUP_
+                || kind == SLIVERUP_
+                || kind == PAWNUP_) {
             walking[fir-1][sec + direction] = 1;
         }
     }
 
     if (check_bound_xy(fir, sec, 0, direction, Isupper)) {
-        if (kind == 1 || (kind >= 4 && kind <= 8) || kind == 10 || kind == 11) {
-            SDL_RenderCopy(
-                    gRenderer,
-                    gTextureLatticeCover,
-                    nullptr,
-                    return_lattice_rect(fir, sec + direction));
+        if (kind == KING_
+                || (kind >= GOLD_ && kind <= BISHOPUP_)
+                || kind == SLIVERUP_
+                || kind == PAWNUP_) {
             walking[fir][sec + direction] = 1;
         }
     }
 
     if (check_bound_xy(fir, sec, 1, direction, Isupper)) {
-        if (kind == 1
-                || kind == 4
-                || kind == 5
-                || kind == 7
-                || kind == 8
-                || kind == 10
-                || kind == 11) {
-            SDL_RenderCopy(
-                    gRenderer,
-                    gTextureLatticeCover,
-                    nullptr,
-                    return_lattice_rect(fir + 1, sec + direction));
+        if (kind == KING_
+                || kind == GOLD_
+                || kind == SLIVER_
+                || kind == ROOKUP_
+                || kind == BISHOPUP_
+                || kind == SLIVERUP_
+                || kind == PAWNUP_) {
             walking[fir + 1][sec + direction] = 1;
         }
     }
 
     if (check_bound_xy(fir, sec, -1, 0, Isupper)) {
-        if (kind == 1
-                || kind == 4
-                || kind == 7
-                || kind == 8
-                || kind == 10
-                || kind == 11) {
-            SDL_RenderCopy(gRenderer,
-                    gTextureLatticeCover,
-                    nullptr,
-                    return_lattice_rect(fir - 1, sec));
+        if (kind == KING_
+                || kind == GOLD_
+                || kind == ROOKUP_
+                || kind == BISHOPUP_
+                || kind == SLIVERUP_
+                || kind == PAWNUP_) {
             walking[fir - 1][sec] = 1;
         }
     }
@@ -453,22 +437,12 @@ void Interface::show_walking(const std::pair<int32_t, int32_t> temp) {
                 || kind == 8
                 || kind == 10
                 || kind == 11) {
-            SDL_RenderCopy(
-                    gRenderer,
-                    gTextureLatticeCover,
-                    nullptr,
-                    return_lattice_rect(fir + 1, sec));
             walking[fir + 1][sec] = 1;
         }
     }
 
     if (check_bound_xy(fir, sec, -1, -1 * direction, Isupper)) {
         if (kind == 1 || kind == 5 || kind == 7 || kind == 8) {
-            SDL_RenderCopy(
-                    gRenderer,
-                    gTextureLatticeCover,
-                    nullptr,
-                    return_lattice_rect(fir - 1, sec - direction));
             walking[fir - 1][sec - direction] = 1;
         }
     }
@@ -480,21 +454,12 @@ void Interface::show_walking(const std::pair<int32_t, int32_t> temp) {
                 || kind == 8
                 || kind == 10
                 || kind == 11) {
-            SDL_RenderCopy(
-                    gRenderer,
-                    gTextureLatticeCover,
-                    nullptr,
-                    return_lattice_rect(fir, sec - direction));
             walking[fir][sec - direction] = 1;
         }
     }
 
     if (check_bound_xy(fir, sec, 1, -direction, Isupper)) {
         if (kind == 1 || kind == 5 || kind == 7 || kind == 8) {
-            SDL_RenderCopy(gRenderer,
-                    gTextureLatticeCover,
-                    nullptr,
-                    return_lattice_rect(fir + 1, sec - direction));
             walking[fir + 1][sec - direction] = 1;
         }
     }
@@ -528,13 +493,6 @@ void Interface::show_walking(const std::pair<int32_t, int32_t> temp) {
                 break;
             }
 
-            SDL_RenderCopy(
-                    gRenderer,
-                    gTextureLatticeCover,
-                    nullptr,
-                    return_lattice_rect(
-                        fir + dec[i][0] * level,
-                        sec + dec[i][1] * level));
 
             walking[fir + dec[i][0] * level][sec + dec[i][1] * level] = 1;
 
@@ -548,6 +506,23 @@ void Interface::show_walking(const std::pair<int32_t, int32_t> temp) {
             }
 
             level += 1;
+        }
+    }
+
+}
+
+void Interface::show_walking(
+        const std::pair<int32_t, int32_t> temp) {
+    make_walking(temp);
+    for (int32_t i = 0 ; i < 5 ; i ++){
+        for (int32_t j = 0 ; j < 5 ; j++){
+            if (walking[i][j] == 1){
+                SDL_RenderCopy(
+                        gRenderer,
+                        gTextureLatticeCover,
+                        nullptr,
+                        return_lattice_rect(i, j));
+            }
         }
     }
 }

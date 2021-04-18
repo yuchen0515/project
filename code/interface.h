@@ -38,6 +38,9 @@ class Interface {
 
         void Show_Chess();
 
+        void make_walking(
+                const std::pair<int32_t, int32_t> temp);
+
         void show_walking(
                 const std::pair<int32_t, int32_t> temp);
 
@@ -156,6 +159,6 @@ class Interface {
             PAWN_ = 6,
             ROOKUP_ = 7,
             BISHOPUP_ = 8,
-            SLIVERUP_ = 9,
+            SLIVERUP_ = 10,
             PAWNUP_ = 11 };
 };
