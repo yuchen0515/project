@@ -57,7 +57,7 @@ Node::Node(const State& state)
     N(0),
     parent(nullptr),
     move(State::no_move),
-    moves(state.get_moves()) {
+    moves(state.get_Moves()) {
     }
 
 Node::Node(const State& state, Node* parent, Move move)
@@ -65,7 +65,7 @@ Node::Node(const State& state, Node* parent, Move move)
     N(0),
     parent(parent),
     move(move),
-    moves(state.get_moves()) {
+    moves(state.get_Moves()) {
     }
 
 Node::~Node() {
@@ -92,7 +92,7 @@ Node* Node::Select(State& state) {
             break;
         }
         node = best_child;
-        state.do_move(node->move);
+        state.do_Move(node->move);
     }
     return node;
 }
@@ -101,30 +101,31 @@ Node* Node::Expansion(State& state) {
     auto node = this;
     auto it = children.size();
     auto move = moves[it];
-    state.do_move(move);
+    state.do_Move(move);
     node = new Node(state, node, move);
     children.push_back(node);
     return node;
 }
 
 int32_t Node::Simulate(State& state) const {
-    auto player_to_move = state.who_turns();
+    auto player_to_move = state.get_turns();
     //int sim_dep = 20;
-    while (state.is_end() == false) {
-        auto moves = state.get_moves();
+    while (state.is_End() == false) {
+        auto moves = state.get_Moves();
         auto move_num = moves.size();
 
         //srand(time(NULL));
         int32_t r = rand() % move_num;
-        state.do_move(moves[r]);
+        state.do_Move(moves[r]);
         //sim_dep--;
+        //}
         //if (sim_dep <= 0)
         //  return 0;
     }
-    if (state.is_draw() == true) {
+    if (state.is_Draw() == true) {
         return 0;
     }
-    if (state.who_turns() == player_to_move) {
+    if (state.get_turns() == player_to_move) {
         return 1;
     }
     return -1;
@@ -144,12 +145,12 @@ void Node::Update(int32_t value) {
 void Node::OneRound(State state) {
     auto node = this;
     node = node->Select(state);
-    if (state.is_end() == false) {
+    if (state.is_End() == false) {
         node = node->Expansion(state);
     }
     int32_t result = 0;
-    if (state.is_end() == true) {
-        if (state.is_draw() == false) {
+    if (state.is_End() == true) {
+        if (state.is_Draw() == false) {
             result = 1;
         }
     } else {
