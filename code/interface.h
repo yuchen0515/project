@@ -98,9 +98,10 @@ class Interface {
         // Screen dimension constants  螢幕寬高設定
         const int32_t SCREEN_WIDTH = 640;
         const int32_t SCREEN_HEIGHT = 640;
-        static constexpr int32_t M_ = 5;
-        static constexpr int32_t N_ = 5;
+        static constexpr int32_t COL_SIZE_ = 5;
+        static constexpr int32_t ROW_SIZE_ = 5;
         static constexpr int32_t PLAYER_NUMBER_ = 2;
+        static constexpr int32_t LEVEL_CHANGE_ = 5;
 
         SDL_Surface *screenBoard = nullptr;
         SDL_Surface *screenSurface = nullptr;
@@ -133,8 +134,8 @@ class Interface {
         // 10: sliver (up), 11: pawn(up)
         // 12 ~ 17: captive 1~6
         //
-        int32_t exist[PLAYER_NUMBER_][N_][7] = {0};
-        std::vector<std::vector<int32_t>> walking{M_, std::vector<int32_t>(N_, 0)};
+        int32_t exist[PLAYER_NUMBER_][ROW_SIZE_][7] = {0};
+        std::vector<std::vector<int32_t>> walking{COL_SIZE_, std::vector<int32_t>(ROW_SIZE_, 0)};
 
         // The window renderer
         SDL_Renderer *gRenderer = nullptr;
@@ -143,6 +144,8 @@ class Interface {
         std::pair<int32_t, int32_t> mouseIndexTemp_ = std::make_pair(-1, -1);
         int32_t mouseX_ = 0;
         int32_t mouseY_ = 0;
+        int32_t turn_ = 1;
+
         bool isClickChess_ = false;
         bool isKingDead_ = false;
 
@@ -161,4 +164,8 @@ class Interface {
             BISHOPUP_ = 8,
             SLIVERUP_ = 10,
             PAWNUP_ = 11 };
+
+        enum player_{
+            LOWER_ = 0,
+            UPPER_ = 1 };
 };

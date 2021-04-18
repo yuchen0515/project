@@ -7,21 +7,21 @@
 
 class Interface;
 
-namespace MN {
-    constexpr int32_t  M_SIZE = 9;
-    constexpr int32_t  N_SIZE = 5;
-    const int32_t G_SIZE = M_SIZE * N_SIZE;
+namespace RC {
+    constexpr int32_t  ROW_SIZE = 9;
+    constexpr int32_t  COL_SIZE = 5;
+    const int32_t G_SIZE = ROW_SIZE * COL_SIZE;
 }
 
 enum class Result : int32_t {
-    Unknown = 0,
+    Upper = 0,
     Lower = 1,
-    Upper = 2
+    Unknown = 2
 };
 
 typedef struct move{
-    int32_t from;
-    int32_t to;
+    std::pair<int32_t, int32_t> from;
+    std::pair<int32_t, int32_t> to;
 }Move;
 
 class State {

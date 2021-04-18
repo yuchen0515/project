@@ -56,22 +56,22 @@ void Interface::InitMedia() {
 void Interface::InitExist() {
     memset(exist, 0, sizeof(exist));
 
-    exist[0][0][0] = exist[1][4][4] = 2;
-    exist[0][1][0] = exist[1][3][4] = 3;
-    exist[0][2][0] = exist[1][2][4] = 5;
-    exist[0][3][0] = exist[1][1][4] = 4;
-    exist[0][4][0] = exist[1][0][4] = 1;
-    exist[0][4][1] = exist[1][0][3] = 6;
+    exist[0][0][0] = exist[1][4][4] = ROOK_;
+    exist[0][1][0] = exist[1][3][4] = BISHOP_;
+    exist[0][2][0] = exist[1][2][4] = SLIVER_;
+    exist[0][3][0] = exist[1][1][4] = GOLD_;
+    exist[0][4][0] = exist[1][0][4] = KING_;
+    exist[0][4][1] = exist[1][0][3] = PAWN_;
 
-    std::fill(walking.begin(), walking.end(), std::vector<int32_t>(N_, 0));
+    std::fill(walking.begin(), walking.end(), std::vector<int32_t>(ROW_SIZE_, 0));
     mouseIndex_ = std::make_pair(-1, -1);
 }
 
 bool Interface::DetectKingExist() {
     int32_t exist_king = 0;
-    for (int32_t i = 0 ; i < 2 ; i++) {
-        for (int32_t j = 0 ; j < 5 ; j++) {
-            for (int32_t k = 0 ; k < 5 ; k++) {
+    for (int32_t i = LOWER_ ; i <= UPPER_ ; i++) {
+        for (int32_t j = 0 ; j < COL_SIZE_ ; j++) {
+            for (int32_t k = 0 ; k < ROW_SIZE_ ; k++) {
                 if (exist[i][j][k] == 1)
                     exist_king += 1;
             }
@@ -145,7 +145,7 @@ bool Interface::init() {
 
     // Create window
     window = SDL_CreateWindow(
-            "Mini-shogi",                   // Title
+            "powerShogi",                   // Title
             SDL_WINDOWPOS_CENTERED,         // X position setting
             SDL_WINDOWPOS_CENTERED,         // Y position setting
             SCREEN_WIDTH,                   // Width
@@ -182,8 +182,9 @@ void Interface::CaptivePush(const int32_t kind, int32_t chess) {
         {0, 5}
     };
 
-    if (chess >= 7 && chess <= 12) {
-        chess -= 5;
+
+    if (chess >= ROOKUP_ && chess <= PAWNUP_) {
+        chess -= LEVEL_CHANGE_;
     }
 
     for (int32_t i = 0 ; i < 2 ; i++) {
@@ -243,10 +244,14 @@ void Interface::MoveChess(
             && (des.second == 3 * (kind == 1 ? 0 : 1)
                 || des.second == 1 + 3 * (kind == 1 ? 0 : 1))) {
         int32_t chess = exist[kind][des.first][des.second];
-        if ((chess >= 2 && chess <= 6)  && chess != 4) {
-            exist[kind][des.first][des.second] += 5;
+        if ((chess >= ROOK_
+                    && chess <= PAWN_)
+                && chess != GOLD_) {
+            exist[kind][des.first][des.second] += LEVEL_CHANGE_;
         }
     }
+
+    turn_ = (turn_ + 1) % PLAYER_NUMBER_;
 }
 
 void Interface::PrintBugMessageBoard() const {
@@ -255,6 +260,9 @@ void Interface::PrintBugMessageBoard() const {
         std::cout << "------------" << std::endl;
         for (int32_t i = 0 ; i < 7 ; i ++) {
             for (int32_t j = 0 ; j < 5 ; j ++) {
+                if (j != 0){
+                    std::cout << "\t";
+                }
                 std::cout << exist[k][j][i];
             }
             std::cout << std::endl;
@@ -369,7 +377,7 @@ void Interface::Show_Chess() {
 }
 
 void Interface::make_walking(const std::pair<int32_t, int32_t> temp) {
-    std::fill(walking.begin(), walking.end(), std::vector<int32_t>(N_, 0));
+    std::fill(walking.begin(), walking.end(), std::vector<int32_t>(ROW_SIZE_, 0));
 
     int32_t Isupper = 0, kind = 0;
     auto &[fir, sec] = temp;
@@ -381,6 +389,10 @@ void Interface::make_walking(const std::pair<int32_t, int32_t> temp) {
         Isupper = 0;
         kind = exist[1][fir][sec];
     } else {
+        return;
+    }
+
+    if (turn_ == Isupper){
         return;
     }
 
@@ -431,35 +443,41 @@ void Interface::make_walking(const std::pair<int32_t, int32_t> temp) {
     }
 
     if (check_bound_xy(fir, sec, 1, 0, Isupper)) {
-        if (kind == 1
-                || kind == 4
-                || kind == 7
-                || kind == 8
-                || kind == 10
-                || kind == 11) {
+        if (kind == KING_
+                || kind == GOLD_
+                || kind == ROOKUP_
+                || kind == BISHOPUP_
+                || kind == SLIVERUP_
+                || kind == PAWNUP_) {
             walking[fir + 1][sec] = 1;
         }
     }
 
     if (check_bound_xy(fir, sec, -1, -1 * direction, Isupper)) {
-        if (kind == 1 || kind == 5 || kind == 7 || kind == 8) {
+        if (kind == KING_
+                || kind == SLIVER_
+                || kind == ROOKUP_
+                || kind == BISHOPUP_) {
             walking[fir - 1][sec - direction] = 1;
         }
     }
 
     if (check_bound_xy(fir, sec, 0, -1 * direction, Isupper)) {
-        if (kind == 1
-                || kind == 4
-                || kind == 7
-                || kind == 8
-                || kind == 10
-                || kind == 11) {
+        if (kind == KING_
+                || kind == GOLD_
+                || kind == ROOKUP_
+                || kind == BISHOPUP_
+                || kind == SLIVERUP_
+                || kind == PAWNUP_) {
             walking[fir][sec - direction] = 1;
         }
     }
 
     if (check_bound_xy(fir, sec, 1, -direction, Isupper)) {
-        if (kind == 1 || kind == 5 || kind == 7 || kind == 8) {
+        if (kind == KING_
+                || kind == SLIVER_
+                || kind == ROOKUP_
+                || kind == BISHOPUP_) {
             walking[fir + 1][sec - direction] = 1;
         }
     }
@@ -475,12 +493,19 @@ void Interface::make_walking(const std::pair<int32_t, int32_t> temp) {
         {-1, 0}
     };
 
-    if (kind != 2 && kind != 3 && kind - 5 != 2 && kind - 5 != 3) {
+    if (kind != ROOK_ 
+            && kind != BISHOP_
+            && kind != ROOKUP_
+            && kind != BISHOPUP_) {
         return;
     }
 
 
-    for (int32_t i = (kind == 3 || kind == 8) ? 0 : 1 ; i < 8 ; i += 2) {
+    for (int32_t i =
+            (kind == BISHOP_
+             || kind == BISHOPUP_) ? 0 : 1;
+            i < BISHOPUP_ ;
+            i += 2) {
         int32_t level = 1;
 
         while (true) {
