@@ -65,7 +65,7 @@ class State {
         }
 
         void do_Move(Move move) {
-            Interface->do_Move(move);
+            //Interface->do_Move(move);
         }
 
         void set_Interface(Interface* param) {
@@ -77,7 +77,7 @@ class State {
         }
 
     private:
-        class *Interface;
+        class Interface *interface_;
         int32_t player_to_move_ = static_cast<int32_t> (Result::Lower);
         Result result_ = Result::Unknown;
         int32_t turns_ = 0;

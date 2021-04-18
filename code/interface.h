@@ -13,6 +13,7 @@
 #include <iostream>
 #include <vector>
 #include <utility>
+#include "./algorithm/state.h"
 
 class Interface {
     public:
