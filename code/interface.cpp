@@ -63,7 +63,7 @@ void Interface::InitExist() {
     exist[0][4][0] = exist[1][0][4] = 1;
     exist[0][4][1] = exist[1][0][3] = 6;
 
-    memset(walking, 0, sizeof(walking));
+    std::fill(walking.begin(), walking.end(), std::vector<int32_t>(N_, 0));
     mouseIndex_ = std::make_pair(-1, -1);
 }
 
@@ -369,7 +369,7 @@ void Interface::Show_Chess() {
 }
 
 void Interface::show_walking(const std::pair<int32_t, int32_t> temp) {
-    memset(walking, 0, sizeof(walking));
+    std::fill(walking.begin(), walking.end(), std::vector<int32_t>(N_, 0));
 
     int32_t Isupper = 0, kind = 0;
     auto &[fir, sec] = temp;

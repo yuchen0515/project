@@ -11,6 +11,7 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <iostream>
+#include <vector>
 #include <utility>
 
 class Interface {
@@ -129,7 +130,7 @@ class Interface {
         // 12 ~ 17: captive 1~6
         //
         int32_t exist[PLAYER_NUMBER_][N_][7] = {0};
-        int32_t walking[M_][N_] = {0};
+        std::vector<std::vector<int32_t>> walking{M_, std::vector<int32_t>(N_, 0)};
 
         // The window renderer
         SDL_Renderer *gRenderer = nullptr;
@@ -155,5 +156,5 @@ class Interface {
             ROOKUP_ = 7,
             BISHOPUP_ = 8,
             SLIVERUP_ = 9,
-            PAWNUP_ = 10 };
+            PAWNUP_ = 11 };
 };
