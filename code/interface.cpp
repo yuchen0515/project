@@ -17,7 +17,7 @@ void Interface::InitMedia() {
             const_cast<char *> ("../image/king.bmp"));
     loadMedia(
             &gTextureJade,
-            const_cast<char *> ("../image/Jade.bmp"));
+            const_cast<char *> ("../image/jade.bmp"));
     loadMedia(
             &gTextureGold,
             const_cast<char *> ("../image/gold.bmp"));
