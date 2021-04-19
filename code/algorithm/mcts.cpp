@@ -11,7 +11,6 @@
 #include <string>
 //#include <stdlib.h>
 //#include <omp.h>
-#include "stdafx.h"
 #include "mcts.h"
 
 //#define PRINT
@@ -48,8 +47,8 @@ class Node {
         return move;
     }
     Move Round(const State& state, int32_t simLimit);
-    string detail() const;
-    void print(ostream& os) const;
+    std::string detail() const;
+    void print(std::ostream& os) const;
 };
 
 Node::Node(const State& state)
@@ -190,22 +189,22 @@ Move Node::Round(const State& state, int32_t simLimit) {
 
 std::string Node::detail() const {
     double rate = mean() / 2 + 0.5;
-    stringstream ss;
-    ss << "Move:" << static_cast<char>(move % 15 + 65);
-    ss << setw(2) << (15 - move / 15);
+    std::stringstream ss;
+    //ss << "Move:" << static_cast<char>(move % 15 + 65);
+    //ss << getw(2) << (15 - move / 15);
     ss << "\t Value:" << V;
     ss << "\t Visited:" << N;
     ss << "\t win-rate:" << rate;
     return ss.str();
 }
 
-void Node::print(ostream& os) const {
+void Node::print(std::ostream& os) const {
     for (auto child : children) {
-        os << child->detail() << endl;
+        os << child->detail() << std::endl;
     }
 }
 
-ostream& operator<<(ostream& os, const Node& node) {
+std::ostream& operator<<(std::ostream& os, const Node& node) {
 #ifdef PRINT
     node.print(os);
 #endif
