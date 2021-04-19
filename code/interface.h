@@ -59,9 +59,10 @@ class Interface {
         }
 
         std::vector<Move> get_Moves()  const {
-            //make_walking(mouseIndex_);
             //move_.clear();
-            
+            std::vector<std::vector<int32_t>> walking(COL_SIZE_, std::vector<int32_t>(ROW_SIZE_, 0));
+            make_walking(mouseIndex_, walking);
+
             std::vector<Move> move__;
            
             Move TEMP;
@@ -78,7 +79,8 @@ class Interface {
         }
 
         void make_walking(
-                const std::pair<int32_t, int32_t> temp);
+                const std::pair<int32_t, int32_t> temp,
+                std::vector<std::vector<int32_t>>& walking) const;
 
         void show_walking(
                 const std::pair<int32_t, int32_t> temp);
@@ -137,8 +139,6 @@ class Interface {
         // Screen dimension constants  螢幕寬高設定
         const int32_t SCREEN_WIDTH = 640;
         const int32_t SCREEN_HEIGHT = 640;
-        static constexpr int32_t COL_SIZE_ = 5;
-        static constexpr int32_t ROW_SIZE_ = 5;
 
         SDL_Surface *screenBoard = nullptr;
         SDL_Surface *screenSurface = nullptr;
@@ -177,6 +177,8 @@ class Interface {
     protected:
         static constexpr int32_t PLAYER_NUMBER_ = 2;
         static constexpr int32_t LEVEL_CHANGE_ = 5;
+        static constexpr int32_t COL_SIZE_ = 5;
+        static constexpr int32_t ROW_SIZE_ = 5;
 
         // 0: upper, 1: lower
         //

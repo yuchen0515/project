@@ -381,7 +381,7 @@ void Interface::Show_Chess() {
     }
 }
 
-void Interface::make_walking(const std::pair<int32_t, int32_t> temp) {
+void Interface::make_walking(const std::pair<int32_t, int32_t> temp, std::vector<std::vector<int32_t>>& walking) const {
     std::fill(walking.begin(), walking.end(), std::vector<int32_t>(ROW_SIZE_, 0));
 
     int32_t Isupper = 0, kind = 0;
@@ -543,7 +543,7 @@ void Interface::make_walking(const std::pair<int32_t, int32_t> temp) {
 
 void Interface::show_walking(
         const std::pair<int32_t, int32_t> temp) {
-    make_walking(temp);
+    make_walking(temp, this->walking);
     for (int32_t i = 0 ; i < 5 ; i ++){
         for (int32_t j = 0 ; j < 5 ; j++){
             if (walking[i][j] == 1){
