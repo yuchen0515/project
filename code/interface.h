@@ -47,30 +47,34 @@ class Interface {
 
         SDL_Texture *loadTexture(char const *str);
 
-        int32_t get_turns() {
+        int32_t get_turns() const {
             return turn_;
         }
 
         void Show_Chess();
 
-        bool is_End() {
-            return DetectKingExist() == false;
+        bool is_End() const {
+            return isKingDead_ == true;
         }
 
         std::vector<Move> get_Moves()  const {
             //move_.clear();
             std::vector<std::vector<int32_t>> walking(COL_SIZE_, std::vector<int32_t>(ROW_SIZE_, 0));
-            make_walking(mouseIndex_, walking);
 
             std::vector<Move> move__;
            
             Move TEMP;
-            TEMP.from = mouseIndex_;
-            for (int32_t i = 0 ; i < ROW_SIZE_ ; i ++){
-                for (int32_t j = 0 ; j < COL_SIZE_ ; j ++){
-                    if (walking[i][j] == 1){
-                        TEMP.to = std::make_pair(i, j);
-                        move__.emplace_back(TEMP);
+            for (int32_t i = 0 ; i < 5 ; i++){
+                for (int32_t j = 0 ; j < 5 ; j ++) {
+                    TEMP.from = std::make_pair(i, j);
+                    make_walking(TEMP.from, walking);
+                    for (int32_t k = 0 ; k < ROW_SIZE_ ; k ++){
+                        for (int32_t p = 0 ; p < COL_SIZE_ ; p ++){
+                            if (walking[k][p] == 1){
+                                TEMP.to = std::make_pair(k, p);
+                                move__.emplace_back(TEMP);
+                            }
+                        }
                     }
                 }
             }
@@ -105,7 +109,7 @@ class Interface {
                 const int32_t kind,
                 int32_t chess);
         void PrintBugMessageBoard() const;
-        bool DetectKingExist();
+        bool DetectKingExist() const ;
 
 
         std::pair<int32_t, int32_t> return_MouseIndex(
@@ -131,10 +135,10 @@ class Interface {
                 const int32_t add_y,
                 const int32_t upper) const;
 
-        void run();
+        //void run();
         void Agent();
 
-    private:
+    protected:
         // Screen dimension constants  螢幕寬高設定
         const int32_t SCREEN_WIDTH = 640;
         const int32_t SCREEN_HEIGHT = 640;
@@ -175,7 +179,6 @@ class Interface {
         SDL_Rect chessDect_[6][9];
         SDL_Point chessSize_ = (SDL_Point){25, 30};
 
-    protected:
         static constexpr int32_t PLAYER_NUMBER_ = 2;
         static constexpr int32_t LEVEL_CHANGE_ = 5;
         static constexpr int32_t COL_SIZE_ = 5;

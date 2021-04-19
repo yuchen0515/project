@@ -6,7 +6,7 @@
 
 #include "interface.h"
 
-#define PRINT
+//#define PRINT
 
 
 void Interface::Agent(){
@@ -75,7 +75,7 @@ void Interface::InitExist() {
     mouseIndex_ = std::make_pair(-1, -1);
 }
 
-bool Interface::DetectKingExist() {
+bool Interface::DetectKingExist() const {
     int32_t exist_king = 0;
     for (int32_t i = LOWER_ ; i <= UPPER_ ; i++) {
         for (int32_t j = 0 ; j < COL_SIZE_ ; j++) {
@@ -241,6 +241,10 @@ void Interface::MoveChess(
         auto& [fir, sec] = des;
         CaptivePush(kind, exist[kind == 1 ? 0 : 1][fir][sec]);
     }
+    if (exist[kind == 1 ? 0 : 1][des.first][des.second] == KING_){
+        isKingDead_ = true;
+
+    }
 
     exist[kind][des.first][des.second]=\
                                        exist[kind][ori.first][ori.second];
@@ -259,11 +263,12 @@ void Interface::MoveChess(
         }
     }
 
+
     turn_ = (turn_ + 1) % PLAYER_NUMBER_;
 }
 
 void Interface::PrintBugMessageBoard() const {
-    system("clear");
+    //system("clear");
     for (int32_t k = 0 ; k < 2 ; k++) {
         std::cout << "------------" << std::endl;
         for (int32_t i = 0 ; i < 7 ; i ++) {
@@ -404,7 +409,7 @@ void Interface::make_walking(const std::pair<int32_t, int32_t> temp, std::vector
         return;
     }
 
-    if (turn_ == Isupper){
+    if (get_turns() == Isupper){
         return;
     }
 
@@ -736,139 +741,6 @@ void Interface::close() {
     SDL_Quit();
 }
 
-void Interface::run(){
-    // Start up SDL and create window
-    if (init() == false) {
-        std::cerr << "Failed to initialize!" << std::endl;
-    } else {
-        InitMedia();
-
-        // Load media
-        if (loadMedia(&gTextureBoard,
-                    const_cast<char *> ("../image/board.bmp")) == false) {
-            std::cerr << "Failed to load media!" << std::endl;
-        } else {
-            // Update the surface
-            SDL_UpdateWindowSurface(window);
-
-            // Wait two seconds
-            SDL_Event e;
-
-            bool quit = false;
-
-            while (quit == false) {
-                // Clear screen
-                SDL_RenderClear(gRenderer);
-
-                // cover
-                show_walking(mouseIndex_);
-
-                while (SDL_PollEvent(&e)) {
-                    if (e.type == SDL_QUIT) {
-                        quit = true;
-                    }
-
-                    if (e.key.keysym.sym == SDLK_ESCAPE) {
-                        quit = true;
-                    }
-
-                    if (e.key.keysym.sym == SDLK_a) {
-                        InitExist();
-                        isKingDead_ = false;
-                    }
-
-                    if (isKingDead_ == true) {
-                        usleep(50000);
-                        continue;
-                    }
-
-                    auto &[mFir, mSec] = mouseIndex_;
-                    auto &[mFirTEMP, mSecTEMP] = mouseIndexTemp_;
-                    Agent();
-                    if (SDL_MOUSEBUTTONDOWN == e.type) {
-                        if (SDL_BUTTON_LEFT == e.button.button) {
-                            mouseIndexTemp_ = mouseIndex_;
-                            mouseX_ = e.button.x;
-                            mouseY_ = e.button.y;
-                            mouseIndex_ = return_MouseIndex(mouseX_, mouseY_);
-#ifdef PRINT
-                            std::cerr << "x, y: " << mouseX_;
-                            std::cerr << " " << mouseY_;
-                            std::cerr << "..............." << std::endl;
-#endif
-
-                            if (isClickChess_
-                                    && (mFir != mFirTEMP
-                                        || mSec != mSecTEMP)) {
-                                MoveChess(mouseIndexTemp_, mouseIndex_);
-                                isClickChess_ = false;
-
-                                if (DetectKingExist() == 0) {
-                                    isKingDead_ = true;
-                                }
-                            } else if (ClickCover(mouseIndex_)
-                                    && isClickChess_ == true
-                                    && (mFir == mFirTEMP
-                                        && mSec == mSecTEMP)) {
-                                isClickChess_ = false;
-                            } else {
-                                isClickChess_ = ClickCover(mouseIndex_) ? 1 : 0;
-                            }
-                        } else if (SDL_BUTTON_RIGHT == e.button.button) {
-                            mouseIndexTemp_ = mouseIndex_;
-                            mouseX_ = e.button.x;
-                            mouseY_ = e.button.y;
-                            mouseIndex_ = return_MouseIndex(mouseX_, mouseY_);
-#ifdef PRINT
-                            std::cerr << "x, y: " << mouseX_;
-                            std::cerr << " " << mouseY_;
-                            std::cerr << "..............." << std::endl;
-#endif
-                            if (isClickChess_
-                                    && (mFir != mFirTEMP
-                                        || mSec != mSecTEMP)) {
-                                MoveChess(mouseIndexTemp_, mouseIndex_);
-                                isClickChess_ = false;
-
-                                if (DetectKingExist() == 0) {
-                                    isKingDead_ = true;
-                                }
-                            } else if (ClickCover(mouseIndex_)
-                                    && isClickChess_ == true
-                                    && (mFir == mFirTEMP
-                                        && mSec == mSecTEMP)) {
-                                isClickChess_ = false;
-                            } else {
-                                isClickChess_ = ClickCover(mouseIndex_) ? 1 : 0;
-                            }
-                        }
-                        std::cerr << "index_x: " << mFir << ", ";
-                        std::cerr << mSec << std::endl;
-
-                        PrintBugMessageBoard();
-                    }
-                }
-                // Render texture to screen
-                SDL_RenderCopy(gRenderer, gTextureBackground, NULL, &texPosition_[0]);
-                // Apply the image
-                SDL_RenderCopy(gRenderer, gTextureBoard, NULL, &texPosition_[1]);
-
-                if (isClickChess_ == false) {
-                    show_walking(std::make_pair(-1, -1));
-                } else {
-                    show_walking(mouseIndex_);
-                }
-
-                Show_Chess();
-                ClickCover(mouseIndex_);
-
-                // Update screen
-                SDL_RenderPresent(gRenderer);
-            }
-        }
-    }
-    close();
-}
 
 bool Interface::isWithinBound (std::pair<int32_t, int32_t> TEMP) const {
     auto& [x, y] = TEMP;

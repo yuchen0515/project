@@ -6,15 +6,16 @@
 #include "../interface.h"
 
 namespace MN {
-    constexpr int32_t  M_SIZE = 9;
+    constexpr int32_t  M_SIZE = 7;
     constexpr int32_t  N_SIZE = 5;
     const int32_t G_SIZE = M_SIZE * N_SIZE;
 }
 
 enum class Result : int32_t {
-    Unknown = 0,
+    Upper = 0,
     Lower = 1,
-    Upper = 2
+    Draw = 2,
+    Unknown = 3
 };
 
 #ifndef MOVE
@@ -44,13 +45,17 @@ class State : public Interface {
         //std::vector<Move> get_Moves() const;
 
         void do_Move(Move move);
+        void run();
 
+        Move Agent();
         bool is_Draw() const;
 
     //private:
-        //int32_t player_to_move_ = static_cast<int32_t> (Result::Lower);
+        int32_t player_to_move_ = static_cast<int32_t> (Result::Lower);
         //Result result_ = Result::Unknown;
-        //int32_t turns_ = 0;
+        int32_t turns_ = 1;
+        bool agentDone_ = false;
+        
         //bool isEnd_ = false;
         //std::vector<Move> move_;
 };

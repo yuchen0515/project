@@ -13,7 +13,7 @@
 //#include <omp.h>
 #include "mcts.h"
 
-//#define PRINT
+#define PRINT
 
 //using namespace std;
 //const int numThread = 10;
@@ -41,7 +41,7 @@ namespace PURE {
                 return N;
             }
             double mean() const {
-                return static_cast<double> (V) / N;
+                return (static_cast<double> (V)) / N;
             }
             Move get_move() const {
                 return move;
@@ -82,6 +82,8 @@ namespace PURE {
                 double uct =
                     static_cast<double> (child->V) / child->N \
                     + sqrt(2.0 * log(static_cast<double> (node->N)) / child->N);
+
+                std::cout << "uct: " << uct << std::endl;
                 if (uct > best_value) {
                     best_value = uct;
                     best_child = child;
@@ -99,6 +101,11 @@ namespace PURE {
     Node* Node::Expansion(State& state) {
         auto node = this;
         auto it = children.size();
+        //std::cout << "hihiihihihihihihi" << std::endl;
+        //std::cout << it << std::endl;
+        //std::cout << moves.size() << std::endl;
+        
+
         auto move = moves[it];
         state.do_Move(move);
         node = new Node(state, node, move);
@@ -108,27 +115,31 @@ namespace PURE {
 
     int32_t Node::Simulate(State& state) const {
         auto player_to_move = state.get_turns();
-        //int sim_dep = 20;
+        int32_t sim_dep = 50;
         while (state.is_End() == false) {
             auto moves = state.get_Moves();
             auto move_num = moves.size();
 
-            //srand(time(NULL));
+            srand(time(NULL));
             int32_t r = rand() % move_num;
             state.do_Move(moves[r]);
-            //sim_dep--;
+            sim_dep--;
             //}
-            //if (sim_dep <= 0)
-            //  return 0;
-    }
-    if (state.is_Draw() == true) {
-        return 0;
-    }
-    if (state.get_turns() == player_to_move) {
-        return 1;
-    }
-    return -1;
-    //return -2;
+            if (sim_dep <= 0){
+                return 0;
+            }
+            //std::cout << "Hello kity" << std::endl;
+            //std::cout << move_num << std::endl;
+            //std::cout << r << std::endl;
+        }
+        if (state.is_Draw() == true) {
+            return 0;
+        }
+        if (state.get_turns() == player_to_move) {
+            return 1;
+        }
+        return -1;
+        //return -2;
 }
 
 void Node::Update(int32_t value) {
@@ -144,14 +155,16 @@ void Node::Update(int32_t value) {
 void Node::OneRound(State state) {
     auto node = this;
     node = node->Select(state);
+
     if (state.is_End() == false) {
         node = node->Expansion(state);
     }
     int32_t result = 0;
     if (state.is_End() == true) {
-        if (state.is_Draw() == false) {
+        std::cout << "ya" << std::endl;
+        //if (state.is_Draw() == false) {
             result = 1;
-        }
+        //}
     } else {
         result = node->Simulate(state);
     }
@@ -190,6 +203,9 @@ Move Node::Round(const State& state, int32_t simLimit) {
 std::string Node::detail() const {
     double rate = mean() / 2 + 0.5;
     std::stringstream ss;
+    ss << "Move from: ( " << move.from.first << ", " << move.from.second << " | ";
+    ss << "Move to: ( " << move.to.first << ", " << move.to.second << " | ";
+
     //ss << "Move:" << static_cast<char>(move % 15 + 65);
     //ss << getw(2) << (15 - move / 15);
     ss << "\t Value:" << V;
@@ -215,7 +231,7 @@ Move MCTS(State state, int32_t simLimit) {
     Node root = Node(state);
     Move move = root.Round(state, simLimit);
 #ifdef PRINT
-    std::cout << root << endl;
+    std::cout << root << std::endl;
 #endif
     return move;
 }
