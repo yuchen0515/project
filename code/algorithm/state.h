@@ -19,62 +19,35 @@ enum class Result : int32_t {
     Upper = 2
 };
 
-typedef struct move{
-    int32_t from;
-    int32_t to;
+#ifndef MOVE
+#define MOVE
+
+typedef struct move {
+    std::pair<int32_t, int32_t> from;
+    std::pair<int32_t, int32_t> to;
 }Move;
+
+#endif
 
 class State {
     public:
-        void set_State() {
+        State(){};
+        void set_State();
+        void set_Result();
+        static const Move no_move;
 
-        }
+        Result get_Result() const;
 
+        bool is_End() const;
+        int32_t get_turns() const;
 
-        void set_Result() {
+        std::vector<Move> get_Moves() const;
 
-        }
+        void do_Move(Move move);
 
-        Result get_Result() const {
-            return result_;
-        }
+        void set_Interface(Interface* param);
 
-        void set_End() {
-
-        }
-
-        bool is_End() const {
-            return isEnd_;
-        }
-
-        void set_turns() {
-
-        }
-
-        int32_t get_turns() const {
-            return turns_;
-        }
-
-        void set_Moves() {
-            move_.clear();
-
-        }
-        
-        const std::vector<Move>& get_Moves() const {
-            return move_;
-        }
-
-        void do_Move(Move move) {
-            //Interface->do_Move(move);
-        }
-
-        void set_Interface(Interface* param) {
-
-        }
-
-        bool is_Draw() const {
-            return false;
-        }
+        bool is_Draw() const;
 
     private:
         class Interface *interface_;

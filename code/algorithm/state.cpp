@@ -3,6 +3,8 @@
 
 #include "state.h"
 
+const Move State::no_move = {std::make_pair(-1, -1), std::make_pair(-1, -1)};
+
 void State::set_State() {
 
 }
@@ -15,37 +17,25 @@ Result State::get_Result() const {
     return result_;
 }
 
-void State::set_End() {
-
-}
-
 bool State::is_End() const {
-    return isEnd_;
+    return interface_->is_End();
 }
 
-void State::set_turns() {
-
-}
 
 int32_t State::get_turns() const {
-    return turns_;
+    return interface_->get_turns();
 }
 
-void State::set_Moves() {
-    move_.clear();
-
-}
-
-const std::vector<Move>& State::get_Moves() const {
-    return move_;
+std::vector<Move> State::get_Moves() const {
+    return interface_->get_Move();
 }
 
 void State::do_Move(Move move) {
-    Interface->do_Move(move);
+    interface_->MoveChess(move.from, move.to);
 }
 
 void State::set_Interface(Interface* param) {
-
+    interface_ = param;
 }
 
 bool State::is_Draw() const {
