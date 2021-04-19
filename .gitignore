@@ -2,8 +2,5 @@
 *.mov
 *.pdf
 *.o
-<<<<<<< HEAD
+.*.swp
 ./code/OOGex/*
-=======
-code/OOGex/*
->>>>>>> master
