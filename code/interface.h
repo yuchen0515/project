@@ -14,6 +14,19 @@
 #include <vector>
 #include <utility>
 #include "./algorithm/state.h"
+#include "./algorithm/mcts.h"
+
+#ifndef MOVE
+#define MOVE
+
+typedef struct move {
+    std::pair<int32_t, int32_t> from;
+    std::pair<int32_t, int32_t> to;
+}Move;
+
+#endif
+
+class State;
 
 class Interface {
     public:
@@ -36,7 +49,32 @@ class Interface {
 
         SDL_Texture *loadTexture(char const *str);
 
+        int32_t get_turns() {
+            return turn_;
+        }
+
         void Show_Chess();
+
+        bool is_End() {
+            return DetectKingExist() == false;
+        }
+
+        std::vector<Move> get_Move(){
+            make_walking(mouseIndex_);
+
+            move_.clear();
+            Move TEMP;
+            TEMP.from = mouseIndex_;
+            for (int32_t i = 0 ; i < ROW_SIZE_ ; i ++){
+                for (int32_t j = 0 ; j < COL_SIZE_ ; j ++){
+                    if (walking[i][j] == 1){
+                        TEMP.to = std::make_pair(i, j);
+                        move_.emplace_back(TEMP);
+                    }
+                }
+            }
+            return move_;
+        }
 
         void make_walking(
                 const std::pair<int32_t, int32_t> temp);
@@ -64,7 +102,6 @@ class Interface {
         void CaptivePush(
                 const int32_t kind,
                 int32_t chess);
-
         void PrintBugMessageBoard() const;
         bool DetectKingExist();
 
@@ -93,6 +130,7 @@ class Interface {
                 const int32_t upper) const;
 
         void run();
+        void Agent();
 
     private:
         // Screen dimension constants  螢幕寬高設定
@@ -149,9 +187,12 @@ class Interface {
         bool isClickChess_ = false;
         bool isKingDead_ = false;
 
+        std::vector<Move> move_;
+
         SDL_Rect texPosition_[2];
         SDL_Rect chessDect_[6][9];
         SDL_Point chessSize_ = (SDL_Point){25, 30};
+
 
         enum chessType_ {
             KING_ = 1,

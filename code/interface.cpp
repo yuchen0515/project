@@ -8,6 +8,13 @@
 
 #define PRINT
 
+void Interface::Agent(){
+    State state;
+    state.set_Interface(this);
+    //auto TEMP = PURE::MCTS(state, 1000);
+    //MoveChess(TEMP.from, TEMP.to);
+}
+
 void Interface::InitMedia() {
     loadMedia(
             &gTextureBackground,
@@ -772,7 +779,7 @@ void Interface::run(){
 
                     auto &[mFir, mSec] = mouseIndex_;
                     auto &[mFirTEMP, mSecTEMP] = mouseIndexTemp_;
-
+                    Agent();
                     if (SDL_MOUSEBUTTONDOWN == e.type) {
                         if (SDL_BUTTON_LEFT == e.button.button) {
                             mouseIndexTemp_ = mouseIndex_;
