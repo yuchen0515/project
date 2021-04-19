@@ -14,7 +14,7 @@
 #include <vector>
 #include <utility>
 
-#include "./algorithm/mcts.h"
+//#include "./algorithm/mcts.h"
 
 #ifndef MOVE
 #define MOVE
@@ -58,21 +58,23 @@ class Interface {
             return DetectKingExist() == false;
         }
 
-        std::vector<Move> get_Move(){
-            make_walking(mouseIndex_);
-
-            move_.clear();
+        std::vector<Move> get_Moves()  const {
+            //make_walking(mouseIndex_);
+            //move_.clear();
+            
+            std::vector<Move> move__;
+           
             Move TEMP;
             TEMP.from = mouseIndex_;
             for (int32_t i = 0 ; i < ROW_SIZE_ ; i ++){
                 for (int32_t j = 0 ; j < COL_SIZE_ ; j ++){
                     if (walking[i][j] == 1){
                         TEMP.to = std::make_pair(i, j);
-                        move_.emplace_back(TEMP);
+                        move__.emplace_back(TEMP);
                     }
                 }
             }
-            return move_;
+            return move__;
         }
 
         void make_walking(

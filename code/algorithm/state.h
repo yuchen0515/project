@@ -30,11 +30,11 @@ typedef struct move {
 //class Interface;
 
 class State : public Interface {
-    //public:
+    public:
         //State(){};
         //void set_State();
         //void set_Result();
-        //static const Move no_move;
+        static const Move no_move;
 
         //Result get_Result() const;
 
@@ -43,9 +43,9 @@ class State : public Interface {
 
         //std::vector<Move> get_Moves() const;
 
-        //void do_Move(Move move);
+        void do_Move(Move move);
 
-        //bool is_Draw() const;
+        bool is_Draw() const;
 
     //private:
         //int32_t player_to_move_ = static_cast<int32_t> (Result::Lower);

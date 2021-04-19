@@ -5,6 +5,8 @@
 
 ///////////////////////
 
+#include "state.h"
+
 #ifndef MOVE
 #define MOVE
 

@@ -3,7 +3,7 @@
 
 #include "state.h"
 
-//const Move State::no_move = {std::make_pair(-1, -1), std::make_pair(-1, -1)};
+const Move State::no_move = {std::make_pair(-1, -1), std::make_pair(-1, -1)};
 
 //void State::set_State() {
 //
@@ -30,10 +30,10 @@
 //    return {};
 //}
 //
-//void State::do_Move(Move move) {
-//    return;
-//}
-//
-//bool State::is_Draw() const {
-//    return false;
-//}
+void State::do_Move(Move move) {
+    return;
+}
+
+bool State::is_Draw() const {
+    return false;
+}
