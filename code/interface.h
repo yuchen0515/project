@@ -26,7 +26,6 @@ typedef struct move {
 
 #endif
 
-
 class Interface {
     public:
         // Declare function
@@ -169,6 +168,8 @@ class Interface {
         int32_t mouseX_ = 0;
         int32_t mouseY_ = 0;
 
+        bool isWithinBound (std::pair<int32_t, int32_t> TEMP) const;
+
         bool isClickChess_ = false;
         SDL_Rect texPosition_[2];
         SDL_Rect chessDect_[6][9];
@@ -188,7 +189,8 @@ class Interface {
         // 10: sliver (up), 11: pawn(up)
         // 12 ~ 17: captive 1~6
         //
-        int32_t exist[PLAYER_NUMBER_][ROW_SIZE_][7] = {0};
+        //int32_t exist[PLAYER_NUMBER_][ROW_SIZE_][7] = {0};
+        std::vector<std::vector<std::vector<int32_t>>> exist{PLAYER_NUMBER_, std::vector<std::vector<int32_t>>(COL_SIZE_, std::vector<int32_t>(7, 0))};
         std::vector<std::vector<int32_t>> walking{COL_SIZE_, std::vector<int32_t>(ROW_SIZE_, 0)};
 
         std::pair<int32_t, int32_t> mouseIndex_ = std::make_pair(-1, -1);

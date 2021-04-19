@@ -8,7 +8,9 @@
 
 #define PRINT
 
+
 void Interface::Agent(){
+    //State state;
     //auto TEMP = PURE::MCTS(state, 1000);
     //MoveChess(TEMP.from, TEMP.to);
 }
@@ -59,7 +61,8 @@ void Interface::InitMedia() {
 }
 
 void Interface::InitExist() {
-    memset(exist, 0, sizeof(exist));
+    //memset(exist, 0, sizeof(exist));
+    std::fill(exist.begin(), exist.end(), std::vector<std::vector<int32_t>>(COL_SIZE_, std::vector<int32_t>(7, 0)));
 
     exist[0][0][0] = exist[1][4][4] = ROOK_;
     exist[0][1][0] = exist[1][3][4] = BISHOP_;
@@ -386,6 +389,10 @@ void Interface::make_walking(const std::pair<int32_t, int32_t> temp, std::vector
 
     int32_t Isupper = 0, kind = 0;
     auto &[fir, sec] = temp;
+
+    if (isWithinBound(temp) == false){
+        return;
+    }
 
     if (exist[0][fir][sec] > 0) {
         Isupper = 1;
@@ -861,4 +868,12 @@ void Interface::run(){
         }
     }
     close();
+}
+
+bool Interface::isWithinBound (std::pair<int32_t, int32_t> TEMP) const {
+    auto& [x, y] = TEMP;
+    if (x < 0 || x > 4 || y < 0 || y > 4){
+        return false;
+    }
+    return true;
 }
