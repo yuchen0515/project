@@ -24,6 +24,7 @@ enum class Result : int32_t {
 typedef struct move {
     std::pair<int32_t, int32_t> from;
     std::pair<int32_t, int32_t> to;
+    int32_t value;
 }Move;
 
 #endif

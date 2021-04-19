@@ -83,7 +83,7 @@ namespace PURE {
                     static_cast<double> (child->V) / child->N \
                     + sqrt(2.0 * log(static_cast<double> (node->N)) / child->N);
 
-                std::cout << "uct: " << uct << std::endl;
+                //std::cout << "uct: " << uct << std::endl;
                 if (uct > best_value) {
                     best_value = uct;
                     best_child = child;
@@ -109,19 +109,22 @@ namespace PURE {
         auto move = moves[it];
         state.do_Move(move);
         node = new Node(state, node, move);
-        children.push_back(node);
+        children.emplace_back(node);
         return node;
     }
 
     int32_t Node::Simulate(State& state) const {
         auto player_to_move = state.get_turns();
-        int32_t sim_dep = 50;
+        int32_t sim_dep = 100;
+        int32_t best_move = 0;
+
         while (state.is_End() == false) {
             auto moves = state.get_Moves();
             auto move_num = moves.size();
 
             srand(time(NULL));
             int32_t r = rand() % move_num;
+
             state.do_Move(moves[r]);
             sim_dep--;
             //}
@@ -146,6 +149,7 @@ void Node::Update(int32_t value) {
     auto node = this;
     while (node != nullptr) {
         node->V += value;
+        //node->V += node->move.value;
         node->N += 1;
         value = -value;
         node = node->parent;
@@ -168,7 +172,9 @@ void Node::OneRound(State state) {
     } else {
         result = node->Simulate(state);
     }
-    node->Update(result);
+
+    //node->Update(result);
+    node->Update(node->move.value);
 }
 
 Move Node::Round(const State& state, int32_t simLimit) {

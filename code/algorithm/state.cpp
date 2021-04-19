@@ -12,7 +12,7 @@ namespace PURE {
 Move State::Agent(){
 
     State state = *this;
-    auto TEMP = PURE::MCTS(state, 500);
+    auto TEMP = PURE::MCTS(state, 1000);
     std::cout << "hihihi" << std::endl;
 
     auto &[a, b] = TEMP.from;
@@ -57,12 +57,20 @@ Move State::Agent(){
 //}
 //
 void State::do_Move(Move move) {
+    auto &[a, b] = move.from;
+    std::cout << a << " " << b << std::endl;
+    auto &[c, d] = move.to;
+    std::cout << c << " " << d << std::endl;
+
     assert(move.from.first >= 0 && move.from.first <= 4);
-    assert(move.from.second>= 0 && move.from.second<= 4);
+    assert(move.from.second >= 0 && move.from.second <= 4);
 
     assert(move.to.first >= 0 && move.to.first <= 4);
     assert(move.to.second>= 0 && move.to.second<= 4);
 
+    if (exist[get_turns() == 1 ? 0 : 1][move.to.first][move.to.second] == KING_){
+        isKingDead_ = true;
+    }
     MoveChess(move.from, move.to);
     //int32_t turn__ = get_turns(); 
     //auto& [a, b] = move.from;
@@ -106,7 +114,7 @@ void State::run(){
 
                 // cover
                 show_walking(mouseIndex_);
-                if (get_turns() == 0 && agentDone_ == false){
+                if (get_turns() == 0 && agentDone_ == false && isKingDead_ == false){
                     auto TEMP = Agent();
                     agentDone_ = true;
                     make_walking(TEMP.from, this->walking);
