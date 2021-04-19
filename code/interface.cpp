@@ -9,8 +9,6 @@
 #define PRINT
 
 void Interface::Agent(){
-    State state;
-    state.set_Interface(this);
     //auto TEMP = PURE::MCTS(state, 1000);
     //MoveChess(TEMP.from, TEMP.to);
 }

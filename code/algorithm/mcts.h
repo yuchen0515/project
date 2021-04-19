@@ -1,7 +1,9 @@
-#ifndef MCTS_H_INCLUDED
-#define MCTS_H_INCLUDED
+#pragma once
 
-#include "state.h"
+//#ifndef MCTS_H_INCLUDED
+//#define MCTS_H_INCLUDED
+
+///////////////////////
 
 #ifndef MOVE
 #define MOVE
@@ -12,6 +14,7 @@ typedef struct move {
 }Move;
 
 #endif
+///////////////////////
 
 class State;
 
@@ -23,4 +26,4 @@ namespace MCTSS {
     Move MCTS(State state, int32_t simLimit);
 }
 
-#endif
+//#endif

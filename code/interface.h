@@ -13,7 +13,7 @@
 #include <iostream>
 #include <vector>
 #include <utility>
-#include "./algorithm/state.h"
+
 #include "./algorithm/mcts.h"
 
 #ifndef MOVE
@@ -26,7 +26,6 @@ typedef struct move {
 
 #endif
 
-class State;
 
 class Interface {
     public:
@@ -138,8 +137,6 @@ class Interface {
         const int32_t SCREEN_HEIGHT = 640;
         static constexpr int32_t COL_SIZE_ = 5;
         static constexpr int32_t ROW_SIZE_ = 5;
-        static constexpr int32_t PLAYER_NUMBER_ = 2;
-        static constexpr int32_t LEVEL_CHANGE_ = 5;
 
         SDL_Surface *screenBoard = nullptr;
         SDL_Surface *screenSurface = nullptr;
@@ -164,6 +161,21 @@ class Interface {
         SDL_Texture *gTextureLatticeCover = nullptr;
         SDL_Texture *gTextureShow = nullptr;
 
+        // The window renderer
+        SDL_Renderer *gRenderer = nullptr;
+
+        int32_t mouseX_ = 0;
+        int32_t mouseY_ = 0;
+
+        bool isClickChess_ = false;
+        SDL_Rect texPosition_[2];
+        SDL_Rect chessDect_[6][9];
+        SDL_Point chessSize_ = (SDL_Point){25, 30};
+
+    protected:
+        static constexpr int32_t PLAYER_NUMBER_ = 2;
+        static constexpr int32_t LEVEL_CHANGE_ = 5;
+
         // 0: upper, 1: lower
         //
         // 1: king, 2: rook, 3: bishop, 4: gold
@@ -175,32 +187,21 @@ class Interface {
         int32_t exist[PLAYER_NUMBER_][ROW_SIZE_][7] = {0};
         std::vector<std::vector<int32_t>> walking{COL_SIZE_, std::vector<int32_t>(ROW_SIZE_, 0)};
 
-        // The window renderer
-        SDL_Renderer *gRenderer = nullptr;
-
         std::pair<int32_t, int32_t> mouseIndex_ = std::make_pair(-1, -1);
         std::pair<int32_t, int32_t> mouseIndexTemp_ = std::make_pair(-1, -1);
-        int32_t mouseX_ = 0;
-        int32_t mouseY_ = 0;
         int32_t turn_ = 1;
 
-        bool isClickChess_ = false;
         bool isKingDead_ = false;
 
         std::vector<Move> move_;
 
-        SDL_Rect texPosition_[2];
-        SDL_Rect chessDect_[6][9];
-        SDL_Point chessSize_ = (SDL_Point){25, 30};
-
-
         enum chessType_ {
             KING_ = 1,
-            ROOK_ = 2,
+            ROOK_,
             BISHOP_ = 3,
-            GOLD_ = 4,
+            GOLD_,
             SLIVER_ = 5,
-            PAWN_ = 6,
+            PAWN_,
             ROOKUP_ = 7,
             BISHOPUP_ = 8,
             SLIVERUP_ = 10,
