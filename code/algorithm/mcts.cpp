@@ -19,107 +19,107 @@
 //const int numThread = 10;
 
 namespace PURE {
-class Node {
- private:
-    int32_t V, N;
-    Node* const parent;
-    const Move move;
-    const std::vector<Move> moves;
-    std::vector<Node*> children;
+    class Node {
+        private:
+            int32_t V, N;
+            Node* const parent;
+            const Move move;
+            const std::vector<Move> moves;
+            std::vector<Node*> children;
 
-    Node* Select(State& state);
-    Node* Expansion(State& state);
-    int32_t Simulate(State& state) const;
-    void Update(int32_t value);
-    void OneRound(State state);
+            Node* Select(State& state);
+            Node* Expansion(State& state);
+            int32_t Simulate(State& state) const;
+            void Update(int32_t value);
+            void OneRound(State state);
 
- public:
-    Node(const State& state);
-    Node(const State& state, Node* parent, Move move);
-    ~Node();
-    int32_t visit_num() const {
-        return N;
-    }
-    double mean() const {
-        return static_cast<double> (V) / N;
-    }
-    Move get_move() const {
-        return move;
-    }
-    Move Round(const State& state, int32_t simLimit);
-    std::string detail() const;
-    void print(std::ostream& os) const;
-};
-
-Node::Node(const State& state)
-    : V(0),
-    N(0),
-    parent(nullptr),
-    move(State::no_move),
-    moves(state.get_Moves()) {
-    }
-
-Node::Node(const State& state, Node* parent, Move move)
-    : V(0),
-    N(0),
-    parent(parent),
-    move(move),
-    moves(state.get_Moves()) {
-    }
-
-Node::~Node() {
-    for (auto child : children) {
-        delete child;
-    }
-}
-
-Node* Node::Select(State& state) {
-    auto node = this;
-    while (node->children.size() == node->moves.size()) {
-        double best_value = -2.0;
-        Node* best_child = nullptr;
-        for (auto child : node->children) {
-            double uct =
-                static_cast<double> (child->V) / child->N \
-                + sqrt(2.0 * log(static_cast<double> (node->N)) / child->N);
-            if (uct > best_value) {
-                best_value = uct;
-                best_child = child;
+        public:
+            Node(const State& state);
+            Node(const State& state, Node* parent, Move move);
+            ~Node();
+            int32_t visit_num() const {
+                return N;
             }
+            double mean() const {
+                return static_cast<double> (V) / N;
+            }
+            Move get_move() const {
+                return move;
+            }
+            Move Round(const State& state, int32_t simLimit);
+            std::string detail() const;
+            void print(std::ostream& os) const;
+    };
+
+    Node::Node(const State& state)
+        : V(0),
+        N(0),
+        parent(nullptr),
+        move(State::no_move),
+        moves(state.get_Moves()) {
         }
-        if (best_child == nullptr) {
-            break;
+
+    Node::Node(const State& state, Node* parent, Move move)
+        : V(0),
+        N(0),
+        parent(parent),
+        move(move),
+        moves(state.get_Moves()) {
         }
-        node = best_child;
-        state.do_Move(node->move);
+
+    Node::~Node() {
+        for (auto child : children) {
+            delete child;
+        }
     }
-    return node;
-}
 
-Node* Node::Expansion(State& state) {
-    auto node = this;
-    auto it = children.size();
-    auto move = moves[it];
-    state.do_Move(move);
-    node = new Node(state, node, move);
-    children.push_back(node);
-    return node;
-}
+    Node* Node::Select(State& state) {
+        auto node = this;
+        while (node->children.size() == node->moves.size()) {
+            double best_value = -2.0;
+            Node* best_child = nullptr;
+            for (auto child : node->children) {
+                double uct =
+                    static_cast<double> (child->V) / child->N \
+                    + sqrt(2.0 * log(static_cast<double> (node->N)) / child->N);
+                if (uct > best_value) {
+                    best_value = uct;
+                    best_child = child;
+                }
+            }
+            if (best_child == nullptr) {
+                break;
+            }
+            node = best_child;
+            state.do_Move(node->move);
+        }
+        return node;
+    }
 
-int32_t Node::Simulate(State& state) const {
-    auto player_to_move = state.get_turns();
-    //int sim_dep = 20;
-    while (state.is_End() == false) {
-        auto moves = state.get_Moves();
-        auto move_num = moves.size();
+    Node* Node::Expansion(State& state) {
+        auto node = this;
+        auto it = children.size();
+        auto move = moves[it];
+        state.do_Move(move);
+        node = new Node(state, node, move);
+        children.push_back(node);
+        return node;
+    }
 
-        //srand(time(NULL));
-        int32_t r = rand() % move_num;
-        state.do_Move(moves[r]);
-        //sim_dep--;
-        //}
-        //if (sim_dep <= 0)
-        //  return 0;
+    int32_t Node::Simulate(State& state) const {
+        auto player_to_move = state.get_turns();
+        //int sim_dep = 20;
+        while (state.is_End() == false) {
+            auto moves = state.get_Moves();
+            auto move_num = moves.size();
+
+            //srand(time(NULL));
+            int32_t r = rand() % move_num;
+            state.do_Move(moves[r]);
+            //sim_dep--;
+            //}
+            //if (sim_dep <= 0)
+            //  return 0;
     }
     if (state.is_Draw() == true) {
         return 0;
