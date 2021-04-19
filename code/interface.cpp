@@ -73,6 +73,8 @@ void Interface::InitExist() {
 
     std::fill(walking.begin(), walking.end(), std::vector<int32_t>(ROW_SIZE_, 0));
     mouseIndex_ = std::make_pair(-1, -1);
+
+    turn_ = (turn_ + 1) % 2;
 }
 
 bool Interface::DetectKingExist() const {

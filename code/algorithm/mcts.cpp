@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <chrono>
 #include <iostream>
 #include <random>
 #include <sstream>
@@ -20,19 +21,6 @@
 
 namespace PURE {
     class Node {
-        private:
-            int32_t V, N;
-            Node* const parent;
-            const Move move;
-            const std::vector<Move> moves;
-            std::vector<Node*> children;
-
-            Node* Select(State& state);
-            Node* Expansion(State& state);
-            int32_t Simulate(State& state) const;
-            void Update(int32_t value);
-            void OneRound(State state);
-
         public:
             Node(const State& state);
             Node(const State& state, Node* parent, Move move);
@@ -49,6 +37,19 @@ namespace PURE {
             Move Round(const State& state, int32_t simLimit);
             std::string detail() const;
             void print(std::ostream& os) const;
+
+        private:
+            int32_t V, N;
+            Node* const parent;
+            const Move move;
+            const std::vector<Move> moves;
+            std::vector<Node*> children;
+
+            Node* Select(State& state);
+            Node* Expansion(State& state);
+            int32_t Simulate(State& state) const;
+            void Update(int32_t value);
+            void OneRound(State state);
     };
 
     Node::Node(const State& state)
@@ -82,8 +83,10 @@ namespace PURE {
                 double uct =
                     static_cast<double> (child->V) / child->N \
                     + sqrt(2.0 * log(static_cast<double> (node->N)) / child->N);
+                    //static_cast<double> (child->V) / child->N \
+                    //+ sqrt(2.0 * log(static_cast<double> (node->N)) / child->N);
 
-                std::cout << "uct: " << uct << std::endl;
+                //std::cout << "uct: " << uct << std::endl;
                 if (uct > best_value) {
                     best_value = uct;
                     best_child = child;
@@ -94,34 +97,44 @@ namespace PURE {
             }
             node = best_child;
             state.do_Move(node->move);
+
+            //
+            //node->moves = node->get_Move();
         }
         return node;
     }
 
     Node* Node::Expansion(State& state) {
+        std::mt19937_64 rng(std::chrono::system_clock::now().time_since_epoch().count());
         auto node = this;
         auto it = children.size();
+        //auto it = rng() % moves.size();
         //std::cout << "hihiihihihihihihi" << std::endl;
         //std::cout << it << std::endl;
         //std::cout << moves.size() << std::endl;
         
-
         auto move = moves[it];
         state.do_Move(move);
         node = new Node(state, node, move);
-        children.push_back(node);
+        children.emplace_back(node);
+
         return node;
     }
 
     int32_t Node::Simulate(State& state) const {
         auto player_to_move = state.get_turns();
-        int32_t sim_dep = 50;
+        int32_t sim_dep = 100;
+        int32_t best_move = 0;
+
+        std::mt19937_64 rng(std::chrono::system_clock::now().time_since_epoch().count());
+
         while (state.is_End() == false) {
             auto moves = state.get_Moves();
             auto move_num = moves.size();
 
-            srand(time(NULL));
-            int32_t r = rand() % move_num;
+            //srand(time(NULL));
+            int32_t r = rng() % move_num;
+
             state.do_Move(moves[r]);
             sim_dep--;
             //}
@@ -136,8 +149,10 @@ namespace PURE {
             return 0;
         }
         if (state.get_turns() == player_to_move) {
+            return 30000;
             return 1;
         }
+        return -30000;
         return -1;
         //return -2;
 }
@@ -146,6 +161,7 @@ void Node::Update(int32_t value) {
     auto node = this;
     while (node != nullptr) {
         node->V += value;
+        //node->V += node->move.value;
         node->N += 1;
         value = -value;
         node = node->parent;
@@ -161,14 +177,18 @@ void Node::OneRound(State state) {
     }
     int32_t result = 0;
     if (state.is_End() == true) {
-        std::cout << "ya" << std::endl;
+        //std::cout << "ya" << std::endl;
         //if (state.is_Draw() == false) {
             result = 1;
+            result = 30000;
         //}
     } else {
         result = node->Simulate(state);
     }
-    node->Update(result);
+
+    //node->Update(result);
+    node->Update(node->move.value);
+    //node->Update(node->move.value + result * 3000);
 }
 
 Move Node::Round(const State& state, int32_t simLimit) {
@@ -189,7 +209,8 @@ Move Node::Round(const State& state, int32_t simLimit) {
 
     //std::cout << "sim_cnt=" << sim_cnt << endl;
     auto best_move = State::no_move;
-    int32_t best_value = -1;
+    //int32_t best_value = -1;
+    int32_t best_value = -30000;
     for (auto child : children) {
         int32_t num = child->visit_num();
         if (num > best_value) {

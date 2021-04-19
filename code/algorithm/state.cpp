@@ -12,15 +12,35 @@ namespace PURE {
 Move State::Agent(){
 
     State state = *this;
-    auto TEMP = PURE::MCTS(state, 500);
-    std::cout << "hihihi" << std::endl;
+    int32_t simul = 0;
+
+    if (get_turns() == 0){
+        simul = 100;
+    }else{
+        simul = 1000;
+    }
+    auto TEMP = PURE::MCTS(state, simul);
+    //std::cout << "hihihi" << std::endl;
 
     auto &[a, b] = TEMP.from;
-    std::cout << a << " " << b << std::endl;
+    //std::cout << a << " " << b << std::endl;
     auto &[c, d] = TEMP.to;
-    std::cout << c << " " << d << std::endl;
+    //std::cout << c << " " << d << std::endl;
 
-    std::cout << "TTTTTTTTTTTTTTT----" << std::endl;
+    //std::cout << "TTTTTTTTTTTTTTT----" << std::endl;
+    
+    if (a < 0 || a > 4){
+        a = 0;
+    }
+    if (b < 0 || b > 4){
+        b = 0;
+    }
+    if (c < 0 || c > 4){
+        c = 0;
+    }
+    if (d < 0 || d > 4){
+        d = 0;
+    }
 
     assert(a >= 0 && a <= 4);
     assert(b >= 0 && b <= 4);
@@ -57,12 +77,22 @@ Move State::Agent(){
 //}
 //
 void State::do_Move(Move move) {
-    assert(move.from.first >= 0 && move.from.first <= 4);
-    assert(move.from.second>= 0 && move.from.second<= 4);
+    auto &[a, b] = move.from;
+    //std::cout << a << " " << b << std::endl;
+    auto &[c, d] = move.to;
+    //std::cout << c << " " << d << std::endl;
 
-    assert(move.to.first >= 0 && move.to.first <= 4);
-    assert(move.to.second>= 0 && move.to.second<= 4);
+    std::cout << a << " " << b << " " << c << " " << d << std::endl;
 
+    assert(a >= 0 && a <= 4);
+    assert(b >= 0 && b <= 4);
+
+    assert(c >= 0 && c <= 4);
+    assert(d >= 0 && d <= 4);
+
+    if (exist[get_turns() == 1 ? 0 : 1][move.to.first][move.to.second] == KING_){
+        isKingDead_ = true;
+    }
     MoveChess(move.from, move.to);
     //int32_t turn__ = get_turns(); 
     //auto& [a, b] = move.from;
@@ -106,7 +136,8 @@ void State::run(){
 
                 // cover
                 show_walking(mouseIndex_);
-                if (get_turns() == 0 && agentDone_ == false){
+                //if (get_turns() == 0 && agentDone_ == false && isKingDead_ == false){
+                if (agentDone_ == false && isKingDead_ == false){
                     auto TEMP = Agent();
                     agentDone_ = true;
                     make_walking(TEMP.from, this->walking);
@@ -132,10 +163,8 @@ void State::run(){
                         continue;
                     }
 
-
                     auto &[mFir, mSec] = mouseIndex_;
                     auto &[mFirTEMP, mSecTEMP] = mouseIndexTemp_;
-
 
                     if (SDL_MOUSEBUTTONDOWN == e.type) {
                         if (SDL_BUTTON_LEFT == e.button.button) {

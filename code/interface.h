@@ -22,6 +22,7 @@
 typedef struct move {
     std::pair<int32_t, int32_t> from;
     std::pair<int32_t, int32_t> to;
+    int32_t value;
 }Move;
 
 #endif
@@ -72,6 +73,8 @@ class Interface {
                         for (int32_t p = 0 ; p < COL_SIZE_ ; p ++){
                             if (walking[k][p] == 1){
                                 TEMP.to = std::make_pair(k, p);
+                                //TEMP.value = evl_value(get_turns() == 1 ? 0 : 1, TEMP.to) - evl_value(get_turns(), TEMP.from) * 0.9;
+                                TEMP.value = evl_value(get_turns() == 1 ? 0 : 1, TEMP.to);
                                 move__.emplace_back(TEMP);
                             }
                         }
@@ -79,6 +82,32 @@ class Interface {
                 }
             }
             return move__;
+        }
+        int32_t evl_value(int32_t turn, std::pair<int32_t, int32_t> temp)const {
+            auto comp = exist[turn][temp.first][temp.second];
+
+            switch (comp) {
+                case KING_:
+                    return 300000;
+                case ROOK_:
+                    return 54;
+                case BISHOP_:
+                    return 60;
+                case GOLD_:
+                    return 74;
+                case SLIVER_:
+                    return 64;
+                case PAWN_:
+                    return 50;
+                case ROOKUP_:
+                    return 80;
+                case BISHOPUP_:
+                    return 84;
+                case SLIVERUP_:
+                case PAWNUP_:
+                    return 65;
+            }
+            return 0;
         }
 
         void make_walking(
