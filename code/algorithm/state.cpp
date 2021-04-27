@@ -43,7 +43,7 @@ Move State::Agent(){
     }
 
     assert(a >= 0 && a <= 4);
-    assert(b >= 0 && b <= 4);
+    assert(b >= -2 && b <= 6);
 
     assert(c >= 0 && c <= 4);
     assert(d >= 0 && d <= 4);
@@ -85,12 +85,12 @@ void State::do_Move(Move move) {
     std::cout << a << " " << b << " " << c << " " << d << std::endl;
 
     assert(a >= 0 && a <= 4);
-    assert(b >= 0 && b <= 4);
+    assert(b >= -2 && b <= 6);
 
     assert(c >= 0 && c <= 4);
     assert(d >= 0 && d <= 4);
 
-    if (exist[get_turns() == 1 ? 0 : 1][move.to.first][move.to.second] == KING_){
+    if (exist[get_turns() == 1 ? 0 : 1][c][d] == KING_){
         isKingDead_ = true;
     }
     MoveChess(move.from, move.to);

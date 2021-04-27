@@ -223,6 +223,33 @@ void Interface::CaptivePush(const int32_t kind, int32_t chess) {
 void Interface::MoveChess(
         std::pair<int32_t, int32_t> ori,
         std::pair<int32_t, int32_t> des) {
+
+    auto &[ori_a, ori_b] = ori;
+    auto &[des_a, des_b] = des;
+
+    bool isCaptive = false;
+
+    if (isWithinBound(ori) == false) {
+        return;
+    }
+    
+    if (des_a < 0 || des_a > 4 || des_b <0 || des_b > 4) {
+        return;
+    }
+
+    //captive
+    if (ori_b < 0 && get_turns() == 1) {
+        return ;
+    }
+    if (ori_b > 4) {
+        isCaptive = true;
+    }
+    if (ori_b < 0) {
+        ori_b += 7;
+        ori_b = 11 - ori_b;
+        isCaptive = true;
+    }
+
     int32_t kind = exist[0][ori.first][ori.second] > 0 ? 0 : 1;
     int32_t kind_des = exist[0][des.first][des.second] > 0 ? 0 : 1;
     int32_t IsChess = 0;
@@ -235,6 +262,8 @@ void Interface::MoveChess(
     std::cout << "walk_check: " << walking[des.first][des.second] << std::endl;
 #endif
 
+
+    //No chess
     if (kind == 1 && exist[1][ori.first][ori.second] == 0) {
         return;
     }
@@ -247,17 +276,28 @@ void Interface::MoveChess(
         IsChess = 1;
     }
 
-    if (kind_des != 1 && kind == 0) {
+    if (kind_des == 0 && kind == 0) {
         return;
     }
 
-    if (IsChess != 0) {
+    //NOT from captive move to a chess rect.
+    if (IsChess == 1 && isCaptive == true) {
+        return;
+    }
+
+    if (IsChess == 1) {
         auto& [fir, sec] = des;
         CaptivePush(kind, exist[kind == 1 ? 0 : 1][fir][sec]);
     }
+
+    //King Dead is or not
     if (exist[kind == 1 ? 0 : 1][des.first][des.second] == KING_){
         isKingDead_ = true;
+    }
 
+    //BUGBUGBUGBUG, lower cative can't be return board.
+    if (kind == 0 && exist[1][ori_a][ori_b] == PAWN_ && isCaptive){
+        kind = (kind == 1) ? 0 : 1;
     }
 
     exist[kind][des.first][des.second]=\
@@ -369,18 +409,34 @@ void Interface::Determine_Draw(const int32_t kind, const int32_t Isupper, const 
 }
 
 bool Interface::ClickCover(const std::pair<int32_t, int32_t> fMouseIndex) const {
-    auto &[fir, sec] = fMouseIndex;
+    auto [fir, sec] = fMouseIndex;
     if (fir >= 0
             && fir <= 4
-            && sec >= 0
-            && sec <= 4) {
-        if (exist[1][fir][sec] > 0) {
+            && sec >= -2
+            && sec <= 6) {
+        bool isUpperCaptive = false;
+
+        if (sec < 0) {
+            sec -= 4;
+            sec *= (-1);
+            isUpperCaptive = true;
+        }
+
+        //Lower
+        if (isUpperCaptive == false && exist[1][fir][sec] > 0) {
+            if (sec >= 5) {
+                sec += 2;
+            }
+
             SDL_RenderCopy(
                     gRenderer,
                     gTextureAlphaChess,
                     nullptr,
                     &chessDect_[fir][sec]);
-        } else if (exist[0][fir][sec] > 0) {
+
+        } 
+        //Upper
+        if ( exist[0][fir][sec] > 0) {
             SDL_RenderCopyEx(
                     gRenderer,
                     gTextureAlphaChess,
@@ -408,20 +464,37 @@ void Interface::make_walking(const std::pair<int32_t, int32_t> temp, std::vector
     std::fill(walking.begin(), walking.end(), std::vector<int32_t>(ROW_SIZE_, 0));
 
     int32_t Isupper = 0, kind = 0;
-    auto &[fir, sec] = temp;
+    auto [fir, sec] = temp;
 
     if (isWithinBound(temp) == false){
         return;
+    }
+    bool isCaptive = false;
+    bool isUpperCaptive = false;
+
+    //Captive
+    if (sec < 0) {
+        sec += 7;
+        sec = 11 - sec;
+        isCaptive = true;
+        isUpperCaptive = true;
+
+    }
+    if (sec > 4) {
+        isCaptive = true;
     }
 
     if (exist[0][fir][sec] > 0) {
         Isupper = 1;
         kind = exist[0][fir][sec];
-    } else if (exist[1][fir][sec] > 0) {
+    } 
+    if (isUpperCaptive == false && exist[1][fir][sec] > 0) {
         Isupper = 0;
         kind = exist[1][fir][sec];
-    } else {
+    }
+    if (kind == 0) {
         return;
+
     }
 
     if (get_turns() == Isupper){
@@ -429,6 +502,26 @@ void Interface::make_walking(const std::pair<int32_t, int32_t> temp, std::vector
     }
 
     int32_t direction = Isupper ? 1 : -1;
+
+    if (isCaptive == true) {
+        for (int32_t x = 0 ; x < COL_SIZE_ ; x ++) {
+            int32_t count_PAWN = 0;
+            for (int32_t y = 0 ; y < ROW_SIZE_; y++ ) {
+                if (exist[0][x][y] == 0 && exist[1][x][y] == 0) {
+                    walking[x][y] = 1;
+                }
+                count_PAWN += (exist[0][x][y] == PAWN_);
+                count_PAWN += (exist[1][x][y] == PAWN_);
+            }
+            std::cout << "x, y" << x << " " << count_PAWN<<std::endl;
+            if (count_PAWN == 1 && kind == PAWN_) {
+                for (int32_t y = 0 ; y < ROW_SIZE_; y++ ) {
+                    walking[x][y] = 0;
+                }
+            }
+        }
+        return;
+    }
 
     if (check_bound_xy(fir, sec, -1, direction, Isupper)) {
         if (kind == KING_
@@ -769,7 +862,7 @@ void Interface::close() {
 
 bool Interface::isWithinBound (std::pair<int32_t, int32_t> TEMP) const {
     auto& [x, y] = TEMP;
-    if (x < 0 || x > 4 || y < 0 || y > 4){
+    if (x < 0 || x > 4 || y < -2 || y > 6){
         return false;
     }
     return true;
