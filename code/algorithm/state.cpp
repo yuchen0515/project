@@ -15,7 +15,7 @@ Move State::Agent(){
     int32_t simul = 0;
 
     if (get_turns() == 0){
-        simul = 100;
+        simul = 1;
     }else{
         simul = 1000;
     }
@@ -137,12 +137,13 @@ void State::run(){
                 // cover
                 show_walking(mouseIndex_);
                 //if (get_turns() == 0 && agentDone_ == false && isKingDead_ == false){
-                if (agentDone_ == false && isKingDead_ == false){
-                    auto TEMP = Agent();
-                    agentDone_ = true;
-                    make_walking(TEMP.from, this->walking);
-                    MoveChess(TEMP.from, TEMP.to);
-                }
+                //if (get_turns() == 1 && agentDone_ == false && isKingDead_ == false){
+                //if (get_turns() == 1 && agentDone_ == false && isKingDead_ == false){
+                //    auto TEMP = Agent();
+                //    agentDone_ = true;
+                //    make_walking(TEMP.from, this->walking);
+                //    MoveChess(TEMP.from, TEMP.to);
+                //}
 
                 while (SDL_PollEvent(&e) && agentDone_ == false) {
                     if (e.type == SDL_QUIT) {
