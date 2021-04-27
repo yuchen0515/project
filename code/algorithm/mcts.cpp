@@ -149,10 +149,10 @@ namespace PURE {
             return 0;
         }
         if (state.get_turns() == player_to_move) {
-            return 30000;
+            //return 30000;
             return 1;
         }
-        return -30000;
+        //return -30000;
         return -1;
         //return -2;
 }
@@ -180,14 +180,14 @@ void Node::OneRound(State state) {
         //std::cout << "ya" << std::endl;
         //if (state.is_Draw() == false) {
             result = 1;
-            result = 30000;
+            //result = 30000;
         //}
     } else {
         result = node->Simulate(state);
     }
 
-    //node->Update(result);
-    node->Update(node->move.value);
+    node->Update(result);
+    //node->Update(node->move.value);
     //node->Update(node->move.value + result * 3000);
 }
 
