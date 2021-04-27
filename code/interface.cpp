@@ -109,17 +109,19 @@ void Interface::InitPosition() {
         }
     }
 
+    //Upper
     for (int32_t i = 0 ; i <= 5 ; i++) {
         for (int32_t j = 5 ; j <= 6 ; j++) {
             setup_bmp_size(
                     &chessDect_[i][j],
                     155 + 77 * i,
-                    152 - 75 * (j-4),
+                    152 - 75 * (j - 4),
                     125,
                     250);
         }
     }
 
+    //Lower
     for (int32_t i = 0 ; i <= 5 ; i++) {
         for (int32_t j = 7 ; j <= 8 ; j++) {
             setup_bmp_size(
@@ -187,25 +189,35 @@ bool Interface::init() {
 
 
 void Interface::CaptivePush(const int32_t kind, int32_t chess) {
-    static int32_t push_stat[2][2] = {
-        {0, 5},
-        {0, 5}
-    };
+    //static int32_t push_stat[2][2] = {
+    //    {0, 5},
+    //    {0, 5}
+    //};
 
 
     if (chess >= ROOKUP_ && chess <= PAWNUP_) {
         chess -= LEVEL_CHANGE_;
     }
 
-    for (int32_t i = 0 ; i < 2 ; i++) {
-        if (push_stat[i][0] >= 5) {
-            push_stat[i][0] = 0;
-            push_stat[i][1] += 1;
+    static constexpr int32_t CaptiveRowSize = 2;
+    for (int32_t j = 0 + ROW_SIZE_ ; j < CaptiveRowSize + ROW_SIZE_; j++) {
+        for (int32_t i = 0 ; i < COL_SIZE_; i++) {
+            if (exist[kind][i][j] == 0){
+                exist[kind][i][j] = chess;
+                return;
+            }
         }
     }
 
-    exist[kind][push_stat[kind][0]][push_stat[kind][1]] = chess;
-    push_stat[kind][0] += 1;
+    //for (int32_t i = 0 ; i < 2 ; i++) {
+    //    if (push_stat[i][0] >= 5) {
+    //        push_stat[i][0] = 0;
+    //        push_stat[i][1] += 1;
+    //    }
+    //}
+
+    //exist[kind][push_stat[kind][0]][push_stat[kind][1]] = chess;
+    //push_stat[kind][0] += 1;
 }
 
 void Interface::MoveChess(
@@ -357,22 +369,23 @@ void Interface::Determine_Draw(const int32_t kind, const int32_t Isupper, const 
 }
 
 bool Interface::ClickCover(const std::pair<int32_t, int32_t> fMouseIndex) const {
-    if (fMouseIndex.first >= 0
-            && fMouseIndex.first <= 4
-            && fMouseIndex.second >= 0
-            && fMouseIndex.second <= 4) {
-        if (exist[1][fMouseIndex.first][fMouseIndex.second] > 0) {
+    auto &[fir, sec] = fMouseIndex;
+    if (fir >= 0
+            && fir <= 4
+            && sec >= 0
+            && sec <= 4) {
+        if (exist[1][fir][sec] > 0) {
             SDL_RenderCopy(
                     gRenderer,
                     gTextureAlphaChess,
                     nullptr,
-                    &chessDect_[fMouseIndex.first][fMouseIndex.second]);
-        } else if (exist[0][fMouseIndex.first][fMouseIndex.second] > 0) {
+                    &chessDect_[fir][sec]);
+        } else if (exist[0][fir][sec] > 0) {
             SDL_RenderCopyEx(
                     gRenderer,
                     gTextureAlphaChess,
                     nullptr,
-                    &chessDect_[fMouseIndex.first][fMouseIndex.second],
+                    &chessDect_[fir][sec],
                     180,
                     &chessSize_, SDL_FLIP_NONE);
         }
@@ -552,7 +565,6 @@ void Interface::make_walking(const std::pair<int32_t, int32_t> temp, std::vector
             level += 1;
         }
     }
-
 }
 
 void Interface::show_walking(
@@ -624,6 +636,17 @@ std::pair<int32_t, int32_t> Interface::return_MouseIndex(
         const int32_t y) const {
     int32_t index_x = (x - 140) / 77;
     int32_t index_y = (y - 140) / 77;
+
+    if (x - 140 < 0) {
+        index_x = ((x - 140 - 77) / 77);
+    }
+
+    if (y - 140 < 0) {
+        index_y = ((y - 140 - 77) / 77);
+    }
+
+    std::cout << "index: " << index_x;
+    std::cout << ", index_y: " << index_y << std::endl;
 
     return std::make_pair(index_x, index_y);
 }

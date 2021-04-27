@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <random>
+#include <chrono>
 #include <string.h>
 #include <unistd.h>
 #include <SDL.h>
@@ -59,6 +61,7 @@ class Interface {
         }
 
         std::vector<Move> get_Moves()  const {
+            std::mt19937_64 rng(std::chrono::system_clock::now().time_since_epoch().count());
             //move_.clear();
             std::vector<std::vector<int32_t>> walking(COL_SIZE_, std::vector<int32_t>(ROW_SIZE_, 0));
 
@@ -75,12 +78,27 @@ class Interface {
                                 TEMP.to = std::make_pair(k, p);
                                 //TEMP.value = evl_value(get_turns() == 1 ? 0 : 1, TEMP.to) - evl_value(get_turns(), TEMP.from) * 0.9;
                                 TEMP.value = evl_value(get_turns() == 1 ? 0 : 1, TEMP.to);
+                                TEMP.value -= evl_value(get_turns(), TEMP.from);
                                 move__.emplace_back(TEMP);
                             }
                         }
                     }
                 }
             }
+            struct cmp{
+                bool operator()(const Move& a, const Move& b){
+                    if (a.value > b.value){
+                        return a.value > b.value;
+                    } 
+                    //else if (a.value == b.value){
+                    //    return rand() % 2 == 0;
+                    //}
+                    //return false;
+                }
+            };
+
+            shuffle(move__.begin(), move__.end(), rng);
+            //sort(move__.begin(), move__.end(), cmp());
             return move__;
         }
         int32_t evl_value(int32_t turn, std::pair<int32_t, int32_t> temp)const {
