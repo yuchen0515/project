@@ -186,8 +186,8 @@ void Node::OneRound(State state) {
         result = node->Simulate(state);
     }
 
-    node->Update(result);
-    //node->Update(node->move.value);
+    //node->Update(result);
+    node->Update(node->move.value);
     //node->Update(node->move.value + result * 3000);
 }
 
