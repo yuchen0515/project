@@ -5,82 +5,58 @@
 
 #include "../interface.h"
 
-class Interface;
-
-namespace RC {
-    constexpr int32_t  ROW_SIZE = 9;
-    constexpr int32_t  COL_SIZE = 5;
-    const int32_t G_SIZE = ROW_SIZE * COL_SIZE;
+namespace MN {
+    constexpr int32_t  M_SIZE = 7;
+    constexpr int32_t  N_SIZE = 5;
+    const int32_t G_SIZE = M_SIZE * N_SIZE;
 }
 
 enum class Result : int32_t {
     Upper = 0,
     Lower = 1,
-    Unknown = 2
+    Draw = 2,
+    Unknown = 3
 };
 
-typedef struct move{
+#ifndef MOVE
+#define MOVE
+
+typedef struct move {
     std::pair<int32_t, int32_t> from;
     std::pair<int32_t, int32_t> to;
+    int32_t value;
 }Move;
 
-class State {
+#endif
+
+//class Interface;
+
+class State : public Interface {
     public:
-        void set_State() {
+        //State(){};
+        //void set_State();
+        //void set_Result();
+        static const Move no_move;
 
-        }
+        //Result get_Result() const;
 
+        //bool is_End() const;
+        //int32_t get_turns() const;
 
-        void set_Result() {
+        //std::vector<Move> get_Moves() const;
 
-        }
+        void do_Move(Move move);
+        void run();
 
-        Result get_Result() const {
-            return result_;
-        }
+        Move Agent();
+        bool is_Draw() const;
 
-        void set_End() {
-
-        }
-
-        bool is_End() const {
-            return isEnd_;
-        }
-
-        void set_turns() {
-
-        }
-
-        int32_t get_turns() const {
-            return turns_;
-        }
-
-        void set_Moves() {
-            move_.clear();
-
-        }
-        
-        const std::vector<Move>& get_Moves() const {
-            return move_;
-        }
-
-        void do_Move(Move move) {
-            //Interface->do_Move(move);
-        }
-
-        void set_Interface(Interface* param) {
-
-        }
-
-        bool is_Draw() const {
-            return false;
-        }
-
-    private:
-        class Interface *interface_;
+    //private:
         int32_t player_to_move_ = static_cast<int32_t> (Result::Lower);
-        Result result_ = Result::Unknown;
-        int32_t turns_ = 0;
-        bool isEnd_ = false;
-        std::vector<Move> move_;
+        //Result result_ = Result::Unknown;
+        int32_t turns_ = 1;
+        bool agentDone_ = false;
+        
+        //bool isEnd_ = false;
+        //std::vector<Move> move_;
 };

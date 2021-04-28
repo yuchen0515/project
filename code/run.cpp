@@ -5,12 +5,12 @@
  */
 
 #include <iostream>
-#include "interface.h"
+#include "./algorithm/state.h"
 
 
 
 int main() {
-    Interface game;
+    State game;
     game.init();
     game.run();
 

@@ -6,7 +6,14 @@
 
 #include "interface.h"
 
-#define PRINT
+//#define PRINT
+
+
+void Interface::Agent(){
+    //State state;
+    //auto TEMP = PURE::MCTS(state, 1000);
+    //MoveChess(TEMP.from, TEMP.to);
+}
 
 void Interface::InitMedia() {
     loadMedia(
@@ -54,7 +61,8 @@ void Interface::InitMedia() {
 }
 
 void Interface::InitExist() {
-    memset(exist, 0, sizeof(exist));
+    //memset(exist, 0, sizeof(exist));
+    std::fill(exist.begin(), exist.end(), std::vector<std::vector<int32_t>>(COL_SIZE_, std::vector<int32_t>(7, 0)));
 
     exist[0][0][0] = exist[1][4][4] = ROOK_;
     exist[0][1][0] = exist[1][3][4] = BISHOP_;
@@ -63,11 +71,16 @@ void Interface::InitExist() {
     exist[0][4][0] = exist[1][0][4] = KING_;
     exist[0][4][1] = exist[1][0][3] = PAWN_;
 
-    std::fill(walking.begin(), walking.end(), std::vector<int32_t>(ROW_SIZE_, 0));
+    std::fill(walking.begin(),
+            walking.end(),
+            std::vector<int32_t>(ROW_SIZE_, 0));
+
     mouseIndex_ = std::make_pair(-1, -1);
+
+    turn_ = (turn_ + 1) % 2;
 }
 
-bool Interface::DetectKingExist() {
+bool Interface::DetectKingExist() const {
     int32_t exist_king = 0;
     for (int32_t i = LOWER_ ; i <= UPPER_ ; i++) {
         for (int32_t j = 0 ; j < COL_SIZE_ ; j++) {
@@ -77,6 +90,7 @@ bool Interface::DetectKingExist() {
             }
         }
     }
+
     if (exist_king == 2) {
         return true;
     }
@@ -85,8 +99,17 @@ bool Interface::DetectKingExist() {
 }
 
 void Interface::InitPosition() {
-    setup_bmp_size(&texPosition_[0], 0, 0, SCREEN_WIDTH * 1.2, SCREEN_HEIGHT);
-    setup_bmp_size(&texPosition_[1], 140, 140, 380, 380);
+    setup_bmp_size(&texPosition_[0],
+            0,
+            0,
+            SCREEN_WIDTH * 1.2,
+            SCREEN_HEIGHT);
+
+    setup_bmp_size(&texPosition_[1],
+            140,
+            140,
+            380,
+            380);
 
     for (int32_t i = 0 ; i < 5 ; i++) {
         for (int32_t j = 0 ; j < 5 ; j++) {
@@ -99,17 +122,19 @@ void Interface::InitPosition() {
         }
     }
 
+    //Upper
     for (int32_t i = 0 ; i <= 5 ; i++) {
         for (int32_t j = 5 ; j <= 6 ; j++) {
             setup_bmp_size(
                     &chessDect_[i][j],
                     155 + 77 * i,
-                    152 - 75 * (j-4),
+                    152 - 75 * (j - 4),
                     125,
                     250);
         }
     }
 
+    //Lower
     for (int32_t i = 0 ; i <= 5 ; i++) {
         for (int32_t j = 7 ; j <= 8 ; j++) {
             setup_bmp_size(
@@ -141,7 +166,6 @@ bool Interface::init() {
         std::cout << "Warning: Linear texture ";
         std::cout << "filtering not enabled!" << std::endl;
     }
-
 
     // Create window
     window = SDL_CreateWindow(
@@ -177,85 +201,136 @@ bool Interface::init() {
 
 
 void Interface::CaptivePush(const int32_t kind, int32_t chess) {
-    static int32_t push_stat[2][2] = {
-        {0, 5},
-        {0, 5}
-    };
-
-
     if (chess >= ROOKUP_ && chess <= PAWNUP_) {
         chess -= LEVEL_CHANGE_;
     }
 
-    for (int32_t i = 0 ; i < 2 ; i++) {
-        if (push_stat[i][0] >= 5) {
-            push_stat[i][0] = 0;
-            push_stat[i][1] += 1;
+    static constexpr int32_t CaptiveRowSize = 2;
+    for (int32_t j = 0 + ROW_SIZE_ ; j < CaptiveRowSize + ROW_SIZE_; j++) {
+        for (int32_t i = 0 ; i < COL_SIZE_; i++) {
+            if (exist[kind][i][j] == 0){
+                exist[kind][i][j] = chess;
+                return;
+            }
         }
     }
-
-    exist[kind][push_stat[kind][0]][push_stat[kind][1]] = chess;
-    push_stat[kind][0] += 1;
 }
 
 void Interface::MoveChess(
         std::pair<int32_t, int32_t> ori,
         std::pair<int32_t, int32_t> des) {
-    int32_t kind = exist[0][ori.first][ori.second] > 0 ? 0 : 1;
+
+    auto &[ori_a, ori_b] = ori;
+    auto &[des_a, des_b] = des;
+
+    bool isCaptive = false;
+    bool isUpperCaptive = false;
+
+    if (isWithinBound(ori) == false) {
+        return;
+    }
+    
+    if (des_a < 0 || des_a > 4 || des_b < 0 || des_b > 4) {
+        return;
+    }
+
+    //captive
+    if (ori_b < 0 && get_turns() == 1) {
+        return ;
+    }
+    if (ori_b > 4) {
+        isCaptive = true;
+        isUpperCaptive = true;
+    }
+    if (ori_b < 0) {
+        ori_b += 7;
+        ori_b = 11 - ori_b;
+        isCaptive = true;
+    }
+
+    int32_t kind = (get_turns() == 0 && exist[0][ori.first][ori.second]) > 0 ? 0 : 1;
     int32_t kind_des = exist[0][des.first][des.second] > 0 ? 0 : 1;
     int32_t IsChess = 0;
     int32_t walk_check = walking[des.first][des.second];
 
 #ifdef PRINT
-    std::cout << "ori: " << ori.first << " " << ori.second << std::endl;
-    std::cout << "des: " << des.first << " " << des.second << std::endl;
+    std::cout << "ori: " << ori_a << " " << ori_b << std::endl;
+    std::cout << "des: " << des_a << " " << des_b << std::endl;
     std::cout << "kind: " << kind << ", " << kind_des << std::endl;
-    std::cout << "walk_check: " << walking[des.first][des.second] << std::endl;
+    std::cout << "walk_check: " << walking[des_a][des_b] << std::endl;
 #endif
 
+    int32_t oppoent = (kind == 1 ? 0 : 1);
+
+    //No chess
     if (kind == 1 && exist[1][ori.first][ori.second] == 0) {
         return;
     }
 
+    //No Move
     if (walk_check == 0) {
         return;
     }
 
-    if (exist[kind == 1 ? 0 : 1][des.first][des.second] > 1) {
+    //Destination having a opponent chess
+    if (exist[oppoent][des.first][des.second] > 1) {
         IsChess = 1;
     }
 
-    if (kind_des != 1 && kind == 0) {
+    //No move to myself chess
+    if (kind_des == 0 && kind == 0) {
         return;
     }
 
-    if (IsChess != 0) {
+    //NOT from captive move to a chess rect.
+    if (IsChess == 1 && isCaptive == true) {
+        return;
+    }
+
+    //Push chess to captive blocks
+    if (IsChess == 1) {
         auto& [fir, sec] = des;
         CaptivePush(kind, exist[kind == 1 ? 0 : 1][fir][sec]);
     }
 
-    exist[kind][des.first][des.second]=\
-                                       exist[kind][ori.first][ori.second];
-    exist[kind][ori.first][ori.second] = 0;
-    exist[kind == 1 ? 0 : 1][des.first][des.second] = 0;
+    //King Dead is or not
+    if (exist[oppoent][des.first][des.second] == KING_){
+        isKingDead_ = true;
+    }
 
-    if ((ori.second == 3 * (kind == 1 ? 0 : 1)
-                || ori.second == 1 + 3 * (kind == 1 ? 0 : 1))
-            && (des.second == 3 * (kind == 1 ? 0 : 1)
-                || des.second == 1 + 3 * (kind == 1 ? 0 : 1))) {
-        int32_t chess = exist[kind][des.first][des.second];
+    ////BUGBUGBUGBUG, lower cative can't be return board.
+    //if (kind == 0 && exist[1][ori_a][ori_b] == PAWN_ && isCaptive){
+    //    kind = (kind == 1) ? 0 : 1;
+    //}
+
+    exist[kind][des_a][des_b]= exist[kind][ori_a][ori_b];
+    exist[kind][ori_a][ori_b] = 0;
+    exist[oppoent][des_a][des_b] = 0;
+
+    if ((ori_b == 3 * oppoent
+                || ori_b == 1 + 3 * oppoent)
+            && (des_b == 3 * oppoent
+                || des_b == 1 + 3 * oppoent)) {
+        int32_t chess = exist[kind][des_a][des_b];
+        //All chess that can level up
         if ((chess >= ROOK_
                     && chess <= PAWN_)
                 && chess != GOLD_) {
-            exist[kind][des.first][des.second] += LEVEL_CHANGE_;
+            exist[kind][des_a][des_b] += LEVEL_CHANGE_;
         }
     }
+
+    std::cout << "Kind: " << kind << std::endl;
+    std::cout << "ori_x: " << ori_a << " ori_y: " << ori_b << std::endl;
+    std::cout << "des_x: " << des_a << " des_y: " << des_b << std::endl;
 
     turn_ = (turn_ + 1) % PLAYER_NUMBER_;
 }
 
 void Interface::PrintBugMessageBoard() const {
-    system("clear");
+//#ifndef PRINT
+    //system("clear");
+//#endif
     for (int32_t k = 0 ; k < 2 ; k++) {
         std::cout << "------------" << std::endl;
         for (int32_t i = 0 ; i < 7 ; i ++) {
@@ -272,7 +347,6 @@ void Interface::PrintBugMessageBoard() const {
 }
 
 void Interface::Determine_Draw(const int32_t kind, const int32_t Isupper, const int32_t j, const int32_t k) {
-
     switch (kind) {
         case KING_:
             if (Isupper) {
@@ -342,22 +416,39 @@ void Interface::Determine_Draw(const int32_t kind, const int32_t Isupper, const 
 }
 
 bool Interface::ClickCover(const std::pair<int32_t, int32_t> fMouseIndex) const {
-    if (fMouseIndex.first >= 0
-            && fMouseIndex.first <= 4
-            && fMouseIndex.second >= 0
-            && fMouseIndex.second <= 4) {
-        if (exist[1][fMouseIndex.first][fMouseIndex.second] > 0) {
+    if (auto [fir, sec] = fMouseIndex;
+            fir >= 0
+            && fir <= 4
+            && sec >= -2
+            && sec <= 6) {
+        bool isUpperCaptive = false;
+
+        //Upper Captive
+        if (sec < 0) {
+            sec -= 4;
+            sec *= (-1);
+            isUpperCaptive = true;
+        }
+
+        //Lower
+        if (isUpperCaptive == false && exist[1][fir][sec] > 0) {
+            //Lower Captive
+            if (sec >= 5) {
+                sec += 2;
+            }
             SDL_RenderCopy(
                     gRenderer,
                     gTextureAlphaChess,
                     nullptr,
-                    &chessDect_[fMouseIndex.first][fMouseIndex.second]);
-        } else if (exist[0][fMouseIndex.first][fMouseIndex.second] > 0) {
+                    &chessDect_[fir][sec]);
+        } 
+        //Upper
+        if ( exist[0][fir][sec] > 0) {
             SDL_RenderCopyEx(
                     gRenderer,
                     gTextureAlphaChess,
                     nullptr,
-                    &chessDect_[fMouseIndex.first][fMouseIndex.second],
+                    &chessDect_[fir][sec],
                     180,
                     &chessSize_, SDL_FLIP_NONE);
         }
@@ -376,28 +467,89 @@ void Interface::Show_Chess() {
     }
 }
 
-void Interface::make_walking(const std::pair<int32_t, int32_t> temp) {
-    std::fill(walking.begin(), walking.end(), std::vector<int32_t>(ROW_SIZE_, 0));
+void Interface::make_walking(
+        const std::pair<int32_t, int32_t> temp,
+        std::vector<std::vector<int32_t>>& walking) const {
+
+    std::fill(walking.begin(),
+            walking.end(),
+            std::vector<int32_t>(ROW_SIZE_, 0));
 
     int32_t Isupper = 0, kind = 0;
-    auto &[fir, sec] = temp;
+    auto [fir, sec] = temp;
+
+    if (isWithinBound(temp) == false){
+        return;
+    }
+
+    bool isCaptive = false;
+    bool isUpperCaptive = false;
+
+    //Upper Captive
+    if (sec < 0) {
+        sec += 7;
+        sec = 11 - sec;
+        isCaptive = true;
+        isUpperCaptive = true;
+
+    }
+
+    //Lower Captive
+    if (sec > 4) {
+        isCaptive = true;
+    }
 
     if (exist[0][fir][sec] > 0) {
         Isupper = 1;
         kind = exist[0][fir][sec];
-    } else if (exist[1][fir][sec] > 0) {
+    } 
+    if (isUpperCaptive == false && exist[1][fir][sec] > 0) {
         Isupper = 0;
         kind = exist[1][fir][sec];
-    } else {
+    }
+
+    //No chess
+    if (kind == 0) {
         return;
     }
 
-    if (turn_ == Isupper){
+    //No your turns
+    if (get_turns() == Isupper){
         return;
     }
 
-    int32_t direction = Isupper ? 1 : -1;
 
+    if (isCaptive == true) {
+        for (int32_t x = 0 ; x < COL_SIZE_ ; x ++) {
+            int32_t count_PAWN = 0;
+            for (int32_t y = 0 ; y < ROW_SIZE_; y++ ) {
+                if (exist[0][x][y] == 0 && exist[1][x][y] == 0) {
+                    walking[x][y] = 1;
+                }
+                count_PAWN += (exist[0][x][y] == PAWN_);
+                count_PAWN += (exist[1][x][y] == PAWN_);
+            }
+
+            if (count_PAWN == 1 && kind == PAWN_) {
+                for (int32_t y = 0 ; y < ROW_SIZE_; y++ ) {
+                    walking[x][y] = 0;
+                }
+            }
+
+            if (int32_t Opponent_y = (Isupper == 1) ? 4 : 0 ;
+                    kind == PAWN_) {
+
+                for (int32_t x = 0 ; x < COL_SIZE_ ; x++) {
+                    walking[x][Opponent_y] = 0;
+                }
+            }
+        }
+        return;
+    }
+
+    int32_t direction = (Isupper == 1) ? 1 : -1;
+
+    //Left Top
     if (check_bound_xy(fir, sec, -1, direction, Isupper)) {
         if (kind == KING_
                 || kind == GOLD_
@@ -406,10 +558,11 @@ void Interface::make_walking(const std::pair<int32_t, int32_t> temp) {
                 || kind == BISHOPUP_
                 || kind == SLIVERUP_
                 || kind == PAWNUP_) {
-            walking[fir-1][sec + direction] = 1;
+            walking[fir - 1][sec + direction] = 1;
         }
     }
 
+    //Top
     if (check_bound_xy(fir, sec, 0, direction, Isupper)) {
         if (kind == KING_
                 || (kind >= GOLD_ && kind <= BISHOPUP_)
@@ -419,6 +572,7 @@ void Interface::make_walking(const std::pair<int32_t, int32_t> temp) {
         }
     }
 
+    //Right Top
     if (check_bound_xy(fir, sec, 1, direction, Isupper)) {
         if (kind == KING_
                 || kind == GOLD_
@@ -431,6 +585,7 @@ void Interface::make_walking(const std::pair<int32_t, int32_t> temp) {
         }
     }
 
+    //Left
     if (check_bound_xy(fir, sec, -1, 0, Isupper)) {
         if (kind == KING_
                 || kind == GOLD_
@@ -442,6 +597,7 @@ void Interface::make_walking(const std::pair<int32_t, int32_t> temp) {
         }
     }
 
+    //Right
     if (check_bound_xy(fir, sec, 1, 0, Isupper)) {
         if (kind == KING_
                 || kind == GOLD_
@@ -453,6 +609,7 @@ void Interface::make_walking(const std::pair<int32_t, int32_t> temp) {
         }
     }
 
+    //Left down
     if (check_bound_xy(fir, sec, -1, -1 * direction, Isupper)) {
         if (kind == KING_
                 || kind == SLIVER_
@@ -462,6 +619,7 @@ void Interface::make_walking(const std::pair<int32_t, int32_t> temp) {
         }
     }
 
+    //down
     if (check_bound_xy(fir, sec, 0, -1 * direction, Isupper)) {
         if (kind == KING_
                 || kind == GOLD_
@@ -473,6 +631,7 @@ void Interface::make_walking(const std::pair<int32_t, int32_t> temp) {
         }
     }
 
+    //Right Down
     if (check_bound_xy(fir, sec, 1, -direction, Isupper)) {
         if (kind == KING_
                 || kind == SLIVER_
@@ -533,12 +692,11 @@ void Interface::make_walking(const std::pair<int32_t, int32_t> temp) {
             level += 1;
         }
     }
-
 }
 
 void Interface::show_walking(
         const std::pair<int32_t, int32_t> temp) {
-    make_walking(temp);
+    make_walking(temp, this->walking);
     for (int32_t i = 0 ; i < 5 ; i ++){
         for (int32_t j = 0 ; j < 5 ; j++){
             if (walking[i][j] == 1){
@@ -570,7 +728,8 @@ int32_t Interface::check_bound_xy(
         return 2;
     }
 
-    if (int32_t notUpper = (upper == 1) ? 0 : 1 ; exist[notUpper][cur_x + add_x][cur_y + add_y] > 0) {
+    if (int32_t notUpper = (upper == 1) ? 0 : 1 ;
+            exist[notUpper][cur_x + add_x][cur_y + add_y] > 0) {
         return 0;
     }
 
@@ -605,6 +764,17 @@ std::pair<int32_t, int32_t> Interface::return_MouseIndex(
         const int32_t y) const {
     int32_t index_x = (x - 140) / 77;
     int32_t index_y = (y - 140) / 77;
+
+    if (x - 140 < 0) {
+        index_x = ((x - 140 - 77) / 77);
+    }
+
+    if (y - 140 < 0) {
+        index_y = ((y - 140 - 77) / 77);
+    }
+
+    std::cout << "index: " << index_x;
+    std::cout << ", index_y: " << index_y << std::endl;
 
     return std::make_pair(index_x, index_y);
 }
@@ -724,136 +894,11 @@ void Interface::close() {
     SDL_Quit();
 }
 
-void Interface::run(){
-    // Start up SDL and create window
-    if (init() == false) {
-        std::cerr << "Failed to initialize!" << std::endl;
-    } else {
-        InitMedia();
 
-        // Load media
-        if (loadMedia(&gTextureBoard,
-                    const_cast<char *> ("../image/board.bmp")) == false) {
-            std::cerr << "Failed to load media!" << std::endl;
-        } else {
-            // Update the surface
-            SDL_UpdateWindowSurface(window);
-
-            // Wait two seconds
-            SDL_Event e;
-
-            bool quit = false;
-
-            while (quit == false) {
-                // Clear screen
-                SDL_RenderClear(gRenderer);
-
-                // cover
-                show_walking(mouseIndex_);
-
-                while (SDL_PollEvent(&e)) {
-                    if (e.type == SDL_QUIT) {
-                        quit = true;
-                    }
-
-                    if (e.key.keysym.sym == SDLK_ESCAPE) {
-                        quit = true;
-                    }
-
-                    if (e.key.keysym.sym == SDLK_a) {
-                        InitExist();
-                        isKingDead_ = false;
-                    }
-
-                    if (isKingDead_ == true) {
-                        usleep(50000);
-                        continue;
-                    }
-
-                    auto &[mFir, mSec] = mouseIndex_;
-                    auto &[mFirTEMP, mSecTEMP] = mouseIndexTemp_;
-
-                    if (SDL_MOUSEBUTTONDOWN == e.type) {
-                        if (SDL_BUTTON_LEFT == e.button.button) {
-                            mouseIndexTemp_ = mouseIndex_;
-                            mouseX_ = e.button.x;
-                            mouseY_ = e.button.y;
-                            mouseIndex_ = return_MouseIndex(mouseX_, mouseY_);
-#ifdef PRINT
-                            std::cerr << "x, y: " << mouseX_;
-                            std::cerr << " " << mouseY_;
-                            std::cerr << "..............." << std::endl;
-#endif
-
-                            if (isClickChess_
-                                    && (mFir != mFirTEMP
-                                        || mSec != mSecTEMP)) {
-                                MoveChess(mouseIndexTemp_, mouseIndex_);
-                                isClickChess_ = false;
-
-                                if (DetectKingExist() == 0) {
-                                    isKingDead_ = true;
-                                }
-                            } else if (ClickCover(mouseIndex_)
-                                    && isClickChess_ == true
-                                    && (mFir == mFirTEMP
-                                        && mSec == mSecTEMP)) {
-                                isClickChess_ = false;
-                            } else {
-                                isClickChess_ = ClickCover(mouseIndex_) ? 1 : 0;
-                            }
-                        } else if (SDL_BUTTON_RIGHT == e.button.button) {
-                            mouseIndexTemp_ = mouseIndex_;
-                            mouseX_ = e.button.x;
-                            mouseY_ = e.button.y;
-                            mouseIndex_ = return_MouseIndex(mouseX_, mouseY_);
-#ifdef PRINT
-                            std::cerr << "x, y: " << mouseX_;
-                            std::cerr << " " << mouseY_;
-                            std::cerr << "..............." << std::endl;
-#endif
-                            if (isClickChess_
-                                    && (mFir != mFirTEMP
-                                        || mSec != mSecTEMP)) {
-                                MoveChess(mouseIndexTemp_, mouseIndex_);
-                                isClickChess_ = false;
-
-                                if (DetectKingExist() == 0) {
-                                    isKingDead_ = true;
-                                }
-                            } else if (ClickCover(mouseIndex_)
-                                    && isClickChess_ == true
-                                    && (mFir == mFirTEMP
-                                        && mSec == mSecTEMP)) {
-                                isClickChess_ = false;
-                            } else {
-                                isClickChess_ = ClickCover(mouseIndex_) ? 1 : 0;
-                            }
-                        }
-                        std::cerr << "index_x: " << mFir << ", ";
-                        std::cerr << mSec << std::endl;
-
-                        PrintBugMessageBoard();
-                    }
-                }
-                // Render texture to screen
-                SDL_RenderCopy(gRenderer, gTextureBackground, NULL, &texPosition_[0]);
-                // Apply the image
-                SDL_RenderCopy(gRenderer, gTextureBoard, NULL, &texPosition_[1]);
-
-                if (isClickChess_ == false) {
-                    show_walking(std::make_pair(-1, -1));
-                } else {
-                    show_walking(mouseIndex_);
-                }
-
-                Show_Chess();
-                ClickCover(mouseIndex_);
-
-                // Update screen
-                SDL_RenderPresent(gRenderer);
-            }
-        }
+bool Interface::isWithinBound (std::pair<int32_t, int32_t> TEMP) const {
+    auto& [x, y] = TEMP;
+    if (x < 0 || x > 4 || y < -2 || y > 6){
+        return false;
     }
-    close();
+    return true;
 }
