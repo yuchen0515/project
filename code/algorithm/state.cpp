@@ -15,9 +15,9 @@ Move State::Agent(){
     int32_t simul = 0;
 
     if (get_turns() == 0){
-        simul = 1;
-    }else{
         simul = 1000;
+    }else{
+        simul = 100;
     }
     auto TEMP = PURE::MCTS(state, simul);
     //std::cout << "hihihi" << std::endl;
@@ -90,18 +90,11 @@ void State::do_Move(Move move) {
     assert(c >= 0 && c <= 4);
     assert(d >= 0 && d <= 4);
 
-    if (exist[get_turns() == 1 ? 0 : 1][c][d] == KING_){
+    if (int32_t oppoent = (get_turns() == 1 ? 0 : 1) ;
+            exist[oppoent][c][d] == KING_){
         isKingDead_ = true;
     }
     MoveChess(move.from, move.to);
-    //int32_t turn__ = get_turns(); 
-    //auto& [a, b] = move.from;
-    //auto& [c, d] = move.to;
-    //exist[turn__][c][d] = exist[turn__][a][b];
-    //exist[turn__][a][b] = 0;
-
-    //turn__ = (turn__ + 1) % 2;
-    //isupper = (isupper == 1) ? 0 : 1;
 
     return;
 }
@@ -138,7 +131,7 @@ void State::run(){
                 show_walking(mouseIndex_);
                 //if (get_turns() == 0 && agentDone_ == false && isKingDead_ == false){
                 //if (get_turns() == 1 && agentDone_ == false && isKingDead_ == false){
-                //if (get_turns() == 1 && agentDone_ == false && isKingDead_ == false){
+                //if (get_turns() == 0 && agentDone_ == false && isKingDead_ == false){
                 //    auto TEMP = Agent();
                 //    agentDone_ = true;
                 //    make_walking(TEMP.from, this->walking);
