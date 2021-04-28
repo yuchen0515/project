@@ -224,6 +224,7 @@ void Interface::MoveChess(
     auto &[des_a, des_b] = des;
 
     bool isCaptive = false;
+    bool isUpperCaptive = false;
 
     if (isWithinBound(ori) == false) {
         return;
@@ -239,6 +240,7 @@ void Interface::MoveChess(
     }
     if (ori_b > 4) {
         isCaptive = true;
+        isUpperCaptive = true;
     }
     if (ori_b < 0) {
         ori_b += 7;
@@ -246,7 +248,7 @@ void Interface::MoveChess(
         isCaptive = true;
     }
 
-    int32_t kind = exist[0][ori.first][ori.second] > 0 ? 0 : 1;
+    int32_t kind = (get_turns() == 0 && exist[0][ori.first][ori.second]) > 0 ? 0 : 1;
     int32_t kind_des = exist[0][des.first][des.second] > 0 ? 0 : 1;
     int32_t IsChess = 0;
     int32_t walk_check = walking[des.first][des.second];
