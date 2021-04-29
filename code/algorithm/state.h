@@ -36,27 +36,27 @@ class State : public Interface {
         //State(){};
         //void set_State();
         //void set_Result();
-        static const Move no_move;
-
         //Result get_Result() const;
-
         //bool is_End() const;
         //int32_t get_turns() const;
-
         //std::vector<Move> get_Moves() const;
+        
+        static const Move no_move;
 
         void do_Move(Move move);
         void run();
 
-        Move Agent();
+        Move Agent(
+                const int32_t lowerSimul,
+                const int32_t upperSimul);
+
         bool is_Draw() const;
 
-    //private:
+        //private:
         int32_t player_to_move_ = static_cast<int32_t> (Result::Lower);
-        //Result result_ = Result::Unknown;
-        int32_t turns_ = 1;
+        int32_t turns_ = LOWER_;
         bool agentDone_ = false;
-        
+        //Result result_ = Result::Unknown;
         //bool isEnd_ = false;
         //std::vector<Move> move_;
 };

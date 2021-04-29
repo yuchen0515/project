@@ -82,7 +82,7 @@ void Interface::InitExist() {
 
 bool Interface::DetectKingExist() const {
     int32_t exist_king = 0;
-    for (int32_t i = LOWER_ ; i <= UPPER_ ; i++) {
+    for (int32_t i = UPPER_; i <= LOWER_; i++) {
         for (int32_t j = 0 ; j < COL_SIZE_ ; j++) {
             for (int32_t k = 0 ; k < ROW_SIZE_ ; k++) {
                 if (exist[i][j][k] == 1)

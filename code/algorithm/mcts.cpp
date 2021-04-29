@@ -186,8 +186,8 @@ void Node::OneRound(State state) {
         result = node->Simulate(state);
     }
 
-    //node->Update(result);
-    node->Update(node->move.value);
+    node->Update(result);
+    //node->Update(node->move.value);
     //node->Update(node->move.value + result * 3000);
 }
 
@@ -209,8 +209,8 @@ Move Node::Round(const State& state, int32_t simLimit) {
 
     //std::cout << "sim_cnt=" << sim_cnt << endl;
     auto best_move = State::no_move;
-    //int32_t best_value = -1;
-    int32_t best_value = -30000;
+    int32_t best_value = -1;
+    //int32_t best_value = -30000;
     for (auto child : children) {
         int32_t num = child->visit_num();
         if (num > best_value) {
