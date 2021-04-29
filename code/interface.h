@@ -264,7 +264,7 @@ class Interface {
 
         std::vector<Move> move_;
 
-        enum chessType_ {
+        static const enum chessType_ {
             KING_ = 1,
             ROOK_,
             BISHOP_ = 3,
@@ -276,7 +276,7 @@ class Interface {
             SLIVERUP_ = 10,
             PAWNUP_ = 11 };
 
-        enum player_{
+        static const enum player_{
             UPPER_ = 0,
             LOWER_ = 1};
 };

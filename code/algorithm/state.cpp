@@ -91,141 +91,139 @@ void State::run(){
     // Start up SDL and create window
     if (init() == false) {
         std::cerr << "Failed to initialize!" << std::endl;
-    } else {
-        InitMedia();
+        return;
+    }
+    InitMedia();
 
-        // Load media
-        if (loadMedia(&gTextureBoard,
-                    const_cast<char *> ("../image/board.bmp")) == false) {
-            std::cerr << "Failed to load media!" << std::endl;
-        } else {
-            // Update the surface
-            SDL_UpdateWindowSurface(window);
+    // Load media
+    if (loadMedia(&gTextureBoard,
+                const_cast<char *> ("../image/board.bmp")) == false) {
+        std::cerr << "Failed to load media!" << std::endl;
+        return;
+    }
+    // Update the surface
+    SDL_UpdateWindowSurface(window);
 
-            // Wait two seconds
-            SDL_Event e;
+    // Wait two seconds
+    SDL_Event e;
 
-            bool quit = false;
+    bool quit = false;
 
-            while (quit == false) {
-                // Clear screen
-                SDL_RenderClear(gRenderer);
+    while (quit == false) {
+        // Clear screen
+        SDL_RenderClear(gRenderer);
 
-                // cover
-                show_walking(mouseIndex_);
-                //if (get_turns() == 0 && agentDone_ == false && isKingDead_ == false){
-                //if (get_turns() == UPPER_ && agentDone_ == false && isKingDead_ == false){
-                ////if (get_turns() == UPPER_ && agentDone_ == false && isKingDead_ == false){
-                //    auto TEMP = Agent(10, 1000);
-                //    agentDone_ = true;
-                //    make_walking(TEMP.from, this->walking);
-                //    MoveChess(TEMP.from, TEMP.to);
-                //}
+        // cover
+        show_walking(mouseIndex_);
 
-                while (SDL_PollEvent(&e) && agentDone_ == false) {
-                    if (e.type == SDL_QUIT) {
-                        quit = true;
-                    }
-
-                    if (e.key.keysym.sym == SDLK_ESCAPE) {
-                        quit = true;
-                    }
-
-                    if (e.key.keysym.sym == SDLK_a) {
-                        InitExist();
-                        isKingDead_ = false;
-                    }
-
-                    if (isKingDead_ == true) {
-                        usleep(50000);
-                        continue;
-                    }
-
-                    auto &[mFir, mSec] = mouseIndex_;
-                    auto &[mFirTEMP, mSecTEMP] = mouseIndexTemp_;
-
-                    if (SDL_MOUSEBUTTONDOWN == e.type) {
-                        if (SDL_BUTTON_LEFT == e.button.button) {
-                            mouseIndexTemp_ = mouseIndex_;
-                            mouseX_ = e.button.x;
-                            mouseY_ = e.button.y;
-                            mouseIndex_ = return_MouseIndex(mouseX_, mouseY_);
-#ifdef PRINT
-                            std::cerr << "x, y: " << mouseX_;
-                            std::cerr << " " << mouseY_;
-                            std::cerr << "..............." << std::endl;
-#endif
-
-                            if (isClickChess_
-                                    && (mFir != mFirTEMP
-                                        || mSec != mSecTEMP)) {
-                                MoveChess(mouseIndexTemp_, mouseIndex_);
-                                isClickChess_ = false;
-
-                                if (DetectKingExist() == 0) {
-                                    isKingDead_ = true;
-                                }
-                            } else if (ClickCover(mouseIndex_)
-                                    && isClickChess_ == true
-                                    && (mFir == mFirTEMP
-                                        && mSec == mSecTEMP)) {
-                                isClickChess_ = false;
-                            } else {
-                                isClickChess_ = ClickCover(mouseIndex_) ? 1 : 0;
-                            }
-                        } else if (SDL_BUTTON_RIGHT == e.button.button) {
-                            mouseIndexTemp_ = mouseIndex_;
-                            mouseX_ = e.button.x;
-                            mouseY_ = e.button.y;
-                            mouseIndex_ = return_MouseIndex(mouseX_, mouseY_);
-#ifdef PRINT
-                            std::cerr << "x, y: " << mouseX_;
-                            std::cerr << " " << mouseY_;
-                            std::cerr << "..............." << std::endl;
-#endif
-                            if (isClickChess_
-                                    && (mFir != mFirTEMP
-                                        || mSec != mSecTEMP)) {
-                                MoveChess(mouseIndexTemp_, mouseIndex_);
-                                isClickChess_ = false;
-
-                                if (DetectKingExist() == 0) {
-                                    isKingDead_ = true;
-                                }
-                            } else if (ClickCover(mouseIndex_)
-                                    && isClickChess_ == true
-                                    && (mFir == mFirTEMP
-                                        && mSec == mSecTEMP)) {
-                                isClickChess_ = false;
-                            } else {
-                                isClickChess_ = ClickCover(mouseIndex_) ? 1 : 0;
-                            }
-                        }
-                        std::cerr << "index_x: " << mFir << ", ";
-                        std::cerr << mSec << std::endl;
-
-                        PrintBugMessageBoard();
-                    }
-                }
-                agentDone_ = false;
-                // Render texture to screen
-                SDL_RenderCopy(gRenderer, gTextureBackground, NULL, &texPosition_[0]);
-                // Apply the image
-                SDL_RenderCopy(gRenderer, gTextureBoard, NULL, &texPosition_[1]);
-
-                if (isClickChess_ == false) {
-                    show_walking(std::make_pair(-1, -1));
-                } else {
-                    show_walking(mouseIndex_);
-                }
-
-                Show_Chess();
-                ClickCover(mouseIndex_);
-
-                // Update screen
-                SDL_RenderPresent(gRenderer);
-            }
-            }
-            }
-            close();
+#ifdef AGENT
+        if (get_turns() == UPPER_ && agentDone_ == false && isKingDead_ == false){
+            auto TEMP = Agent(10, 1000);
+            agentDone_ = true;
+            make_walking(TEMP.from, this->walking);
+            MoveChess(TEMP.from, TEMP.to);
         }
+#endif
+
+        while (SDL_PollEvent(&e) && agentDone_ == false) {
+            if (e.type == SDL_QUIT
+                    || e.key.keysym.sym == SDLK_ESCAPE) {
+                quit = true;
+            }
+
+            if (e.key.keysym.sym == SDLK_a) {
+                InitExist();
+                isKingDead_ = false;
+            }
+
+            if (isKingDead_ == true) {
+                usleep(50000);
+                continue;
+            }
+
+            auto &[mFir, mSec] = mouseIndex_;
+            auto &[mFirTEMP, mSecTEMP] = mouseIndexTemp_;
+
+            if (SDL_MOUSEBUTTONDOWN == e.type) {
+                if (SDL_BUTTON_LEFT == e.button.button) {
+                    mouseIndexTemp_ = mouseIndex_;
+                    mouseX_ = e.button.x;
+                    mouseY_ = e.button.y;
+                    mouseIndex_ = return_MouseIndex(mouseX_, mouseY_);
+#ifdef PRINT
+                    std::cerr << "x, y: " << mouseX_;
+                    std::cerr << " " << mouseY_;
+                    std::cerr << "..............." << std::endl;
+#endif
+
+                    if (isClickChess_
+                            && (mFir != mFirTEMP
+                                || mSec != mSecTEMP)) {
+                        MoveChess(mouseIndexTemp_, mouseIndex_);
+                        isClickChess_ = false;
+
+                        if (DetectKingExist() == 0) {
+                            isKingDead_ = true;
+                        }
+                    } else if (ClickCover(mouseIndex_)
+                            && isClickChess_ == true
+                            && (mFir == mFirTEMP
+                                && mSec == mSecTEMP)) {
+                        isClickChess_ = false;
+                    } else {
+                        isClickChess_ = ClickCover(mouseIndex_) ? 1 : 0;
+                    }
+                } else if (SDL_BUTTON_RIGHT == e.button.button) {
+                    mouseIndexTemp_ = mouseIndex_;
+                    mouseX_ = e.button.x;
+                    mouseY_ = e.button.y;
+                    mouseIndex_ = return_MouseIndex(mouseX_, mouseY_);
+#ifdef PRINT
+                    std::cerr << "x, y: " << mouseX_;
+                    std::cerr << " " << mouseY_;
+                    std::cerr << "..............." << std::endl;
+#endif
+                    if (isClickChess_
+                            && (mFir != mFirTEMP
+                                || mSec != mSecTEMP)) {
+                        MoveChess(mouseIndexTemp_, mouseIndex_);
+                        isClickChess_ = false;
+
+                        if (DetectKingExist() == 0) {
+                            isKingDead_ = true;
+                        }
+                    } else if (ClickCover(mouseIndex_)
+                            && isClickChess_ == true
+                            && (mFir == mFirTEMP
+                                && mSec == mSecTEMP)) {
+                        isClickChess_ = false;
+                    } else {
+                        isClickChess_ = ClickCover(mouseIndex_) ? 1 : 0;
+                    }
+                }
+                std::cerr << "index_x: " << mFir << ", ";
+                std::cerr << mSec << std::endl;
+
+                PrintBugMessageBoard();
+            }
+        }
+        agentDone_ = false;
+        // Render texture to screen
+        SDL_RenderCopy(gRenderer, gTextureBackground, NULL, &texPosition_[0]);
+        // Apply the image
+        SDL_RenderCopy(gRenderer, gTextureBoard, NULL, &texPosition_[1]);
+
+        if (isClickChess_ == false) {
+            show_walking(std::make_pair(-1, -1));
+        } else {
+            show_walking(mouseIndex_);
+        }
+
+        Show_Chess();
+        ClickCover(mouseIndex_);
+
+        // Update screen
+        SDL_RenderPresent(gRenderer);
+    }
+    close();
+}
