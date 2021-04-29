@@ -66,4 +66,8 @@ class State : public Interface {
         //Result result_ = Result::Unknown;
         //bool isEnd_ = false;
         //std::vector<Move> move_;
+
+        std::vector<int32_t> winner_ = {0, 0};
+        std::vector<int32_t> lose_ = {0, 0};
+        int32_t game_number_ = 1e5;
 };

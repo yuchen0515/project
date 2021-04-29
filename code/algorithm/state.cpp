@@ -65,7 +65,9 @@ void State::do_Move(Move move) {
     //std::cout << a << " " << b << std::endl;
     //std::cout << c << " " << d << std::endl;
 
+#ifdef PRINT
     std::cout << a << " " << b << " " << c << " " << d << std::endl;
+#endif
 
     if ((a < 0 || a > 4)
             || (b < -2 || b > 6)
@@ -111,15 +113,26 @@ void State::run(){
 
     bool quit = false;
 
-    while (quit == false) {
+    //init
+    game_number_ = 100;
+    player_setting_[LOWER_] = PLAYER_TYPE_::AGENT_;
+    player_setting_[UPPER_] = PLAYER_TYPE_::AGENT_;
+
+    std::vector<int32_t> simula_TEMP = {
+        100,
+        1000};
+
+
+    //
+    std::cout << "------Game Information------" << std::endl;
+
+    while (quit == false && game_number_ > 0) {
         // Clear screen
         SDL_RenderClear(gRenderer);
 
         // cover
         show_walking(mouseIndex_);
 
-        //
-        player_setting_[LOWER_] = PLAYER_TYPE_::AGENT_;
 
         bool agentCheck = false;
         if (player_setting_[get_turns()] == PLAYER_TYPE_::AGENT_) {
@@ -127,7 +140,7 @@ void State::run(){
         }
 
         if (agentCheck == true && agentDone_ == false && isKingDead_ == false){
-            auto TEMP = Agent(100, 1000);
+            auto TEMP = Agent(simula_TEMP[0], simula_TEMP[1]);
             agentDone_ = true;
             make_walking(TEMP.from, this->walking);
             MoveChess(TEMP.from, TEMP.to);
@@ -139,7 +152,9 @@ void State::run(){
                 quit = true;
             }
 
-            if (e.key.keysym.sym == SDLK_a) {
+            if (e.key.keysym.sym == SDLK_a
+                    || ((player_setting_[LOWER_] == PLAYER_TYPE_::AGENT_)
+                    && (player_setting_[UPPER_] == PLAYER_TYPE_::AGENT_))) {
                 InitExist();
                 isKingDead_ = false;
             }
@@ -209,10 +224,18 @@ void State::run(){
                         isClickChess_ = ClickCover(mouseIndex_) ? 1 : 0;
                     }
                 }
+#ifdef PRINT
                 std::cerr << "index_x: " << mFir << ", ";
                 std::cerr << mSec << std::endl;
+#endif
 
                 PrintBugMessageBoard();
+
+                if (isKingDead_ == true) {
+                    lose_[get_turns()] += 1;
+                    winner_[get_turns() == 1 ? 0 : 1] += 1;
+                    game_number_ -= 1;
+                }    
             }
         }
         agentDone_ = false;
@@ -233,5 +256,33 @@ void State::run(){
         // Update screen
         SDL_RenderPresent(gRenderer);
     }
+
+    std::cout << "Upper[ ";
+    if (player_setting_[UPPER_] == PLAYER_TYPE_::PLAYER_) {
+        std::cout << "Player";
+    } else {
+        std::cout << "Agent] Simulate: " << simula_TEMP[UPPER_];
+    }
+
+    std::cout << std::endl;
+    std::cout << "Win: " << winner_[UPPER_];
+    std::cout << ", Lose: " << lose_[UPPER_];
+    std::cout << ", Win rate: " << 1.0 * winner_[UPPER_] / (lose_[UPPER_] + winner_[UPPER_]) << std::endl;
+
+    std::cout << "---" << std::endl;
+
+    std::cout << "Lower[ ";
+    if (player_setting_[LOWER_] == PLAYER_TYPE_::PLAYER_) {
+        std::cout << "Player";
+    } else {
+        std::cout << "Agent] Simulate: " << simula_TEMP[LOWER_];
+    }
+
+    std::cout << std::endl;
+    std::cout << "Win: " << winner_[LOWER_];
+    std::cout << ", Lose: " << lose_[LOWER_];
+    std::cout << ", Win rate: " << 1.0 * winner_[LOWER_] / (lose_[LOWER_] + winner_[LOWER_]) << std::endl;
+
+
     close();
 }

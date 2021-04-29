@@ -320,9 +320,11 @@ void Interface::MoveChess(
         }
     }
 
+#ifdef PRINT
     std::cout << "Kind: " << kind << std::endl;
     std::cout << "ori_x: " << ori_a << " ori_y: " << ori_b << std::endl;
     std::cout << "des_x: " << des_a << " des_y: " << des_b << std::endl;
+#endif
 
     turn_ = (turn_ + 1) % PLAYER_NUMBER_;
 }

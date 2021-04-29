@@ -14,7 +14,7 @@
 //#include <omp.h>
 #include "mcts.h"
 
-#define PRINT
+//#define PRINT
 
 //using namespace std;
 //const int numThread = 10;

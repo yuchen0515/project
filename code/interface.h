@@ -69,7 +69,7 @@ class Interface {
            
             Move TEMP;
             for (int32_t i = 0 ; i < 5 ; i++){
-                for (int32_t j = 0 ; j < 5 ; j ++) {
+                for (int32_t j = 0 ; j < 7 ; j ++) {
                     TEMP.from = std::make_pair(i, j);
                     make_walking(TEMP.from, walking);
                     for (int32_t k = 0 ; k < ROW_SIZE_ ; k ++){
@@ -78,7 +78,7 @@ class Interface {
                                 TEMP.to = std::make_pair(k, p);
                                 //TEMP.value = evl_value(get_turns() == 1 ? 0 : 1, TEMP.to) - evl_value(get_turns(), TEMP.from) * 0.9;
                                 TEMP.value = evl_value(get_turns() == 1 ? 0 : 1, TEMP.to);
-                                TEMP.value -= 1.2 * evl_value(get_turns(), TEMP.from);
+                                //TEMP.value -= 1.2 * evl_value(get_turns(), TEMP.from);
                                 move__.emplace_back(TEMP);
                             }
                         }
@@ -87,9 +87,10 @@ class Interface {
             }
             struct cmp{
                 bool operator()(const Move& a, const Move& b){
-                    if (a.value > b.value){
-                        return a.value > b.value;
-                    } 
+                    return a.value > b.value;
+                    //if (a.value > b.value){
+                    //    return a.value > b.value;
+                    //} 
                     //else if (a.value == b.value){
                     //    return rand() % 2 == 0;
                     //}
@@ -101,17 +102,22 @@ class Interface {
 
             shuffle(move__.begin(), move__.end(), rng);
             //sort(move__.begin(), move__.end(), cmp());
-            //std::vector<Move> SA_move;
-            //std::cout << "SA_MOVE_SIZE: " << SA_move.size() << std::endl;
-            //for (int32_t i = 0 ; i < move__.size(); i++) {
-            //    if (i < (move__.size() >> 1) + 1) {
-            //        SA_move.emplace_back(move__[i]);
-            //    } else if (std::exp(((move__.size() >> 1) - i) / 1e2) > rf(rng)) {
-            //        SA_move.emplace_back(move__[i]);
-            //    }
-            //}
-            //std::cout << "SA_MOVE_SIZE: " << SA_move.size() << std::endl;
-            //return SA_move;
+            std::vector<Move> SA_move;
+
+            int32_t max_span = move__[0].value;
+            SA_move.emplace_back(move__[0]);
+
+            //SA selection
+            for (int32_t i = 1 ; i < move__.size(); i++) {
+                if (move__[i].value >= max_span) {
+                    max_span = move__[i].value;
+                    SA_move.emplace_back(move__[i]);
+                } else if (std::exp((move__[i].value - max_span) / 1e2) > rf(rng)) {
+                    SA_move.emplace_back(move__[i]);
+                }
+            }
+
+            return SA_move;
             return move__;
         }
         int32_t evl_value(int32_t turn, std::pair<int32_t, int32_t> temp)const {
