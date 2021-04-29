@@ -52,10 +52,17 @@ class State : public Interface {
 
         bool is_Draw() const;
 
+        static const enum class PLAYER_TYPE_: int32_t {
+            AGENT_,
+            PLAYER_};
         //private:
         int32_t player_to_move_ = static_cast<int32_t> (Result::Lower);
         int32_t turns_ = LOWER_;
         bool agentDone_ = false;
+
+        PLAYER_TYPE_ player_setting_[2] = {
+            PLAYER_TYPE_::PLAYER_, 
+            PLAYER_TYPE_::PLAYER_};
         //Result result_ = Result::Unknown;
         //bool isEnd_ = false;
         //std::vector<Move> move_;

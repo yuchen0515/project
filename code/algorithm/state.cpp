@@ -3,6 +3,8 @@
 
 #include "state.h"
 
+#define AGENT
+
 const Move State::no_move = {
     std::make_pair(-1, -1),
     std::make_pair(-1, -1)};
@@ -116,14 +118,20 @@ void State::run(){
         // cover
         show_walking(mouseIndex_);
 
-#ifdef AGENT
-        if (get_turns() == UPPER_ && agentDone_ == false && isKingDead_ == false){
-            auto TEMP = Agent(10, 1000);
+        //
+        player_setting_[LOWER_] = PLAYER_TYPE_::AGENT_;
+
+        bool agentCheck = false;
+        if (player_setting_[get_turns()] == PLAYER_TYPE_::AGENT_) {
+            agentCheck = true;
+        }
+
+        if (agentCheck == true && agentDone_ == false && isKingDead_ == false){
+            auto TEMP = Agent(100, 1000);
             agentDone_ = true;
             make_walking(TEMP.from, this->walking);
             MoveChess(TEMP.from, TEMP.to);
         }
-#endif
 
         while (SDL_PollEvent(&e) && agentDone_ == false) {
             if (e.type == SDL_QUIT

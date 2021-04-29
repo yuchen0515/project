@@ -258,7 +258,7 @@ class Interface {
 
         std::pair<int32_t, int32_t> mouseIndex_ = std::make_pair(-1, -1);
         std::pair<int32_t, int32_t> mouseIndexTemp_ = std::make_pair(-1, -1);
-        int32_t turn_ = 1;
+        int32_t turn_ = 0;
 
         bool isKingDead_ = false;
 
