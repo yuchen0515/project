@@ -114,13 +114,13 @@ void State::run(){
     bool quit = false;
 
     //init
-    game_number_ = 100;
-    player_setting_[LOWER_] = PLAYER_TYPE_::AGENT_;
+    game_number_ = 2;
+    //player_setting_[LOWER_] = PLAYER_TYPE_::AGENT_;
     player_setting_[UPPER_] = PLAYER_TYPE_::AGENT_;
 
     std::vector<int32_t> simula_TEMP = {
-        100,
-        1000};
+        2500,
+        2500};
 
 
     //
@@ -133,7 +133,7 @@ void State::run(){
         // cover
         show_walking(mouseIndex_);
 
-
+        int32_t SelfPlay =  ((player_setting_[LOWER_] == PLAYER_TYPE_::AGENT_) && (player_setting_[UPPER_] == PLAYER_TYPE_::AGENT_));
         bool agentCheck = false;
         if (player_setting_[get_turns()] == PLAYER_TYPE_::AGENT_) {
             agentCheck = true;
@@ -146,15 +146,30 @@ void State::run(){
             MoveChess(TEMP.from, TEMP.to);
         }
 
-        while (SDL_PollEvent(&e) && agentDone_ == false) {
+        //selfplay
+        if (SelfPlay && isKingDead_ == true) {
+            InitExist();
+            isKingDead_ = false;
+            lose_[get_turns() == 1 ? 0 : 1] += 1;
+            winner_[get_turns()] += 1;
+            game_number_ -= 1;
+            std::cerr << "Count: " << game_number_ << std::endl;
+            std::cerr << "Winner: "; 
+            if (get_turns() == 0) {
+                std::cerr << "Upper" << std::endl;
+
+            }else {
+                std::cerr << "Lower" << std::endl;
+            }
+        }
+
+        while ((SDL_PollEvent(&e) && agentDone_ == false)) {
             if (e.type == SDL_QUIT
                     || e.key.keysym.sym == SDLK_ESCAPE) {
                 quit = true;
             }
 
-            if (e.key.keysym.sym == SDLK_a
-                    || ((player_setting_[LOWER_] == PLAYER_TYPE_::AGENT_)
-                    && (player_setting_[UPPER_] == PLAYER_TYPE_::AGENT_))) {
+            if (e.key.keysym.sym == SDLK_a) {
                 InitExist();
                 isKingDead_ = false;
             }
@@ -231,11 +246,6 @@ void State::run(){
 
                 PrintBugMessageBoard();
 
-                if (isKingDead_ == true) {
-                    lose_[get_turns()] += 1;
-                    winner_[get_turns() == 1 ? 0 : 1] += 1;
-                    game_number_ -= 1;
-                }    
             }
         }
         agentDone_ = false;
@@ -257,7 +267,7 @@ void State::run(){
         SDL_RenderPresent(gRenderer);
     }
 
-    std::cout << "Upper[ ";
+    std::cout << "Upper[";
     if (player_setting_[UPPER_] == PLAYER_TYPE_::PLAYER_) {
         std::cout << "Player";
     } else {
@@ -271,7 +281,7 @@ void State::run(){
 
     std::cout << "---" << std::endl;
 
-    std::cout << "Lower[ ";
+    std::cout << "Lower[";
     if (player_setting_[LOWER_] == PLAYER_TYPE_::PLAYER_) {
         std::cout << "Player";
     } else {
@@ -285,4 +295,26 @@ void State::run(){
 
 
     close();
+}
+
+double State::sigmoid(const double score) const {
+    return 1.0 / (1.0 + exp(-score));
+}
+
+double State::step_tangent(const double score) const {
+    // blank
+}
+
+double State::get_board_score(const int32_t player_type) const {
+    double res = 0.0;
+    for (int32_t y = 0 ; y < ROW_SIZE_ ; y++) {
+        for (int32_t x = 0 ; x < COL_SIZE_; x++) {
+            res += evl_value(player_type, std::make_pair(x,y));
+        }
+    }
+    return res;
+}
+
+void State::switch_turn() {
+    turn_ = (turn_ + 1) % PLAYER_NUMBER_;
 }

@@ -24,7 +24,7 @@ enum class Result : int32_t {
 typedef struct move {
     std::pair<int32_t, int32_t> from;
     std::pair<int32_t, int32_t> to;
-    int32_t value;
+    double value;
 }Move;
 
 #endif
@@ -70,4 +70,9 @@ class State : public Interface {
         std::vector<int32_t> winner_ = {0, 0};
         std::vector<int32_t> lose_ = {0, 0};
         int32_t game_number_ = 1e5;
+
+        double sigmoid(const double score) const;
+        double step_tangent(const double score) const;
+        double get_board_score(const int32_t player_type) const;
+        void switch_turn();
 };
