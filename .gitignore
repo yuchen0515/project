@@ -4,3 +4,4 @@
 *.o
 .*.swp
 ./code/OOGex/*
+code/data/*
