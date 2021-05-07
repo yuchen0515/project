@@ -242,7 +242,6 @@ std::string Node::detail() const {
     //ss << getw(2) << (15 - move / 15);
     ss << "\t Value:" << V;
     ss << "\t Visited:" << N;
-    ss << "\t ch:" << children.size();
     ss << "\t win-rate:" << rate;
     return ss.str();
 }
