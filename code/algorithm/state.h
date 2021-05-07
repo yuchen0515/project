@@ -24,7 +24,7 @@ enum class Result : int32_t {
 typedef struct move {
     std::pair<int32_t, int32_t> from;
     std::pair<int32_t, int32_t> to;
-    int32_t value;
+    double value;
 }Move;
 
 #endif
@@ -36,27 +36,43 @@ class State : public Interface {
         //State(){};
         //void set_State();
         //void set_Result();
-        static const Move no_move;
-
         //Result get_Result() const;
-
         //bool is_End() const;
         //int32_t get_turns() const;
-
         //std::vector<Move> get_Moves() const;
+        
+        static const Move no_move;
 
         void do_Move(Move move);
         void run();
 
-        Move Agent();
+        Move Agent(
+                const int32_t lowerSimul,
+                const int32_t upperSimul);
+
         bool is_Draw() const;
 
-    //private:
+        static const enum class PLAYER_TYPE_: int32_t {
+            AGENT_,
+            PLAYER_};
+        //private:
         int32_t player_to_move_ = static_cast<int32_t> (Result::Lower);
-        //Result result_ = Result::Unknown;
-        int32_t turns_ = 1;
+        int32_t turns_ = LOWER_;
         bool agentDone_ = false;
-        
+
+        PLAYER_TYPE_ player_setting_[2] = {
+            PLAYER_TYPE_::PLAYER_, 
+            PLAYER_TYPE_::PLAYER_};
+        //Result result_ = Result::Unknown;
         //bool isEnd_ = false;
         //std::vector<Move> move_;
+
+        std::vector<int32_t> winner_ = {0, 0};
+        std::vector<int32_t> lose_ = {0, 0};
+        int32_t game_number_ = 1e5;
+
+        double sigmoid(const double score) const;
+        double step_tangent(const double score) const;
+        double get_board_score(const int32_t player_type) const;
+        void switch_turn();
 };

@@ -77,6 +77,10 @@ namespace PURE {
     Node* Node::Select(State& state) {
         auto node = this;
         while (node->children.size() == node->moves.size()) {
+            //test
+            //
+            //std::cout << "turns: " << state.get_turns() << std::endl;
+            //
             double best_value = -2.0;
             Node* best_child = nullptr;
             for (auto child : node->children) {
@@ -97,7 +101,8 @@ namespace PURE {
             }
             node = best_child;
             state.do_Move(node->move);
-
+            //
+            //state.switch_turn();
             //
             //node->moves = node->get_Move();
         }
@@ -115,6 +120,9 @@ namespace PURE {
         
         auto move = moves[it];
         state.do_Move(move);
+        //
+        //state.switch_turn();
+        //
         node = new Node(state, node, move);
         children.emplace_back(node);
 
@@ -123,7 +131,7 @@ namespace PURE {
 
     int32_t Node::Simulate(State& state) const {
         auto player_to_move = state.get_turns();
-        int32_t sim_dep = 100;
+        int32_t sim_dep = 50;
         int32_t best_move = 0;
 
         std::mt19937_64 rng(std::chrono::system_clock::now().time_since_epoch().count());
@@ -136,6 +144,9 @@ namespace PURE {
             int32_t r = rng() % move_num;
 
             state.do_Move(moves[r]);
+            //
+            //state.switch_turn();
+            //
             sim_dep--;
             //}
             if (sim_dep <= 0){
@@ -144,17 +155,17 @@ namespace PURE {
             //std::cout << "Hello kity" << std::endl;
             //std::cout << move_num << std::endl;
             //std::cout << r << std::endl;
-        }
-        if (state.is_Draw() == true) {
-            return 0;
-        }
-        if (state.get_turns() == player_to_move) {
-            //return 30000;
-            return 1;
-        }
-        //return -30000;
-        return -1;
-        //return -2;
+    }
+    if (state.is_Draw() == true) {
+        return 0;
+    }
+    if (state.get_turns() == player_to_move) {
+        //return 30000;
+        return 1;
+    }
+    //return -30000;
+    return -1;
+    //return -2;
 }
 
 void Node::Update(int32_t value) {
@@ -179,15 +190,15 @@ void Node::OneRound(State state) {
     if (state.is_End() == true) {
         //std::cout << "ya" << std::endl;
         //if (state.is_Draw() == false) {
-            result = 1;
-            //result = 30000;
+        result = 1;
+        //result = 30000;
         //}
     } else {
         result = node->Simulate(state);
     }
 
-    //node->Update(result);
-    node->Update(node->move.value);
+    node->Update(result);
+    //node->Update(node->move.value);
     //node->Update(node->move.value + result * 3000);
 }
 
@@ -209,8 +220,8 @@ Move Node::Round(const State& state, int32_t simLimit) {
 
     //std::cout << "sim_cnt=" << sim_cnt << endl;
     auto best_move = State::no_move;
-    //int32_t best_value = -1;
-    int32_t best_value = -30000;
+    int32_t best_value = -1;
+    //int32_t best_value = -30000;
     for (auto child : children) {
         int32_t num = child->visit_num();
         if (num > best_value) {

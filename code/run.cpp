@@ -11,7 +11,7 @@
 
 int main() {
     State game;
-    game.init();
+    //
     game.run();
 
     return 0;

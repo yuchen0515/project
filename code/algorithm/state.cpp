@@ -4,97 +4,85 @@
 
 #include "state.h"
 
-const Move State::no_move = {std::make_pair(-1, -1), std::make_pair(-1, -1)};
+#define AGENT
+
+const Move State::no_move = {
+    std::make_pair(-1, -1),
+    std::make_pair(-1, -1)};
 
 namespace PURE {
     Move MCTS(State state, int32_t simLimit);
 }
 
-Move State::Agent(){
+Move State::Agent(
+        const int32_t lowerSimul,
+        const int32_t upperSimul) {
 
-    State state = *this;
+    auto STATE = (*this);
     int32_t simul = 0;
 
-    if (get_turns() == 0){
-        simul = 1000;
-    }else{
-        simul = 100;
+    if (get_turns() == LOWER_){
+        simul = lowerSimul;
+    } else if (get_turns() == UPPER_){
+        simul = upperSimul;
     }
-    auto TEMP = PURE::MCTS(state, simul);
-    //std::cout << "hihihi" << std::endl;
+
+    auto TEMP = PURE::MCTS(STATE, simul);
 
     auto &[a, b] = TEMP.from;
-    //std::cout << a << " " << b << std::endl;
     auto &[c, d] = TEMP.to;
-    //std::cout << c << " " << d << std::endl;
 
-    //std::cout << "TTTTTTTTTTTTTTT----" << std::endl;
-    
-    if (a < 0 || a > 4){
-        a = 0;
-    }
-    if (b < 0 || b > 4){
-        b = 0;
-    }
-    if (c < 0 || c > 4){
-        c = 0;
-    }
-    if (d < 0 || d > 4){
-        d = 0;
-    }
+    a = (a < 0 || a > 4) ? 0 : a;
+    b = (b < -2 || b > 6) ? 0 : b;
+    c = (c < 0 || c > 4) ? 0 : c;
+    d = (d < 0 || d > 4) ? 0 : d;
 
     assert(a >= 0 && a <= 4);
     assert(b >= -2 && b <= 6);
 
     assert(c >= 0 && c <= 4);
     assert(d >= 0 && d <= 4);
+
     return TEMP;
-    MoveChess(TEMP.from, TEMP.to);
 }
 
 //void State::set_State() {
-//
 //}
-//
 //void State::set_Result() {
-//
 //}
-//
 //Result State::get_Result() const {
-//    return result_;
 //}
-//
 //bool State::is_End() const {
-//    return false;
 //}
-//
-//
 //int32_t State::get_turns() const {
-//    return 0;
 //}
-//
 //std::vector<Move> State::get_Moves() const {
-//    return {};
 //}
-//
+
 void State::do_Move(Move move) {
     auto &[a, b] = move.from;
-    //std::cout << a << " " << b << std::endl;
     auto &[c, d] = move.to;
+
+    //std::cout << a << " " << b << std::endl;
     //std::cout << c << " " << d << std::endl;
 
+#ifdef PRINT
     std::cout << a << " " << b << " " << c << " " << d << std::endl;
+#endif
 
-    assert(a >= 0 && a <= 4);
-    assert(b >= -2 && b <= 6);
-
-    assert(c >= 0 && c <= 4);
-    assert(d >= 0 && d <= 4);
+    if ((a < 0 || a > 4)
+            || (b < -2 || b > 6)
+            || (c < 0 || c > 4)
+            || (d < 0 && d > 4)) {
+        std::cerr << "Error: " << __FUNCTION__ << std::endl;
+        return;
+    }
 
     if (int32_t oppoent = (get_turns() == 1 ? 0 : 1) ;
             exist[oppoent][c][d] == KING_){
         isKingDead_ = true;
     }
+
     MoveChess(move.from, move.to);
 
     return;
@@ -108,141 +96,226 @@ void State::run(){
     // Start up SDL and create window
     if (init() == false) {
         std::cerr << "Failed to initialize!" << std::endl;
-    } else {
-        InitMedia();
+        return;
+    }
+    InitMedia();
 
-        // Load media
-        if (loadMedia(&gTextureBoard,
-                    const_cast<char *> ("../image/board.bmp")) == false) {
-            std::cerr << "Failed to load media!" << std::endl;
-        } else {
-            // Update the surface
-            SDL_UpdateWindowSurface(window);
+    // Load media
+    if (loadMedia(&gTextureBoard,
+                const_cast<char *> ("../image/board.bmp")) == false) {
+        std::cerr << "Failed to load media!" << std::endl;
+        return;
+    }
+    // Update the surface
+    SDL_UpdateWindowSurface(window);
 
-            // Wait two seconds
-            SDL_Event e;
+    // Wait two seconds
+    SDL_Event e;
 
-            bool quit = false;
+    bool quit = false;
 
-            while (quit == false) {
-                // Clear screen
-                SDL_RenderClear(gRenderer);
+    //init
+    game_number_ = 2;
+    //player_setting_[LOWER_] = PLAYER_TYPE_::AGENT_;
+    player_setting_[UPPER_] = PLAYER_TYPE_::AGENT_;
 
-                // cover
-                show_walking(mouseIndex_);
-                //if (get_turns() == 0 && agentDone_ == false && isKingDead_ == false){
-                //if (get_turns() == 1 && agentDone_ == false && isKingDead_ == false){
-                //if (get_turns() == 0 && agentDone_ == false && isKingDead_ == false){
-                //    auto TEMP = Agent();
-                //    agentDone_ = true;
-                //    make_walking(TEMP.from, this->walking);
-                //    MoveChess(TEMP.from, TEMP.to);
-                //}
+    std::vector<int32_t> simula_TEMP = {
+        2500,
+        2500};
 
-                while (SDL_PollEvent(&e) && agentDone_ == false) {
-                    if (e.type == SDL_QUIT) {
-                        quit = true;
-                    }
 
-                    if (e.key.keysym.sym == SDLK_ESCAPE) {
-                        quit = true;
-                    }
+    //
+    std::cout << "------Game Information------" << std::endl;
 
-                    if (e.key.keysym.sym == SDLK_a) {
-                        InitExist();
-                        isKingDead_ = false;
-                    }
+    while (quit == false && game_number_ > 0) {
+        // Clear screen
+        SDL_RenderClear(gRenderer);
 
-                    if (isKingDead_ == true) {
-                        usleep(50000);
-                        continue;
-                    }
+        // cover
+        show_walking(mouseIndex_);
 
-                    auto &[mFir, mSec] = mouseIndex_;
-                    auto &[mFirTEMP, mSecTEMP] = mouseIndexTemp_;
+        int32_t SelfPlay =  ((player_setting_[LOWER_] == PLAYER_TYPE_::AGENT_) && (player_setting_[UPPER_] == PLAYER_TYPE_::AGENT_));
+        bool agentCheck = false;
+        if (player_setting_[get_turns()] == PLAYER_TYPE_::AGENT_) {
+            agentCheck = true;
+        }
 
-                    if (SDL_MOUSEBUTTONDOWN == e.type) {
-                        if (SDL_BUTTON_LEFT == e.button.button) {
-                                mouseIndexTemp_ = mouseIndex_;
-                                mouseX_ = e.button.x;
-                                mouseY_ = e.button.y;
-                                mouseIndex_ = return_MouseIndex(mouseX_, mouseY_);
-#ifdef PRINT
-                            std::cerr << "x, y: " << mouseX_;
-                            std::cerr << " " << mouseY_;
-                            std::cerr << "..............." << std::endl;
-#endif
+        if (agentCheck == true && agentDone_ == false && isKingDead_ == false){
+            auto TEMP = Agent(simula_TEMP[0], simula_TEMP[1]);
+            agentDone_ = true;
+            make_walking(TEMP.from, this->walking);
+            MoveChess(TEMP.from, TEMP.to);
+        }
 
-                            if (isClickChess_
-                                    && (mFir != mFirTEMP
-                                        || mSec != mSecTEMP)) {
-                                MoveChess(mouseIndexTemp_, mouseIndex_);
-                                isClickChess_ = false;
+        //selfplay
+        if (SelfPlay && isKingDead_ == true) {
+            InitExist();
+            isKingDead_ = false;
+            lose_[get_turns() == 1 ? 0 : 1] += 1;
+            winner_[get_turns()] += 1;
+            game_number_ -= 1;
+            std::cerr << "Count: " << game_number_ << std::endl;
+            std::cerr << "Winner: "; 
+            if (get_turns() == 0) {
+                std::cerr << "Upper" << std::endl;
 
-                                if (DetectKingExist() == 0) {
-                                    isKingDead_ = true;
-                                }
-                            } else if (ClickCover(mouseIndex_)
-                                    && isClickChess_ == true
-                                    && (mFir == mFirTEMP
-                                        && mSec == mSecTEMP)) {
-                                isClickChess_ = false;
-                            } else {
-                                isClickChess_ = ClickCover(mouseIndex_) ? 1 : 0;
-                            }
-                        } else if (SDL_BUTTON_RIGHT == e.button.button) {
-                                mouseIndexTemp_ = mouseIndex_;
-                                mouseX_ = e.button.x;
-                                mouseY_ = e.button.y;
-                                mouseIndex_ = return_MouseIndex(mouseX_, mouseY_);
-#ifdef PRINT
-                            std::cerr << "x, y: " << mouseX_;
-                            std::cerr << " " << mouseY_;
-                            std::cerr << "..............." << std::endl;
-#endif
-                            if (isClickChess_
-                                    && (mFir != mFirTEMP
-                                        || mSec != mSecTEMP)) {
-                                MoveChess(mouseIndexTemp_, mouseIndex_);
-                                isClickChess_ = false;
-
-                                if (DetectKingExist() == 0) {
-                                    isKingDead_ = true;
-                                }
-                            } else if (ClickCover(mouseIndex_)
-                                    && isClickChess_ == true
-                                    && (mFir == mFirTEMP
-                                        && mSec == mSecTEMP)) {
-                                isClickChess_ = false;
-                            } else {
-                                isClickChess_ = ClickCover(mouseIndex_) ? 1 : 0;
-                            }
-                        }
-                        std::cerr << "index_x: " << mFir << ", ";
-                        std::cerr << mSec << std::endl;
-
-                        PrintBugMessageBoard();
-                    }
-                }
-                agentDone_ = false;
-                // Render texture to screen
-                SDL_RenderCopy(gRenderer, gTextureBackground, NULL, &texPosition_[0]);
-                // Apply the image
-                SDL_RenderCopy(gRenderer, gTextureBoard, NULL, &texPosition_[1]);
-
-                if (isClickChess_ == false) {
-                    show_walking(std::make_pair(-1, -1));
-                } else {
-                    show_walking(mouseIndex_);
-                }
-
-                Show_Chess();
-                ClickCover(mouseIndex_);
-
-                // Update screen
-                SDL_RenderPresent(gRenderer);
+            }else {
+                std::cerr << "Lower" << std::endl;
             }
         }
+
+        while ((SDL_PollEvent(&e) && agentDone_ == false)) {
+            if (e.type == SDL_QUIT
+                    || e.key.keysym.sym == SDLK_ESCAPE) {
+                quit = true;
+            }
+
+            if (e.key.keysym.sym == SDLK_a) {
+                InitExist();
+                isKingDead_ = false;
+            }
+
+            if (isKingDead_ == true) {
+                usleep(50000);
+                continue;
+            }
+
+            auto &[mFir, mSec] = mouseIndex_;
+            auto &[mFirTEMP, mSecTEMP] = mouseIndexTemp_;
+
+            if (SDL_MOUSEBUTTONDOWN == e.type) {
+                if (SDL_BUTTON_LEFT == e.button.button) {
+                    mouseIndexTemp_ = mouseIndex_;
+                    mouseX_ = e.button.x;
+                    mouseY_ = e.button.y;
+                    mouseIndex_ = return_MouseIndex(mouseX_, mouseY_);
+#ifdef PRINT
+                    std::cerr << "x, y: " << mouseX_;
+                    std::cerr << " " << mouseY_;
+                    std::cerr << "..............." << std::endl;
+#endif
+
+                    if (isClickChess_
+                            && (mFir != mFirTEMP
+                                || mSec != mSecTEMP)) {
+                        MoveChess(mouseIndexTemp_, mouseIndex_);
+                        isClickChess_ = false;
+
+                        if (DetectKingExist() == 0) {
+                            isKingDead_ = true;
+                        }
+                    } else if (ClickCover(mouseIndex_)
+                            && isClickChess_ == true
+                            && (mFir == mFirTEMP
+                                && mSec == mSecTEMP)) {
+                        isClickChess_ = false;
+                    } else {
+                        isClickChess_ = ClickCover(mouseIndex_) ? 1 : 0;
+                    }
+                } else if (SDL_BUTTON_RIGHT == e.button.button) {
+                    mouseIndexTemp_ = mouseIndex_;
+                    mouseX_ = e.button.x;
+                    mouseY_ = e.button.y;
+                    mouseIndex_ = return_MouseIndex(mouseX_, mouseY_);
+#ifdef PRINT
+                    std::cerr << "x, y: " << mouseX_;
+                    std::cerr << " " << mouseY_;
+                    std::cerr << "..............." << std::endl;
+#endif
+                    if (isClickChess_
+                            && (mFir != mFirTEMP
+                                || mSec != mSecTEMP)) {
+                        MoveChess(mouseIndexTemp_, mouseIndex_);
+                        isClickChess_ = false;
+
+                        if (DetectKingExist() == 0) {
+                            isKingDead_ = true;
+                        }
+                    } else if (ClickCover(mouseIndex_)
+                            && isClickChess_ == true
+                            && (mFir == mFirTEMP
+                                && mSec == mSecTEMP)) {
+                        isClickChess_ = false;
+                    } else {
+                        isClickChess_ = ClickCover(mouseIndex_) ? 1 : 0;
+                    }
+                }
+#ifdef PRINT
+                std::cerr << "index_x: " << mFir << ", ";
+                std::cerr << mSec << std::endl;
+#endif
+
+                PrintBugMessageBoard();
+
+            }
+        }
+        agentDone_ = false;
+        // Render texture to screen
+        SDL_RenderCopy(gRenderer, gTextureBackground, NULL, &texPosition_[0]);
+        // Apply the image
+        SDL_RenderCopy(gRenderer, gTextureBoard, NULL, &texPosition_[1]);
+
+        if (isClickChess_ == false) {
+            show_walking(std::make_pair(-1, -1));
+        } else {
+            show_walking(mouseIndex_);
+        }
+
+        Show_Chess();
+        ClickCover(mouseIndex_);
+
+        // Update screen
+        SDL_RenderPresent(gRenderer);
     }
+
+    std::cout << "Upper[";
+    if (player_setting_[UPPER_] == PLAYER_TYPE_::PLAYER_) {
+        std::cout << "Player";
+    } else {
+        std::cout << "Agent] Simulate: " << simula_TEMP[UPPER_];
+    }
+
+    std::cout << std::endl;
+    std::cout << "Win: " << winner_[UPPER_];
+    std::cout << ", Lose: " << lose_[UPPER_];
+    std::cout << ", Win rate: " << 1.0 * winner_[UPPER_] / (lose_[UPPER_] + winner_[UPPER_]) << std::endl;
+
+    std::cout << "---" << std::endl;
+
+    std::cout << "Lower[";
+    if (player_setting_[LOWER_] == PLAYER_TYPE_::PLAYER_) {
+        std::cout << "Player";
+    } else {
+        std::cout << "Agent] Simulate: " << simula_TEMP[LOWER_];
+    }
+
+    std::cout << std::endl;
+    std::cout << "Win: " << winner_[LOWER_];
+    std::cout << ", Lose: " << lose_[LOWER_];
+    std::cout << ", Win rate: " << 1.0 * winner_[LOWER_] / (lose_[LOWER_] + winner_[LOWER_]) << std::endl;
+
+
     close();
+}
+
+double State::sigmoid(const double score) const {
+    return 1.0 / (1.0 + exp(-score));
+}
+
+double State::step_tangent(const double score) const {
+    // blank
+}
+
+double State::get_board_score(const int32_t player_type) const {
+    double res = 0.0;
+    for (int32_t y = 0 ; y < ROW_SIZE_ ; y++) {
+        for (int32_t x = 0 ; x < COL_SIZE_; x++) {
+            res += evl_value(player_type, std::make_pair(x,y));
+        }
+    }
+    return res;
+}
+
+void State::switch_turn() {
+    turn_ = (turn_ + 1) % PLAYER_NUMBER_;
 }

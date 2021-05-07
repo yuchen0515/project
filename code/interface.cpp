@@ -5,15 +5,114 @@
  */
 
 #include "interface.h"
-
 //#define PRINT
-
 
 void Interface::Agent(){
     //State state;
     //auto TEMP = PURE::MCTS(state, 1000);
     //MoveChess(TEMP.from, TEMP.to);
 }
+
+int32_t Interface::get_turns() const {
+    return turn_;
+}
+
+bool Interface::is_End() const {
+    return isKingDead_ == true;
+}
+
+std::vector<Move> Interface::get_Moves()  const {
+    std::mt19937_64 rng(std::chrono::system_clock::now().time_since_epoch().count());
+    //move_.clear();
+    std::vector<std::vector<int32_t>> walking(COL_SIZE_, std::vector<int32_t>(ROW_SIZE_, 0));
+
+    std::vector<Move> move__;
+
+    Move TEMP;
+    for (int32_t i = 0 ; i < 5 ; i++){
+        for (int32_t j = 0 ; j < 7 ; j ++) {
+            TEMP.from = std::make_pair(i, j);
+            make_walking(TEMP.from, walking);
+            for (int32_t k = 0 ; k < ROW_SIZE_ ; k ++){
+                for (int32_t p = 0 ; p < COL_SIZE_ ; p ++){
+                    if (walking[k][p] == 1){
+                        TEMP.to = std::make_pair(k, p);
+                        //TEMP.value = evl_value(get_turns() == 1 ? 0 : 1, TEMP.to) - evl_value(get_turns(), TEMP.from) * 0.9;
+                        TEMP.value = evl_value(get_turns() == 1 ? 0 : 1, TEMP.to);
+                        if (exist[get_turns()][i][j] == KING_) {
+                            TEMP.value += 30000;
+
+                        }
+                        //TEMP.value -= 1.2 * evl_value(get_turns(), TEMP.from);
+                        move__.emplace_back(TEMP);
+                    }
+                }
+            }
+        }
+    }
+    struct cmp{
+        bool operator()(const Move& a, const Move& b){
+            return a.value > b.value;
+            //if (a.value > b.value){
+            //    return a.value > b.value;
+            //} 
+            //else if (a.value == b.value){
+            //    return rand() % 2 == 0;
+            //}
+            //return false;
+        }
+    };
+
+    std::uniform_real_distribution<long double> rf(0, 1);
+
+    shuffle(move__.begin(), move__.end(), rng);
+    //sort(move__.begin(), move__.end(), cmp());
+    std::vector<Move> SA_move;
+
+    int32_t max_span = move__[0].value;
+    SA_move.emplace_back(move__[0]);
+
+    //SA selection
+    for (int32_t i = 1 ; i < move__.size(); i++) {
+        if (move__[i].value >= max_span) {
+            max_span = move__[i].value;
+            SA_move.emplace_back(move__[i]);
+        } else if (std::exp((move__[i].value - max_span + 0.0) / 1e2) > rf(rng)) {
+            SA_move.emplace_back(move__[i]);
+        }
+    }
+
+    return SA_move;
+    return move__;
+}
+
+int32_t Interface::evl_value(int32_t turn, std::pair<int32_t, int32_t> temp)const {
+    auto comp = exist[turn][temp.first][temp.second];
+
+    switch (comp) {
+        case KING_:
+            return 300000;
+        case ROOK_:
+            return 54;
+        case BISHOP_:
+            return 60;
+        case GOLD_:
+            return 74;
+        case SLIVER_:
+            return 64;
+        case PAWN_:
+            return 50;
+        case ROOKUP_:
+            return 80;
+        case BISHOPUP_:
+            return 84;
+        case SLIVERUP_:
+        case PAWNUP_:
+            return 65;
+    }
+    return 0;
+}
+
 
 void Interface::InitMedia() {
     loadMedia(
@@ -82,7 +181,7 @@ void Interface::InitExist() {
 
 bool Interface::DetectKingExist() const {
     int32_t exist_king = 0;
-    for (int32_t i = LOWER_ ; i <= UPPER_ ; i++) {
+    for (int32_t i = UPPER_; i <= LOWER_; i++) {
         for (int32_t j = 0 ; j < COL_SIZE_ ; j++) {
             for (int32_t k = 0 ; k < ROW_SIZE_ ; k++) {
                 if (exist[i][j][k] == 1)
@@ -169,7 +268,7 @@ bool Interface::init() {
 
     // Create window
     window = SDL_CreateWindow(
-            "powerShogi",                   // Title
+            "Pioneer",                   // Title
             SDL_WINDOWPOS_CENTERED,         // X position setting
             SDL_WINDOWPOS_CENTERED,         // Y position setting
             SCREEN_WIDTH,                   // Width
@@ -198,7 +297,6 @@ bool Interface::init() {
 
     return true;
 }
-
 
 void Interface::CaptivePush(const int32_t kind, int32_t chess) {
     if (chess >= ROOKUP_ && chess <= PAWNUP_) {
@@ -229,7 +327,7 @@ void Interface::MoveChess(
     if (isWithinBound(ori) == false) {
         return;
     }
-    
+
     if (des_a < 0 || des_a > 4 || des_b < 0 || des_b > 4) {
         return;
     }
@@ -320,17 +418,19 @@ void Interface::MoveChess(
         }
     }
 
+#ifdef PRINT
     std::cout << "Kind: " << kind << std::endl;
     std::cout << "ori_x: " << ori_a << " ori_y: " << ori_b << std::endl;
     std::cout << "des_x: " << des_a << " des_y: " << des_b << std::endl;
+#endif
 
     turn_ = (turn_ + 1) % PLAYER_NUMBER_;
 }
 
 void Interface::PrintBugMessageBoard() const {
-//#ifndef PRINT
+    //#ifndef PRINT
     //system("clear");
-//#endif
+    //#endif
     for (int32_t k = 0 ; k < 2 ; k++) {
         std::cout << "------------" << std::endl;
         for (int32_t i = 0 ; i < 7 ; i ++) {
@@ -735,7 +835,6 @@ int32_t Interface::check_bound_xy(
 
     return 1;
 }
-
 
 SDL_Rect* Interface::return_lattice_rect(
         const int32_t x,
