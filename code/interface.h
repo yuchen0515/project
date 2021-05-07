@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <random>
 #include <chrono>
 #include <string.h>
@@ -97,7 +98,7 @@ class Interface {
                 }
             };
 
-            shuffle(move__.begin(), move__.end(), rng);
+            std::shuffle(move__.begin(), move__.end(), rng);
             //sort(move__.begin(), move__.end(), cmp());
             return move__;
         }
