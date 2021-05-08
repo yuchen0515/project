@@ -10,6 +10,7 @@
 #include <utility>
 #include <iomanip>
 #include <string>
+#include <limits>
 //#include <stdlib.h>
 //#include <omp.h>
 #include "mcts.h"
@@ -50,6 +51,8 @@ namespace PURE {
             int32_t Simulate(State& state) const;
             void Update(int32_t value);
             void OneRound(State state);
+
+            bool Expanded() const;
     };
 
     Node::Node(const State& state)
@@ -76,13 +79,13 @@ namespace PURE {
 
     Node* Node::Select(State& state) {
         auto node = this;
-        while (node->children.size() == node->moves.size()) {
-            double best_value = -2.0;
+        while (node->Expanded()) {
+            double best_value = -std::numeric_limits<double>::max();
             Node* best_child = nullptr;
             for (auto child : node->children) {
                 double uct =
-                    static_cast<double> (child->V) / child->N \
-                    + sqrt(2.0 * log(static_cast<double> (node->N)) / child->N);
+                    static_cast<double> (child->V) / (child->N+1) \
+                    + sqrt(2.0 * log(static_cast<double> (node->N)) / (child->N+1));
                     //static_cast<double> (child->V) / child->N \
                     //+ sqrt(2.0 * log(static_cast<double> (node->N)) / child->N);
 
@@ -92,6 +95,7 @@ namespace PURE {
                     best_child = child;
                 }
             }
+            assert(best_child);
             if (best_child == nullptr) {
                 break;
             }
@@ -105,19 +109,22 @@ namespace PURE {
     }
 
     Node* Node::Expansion(State& state) {
-        std::mt19937_64 rng(std::chrono::system_clock::now().time_since_epoch().count());
+        // std::mt19937_64 rng(std::chrono::system_clock::now().time_since_epoch().count());
         auto node = this;
-        auto it = children.size();
+        // auto it = children.size();
         //auto it = rng() % moves.size();
         //std::cout << "hihiihihihihihihi" << std::endl;
         //std::cout << it << std::endl;
         //std::cout << moves.size() << std::endl;
         
-        auto move = moves[it];
-        state.do_Move(move);
-        node = new Node(state, node, move);
-        children.emplace_back(node);
+        // auto move = moves[it];
+        // state.do_Move(move);
+        // node = new Node(state, node, move);
+        // children.emplace_back(node);
 
+        for (size_t i = 0; i < moves.size(); ++i) {
+            children.emplace_back(new Node(state, this, moves[i]));
+        }
         return node;
     }
 
@@ -168,13 +175,18 @@ void Node::Update(int32_t value) {
     }
 }
 
+bool Node::Expanded() const {
+    return !children.empty();
+}
+
 void Node::OneRound(State state) {
     auto node = this;
     node = node->Select(state);
 
-    if (state.is_End() == false) {
+    if (state.is_End() == false && node->Expanded() == false) {
         node = node->Expansion(state);
     }
+
     int32_t result = 0;
     if (state.is_End() == true) {
         //std::cout << "ya" << std::endl;
@@ -195,7 +207,6 @@ Move Node::Round(const State& state, int32_t simLimit) {
     //int sim_cnt = 0;
     /*//time limit
       __int64 rtime;
-
       rtime = clock() + simLimit *  CLOCKS_PER_SEC;
       while (clock() < rtime){
       OneRound(state);
