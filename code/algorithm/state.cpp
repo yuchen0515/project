@@ -78,12 +78,26 @@ void State::do_Move(Move move) {
         return;
     }
 
-    if (int32_t oppoent = (get_turns() == 1 ? 0 : 1) ;
-            exist[oppoent][c][d] == KING_){
+    bool isDesKing = false;
+    int32_t ori_turn = get_turns();
+    if (int32_t opponent = (get_turns() == 1 ? 0 : 1);
+            exist[opponent][c][d] == KING_) {
+        isDesKing = true;
+    }
+
+    //std::cerr << get_turns() << "(ori): " << get_board_score(get_turns()) - get_board_score(!get_turns())<< std::endl;
+
+    MoveChess(move.from, move.to);
+
+    if (isDesKing == true && exist[ori_turn == 0 ? 1 : 0][c][d] > 0) {
         isKingDead_ = true;
     }
 
-    MoveChess(move.from, move.to);
+    //std::cerr << ori_turn << "(final): " << get_board_score(ori_turn) - get_board_score(!ori_turn)<< std::endl;
+
+    //turn_ = 1 - turn_;
+    //player_to_move_ = turn_;
+    //player_to_move_ = get_turns();
 
     return;
 }
@@ -115,13 +129,14 @@ void State::run(){
     bool quit = false;
 
     //init
-    game_number_ = 2;
-    //player_setting_[LOWER_] = PLAYER_TYPE_::AGENT_;
+    game_number_ = 1000;
     player_setting_[UPPER_] = PLAYER_TYPE_::AGENT_;
+    //player_setting_[LOWER_] = PLAYER_TYPE_::AGENT_;
 
     std::vector<int32_t> simula_TEMP = {
-        2500,
-        2500};
+        1000, //UPPER
+        //50000,  // Upper
+      1000}; // Lowe7r
 
 
     //
@@ -284,7 +299,7 @@ void State::run(){
 
     std::cout << "Lower[";
     if (player_setting_[LOWER_] == PLAYER_TYPE_::PLAYER_) {
-        std::cout << "Player";
+        std::cout << "Player]";
     } else {
         std::cout << "Agent] Simulate: " << simula_TEMP[LOWER_];
     }
@@ -299,7 +314,7 @@ void State::run(){
 }
 
 double State::sigmoid(const double score) const {
-    return 1.0 / (1.0 + exp(-score));
+    return 1.0 / (1.0 + exp(-score / 20));
 }
 
 double State::step_tangent(const double score) const {
@@ -308,7 +323,7 @@ double State::step_tangent(const double score) const {
 
 double State::get_board_score(const int32_t player_type) const {
     double res = 0.0;
-    for (int32_t y = 0 ; y < ROW_SIZE_ ; y++) {
+    for (int32_t y = 0 ; y < ROW_SIZE_ + 2 ; y++) {
         for (int32_t x = 0 ; x < COL_SIZE_; x++) {
             res += evl_value(player_type, std::make_pair(x,y));
         }
@@ -317,5 +332,6 @@ double State::get_board_score(const int32_t player_type) const {
 }
 
 void State::switch_turn() {
-    turn_ = (turn_ + 1) % PLAYER_NUMBER_;
+    turn_ = (PLAYER_NUMBER_ - 1) - turn_;
 }
+

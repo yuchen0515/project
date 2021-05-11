@@ -21,6 +21,7 @@ enum class Result : int32_t {
 #ifndef MOVE
 #define MOVE
 
+
 typedef struct move {
     std::pair<int32_t, int32_t> from;
     std::pair<int32_t, int32_t> to;
@@ -56,8 +57,8 @@ class State : public Interface {
             AGENT_,
             PLAYER_};
         //private:
-        int32_t player_to_move_ = static_cast<int32_t> (Result::Lower);
-        int32_t turns_ = LOWER_;
+        //int32_t player_to_move_ = static_cast<int32_t> (Result::Lower);
+        //int32_t turns_ = LOWER_;
         bool agentDone_ = false;
 
         PLAYER_TYPE_ player_setting_[2] = {
