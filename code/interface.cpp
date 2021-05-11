@@ -39,10 +39,11 @@ std::vector<Move> Interface::get_Moves()  const {
                         TEMP.to = std::make_pair(k, p);
                         //TEMP.value = evl_value(get_turns() == 1 ? 0 : 1, TEMP.to) - evl_value(get_turns(), TEMP.from) * 0.9;
                         TEMP.value = evl_value(get_turns() == 1 ? 0 : 1, TEMP.to);
-                        if (exist[get_turns()][i][j] == KING_) {
-                            TEMP.value += 30000;
-
-                        }
+                        //
+                        //if (exist[get_turns()][i][j] == KING_) {
+                        //    TEMP.value += 30000;
+                        //}
+                        //
                         //TEMP.value -= 1.2 * evl_value(get_turns(), TEMP.from);
                         move__.emplace_back(TEMP);
                     }
@@ -74,11 +75,15 @@ std::vector<Move> Interface::get_Moves()  const {
 
     //SA selection
     for (int32_t i = 1 ; i < move__.size(); i++) {
-        if (move__[i].value >= max_span) {
-            max_span = move__[i].value;
+        if (bool isMyKing = exist[get_turns()][move__[i].from.first][move__[i].from.second] == KING_ ;
+                move__[i].value >= max_span || isMyKing == true){
+            //if (isMyKing == false) {
+                max_span = move__[i].value;
+            //}
             SA_move.emplace_back(move__[i]);
         } else if (std::exp((move__[i].value - max_span + 0.0) / 1e2) > rf(rng)) {
             SA_move.emplace_back(move__[i]);
+            //max_span = move__[i].value;
         }
     }
 
@@ -91,7 +96,7 @@ int32_t Interface::evl_value(int32_t turn, std::pair<int32_t, int32_t> temp)cons
 
     switch (comp) {
         case KING_:
-            return 300000;
+            return 30000;
         case ROOK_:
             return 54;
         case BISHOP_:
@@ -318,6 +323,7 @@ void Interface::MoveChess(
         std::pair<int32_t, int32_t> ori,
         std::pair<int32_t, int32_t> des) {
 
+
     auto &[ori_a, ori_b] = ori;
     auto &[des_a, des_b] = des;
 
@@ -346,10 +352,11 @@ void Interface::MoveChess(
         isCaptive = true;
     }
 
-    int32_t kind = (get_turns() == 0 && exist[0][ori.first][ori.second]) > 0 ? 0 : 1;
-    int32_t kind_des = exist[0][des.first][des.second] > 0 ? 0 : 1;
+    int32_t kind = (get_turns() == 0 && exist[0][ori_a][ori_b]) > 0 ? 0 : 1;
+    int32_t kind_des = exist[0][des_a][des_b] > 0 ? 0 : 1;
     int32_t IsChess = 0;
-    int32_t walk_check = walking[des.first][des.second];
+    int32_t walk_check = walking[des_a][des_b];
+
 
 #ifdef PRINT
     std::cout << "ori: " << ori_a << " " << ori_b << std::endl;
@@ -391,28 +398,27 @@ void Interface::MoveChess(
         CaptivePush(kind, exist[kind == 1 ? 0 : 1][fir][sec]);
     }
 
+    bool isDesKing = false;
     //King Dead is or not
     if (exist[oppoent][des.first][des.second] == KING_){
-        isKingDead_ = true;
+        isDesKing = true;
     }
-
-    ////BUGBUGBUGBUG, lower cative can't be return board.
-    //if (kind == 0 && exist[1][ori_a][ori_b] == PAWN_ && isCaptive){
-    //    kind = (kind == 1) ? 0 : 1;
-    //}
 
     exist[kind][des_a][des_b]= exist[kind][ori_a][ori_b];
     exist[kind][ori_a][ori_b] = 0;
     exist[oppoent][des_a][des_b] = 0;
 
-    if ((ori_b == 3 * oppoent
-                || ori_b == 1 + 3 * oppoent)
-            && (des_b == 3 * oppoent
-                || des_b == 1 + 3 * oppoent)) {
-        int32_t chess = exist[kind][des_a][des_b];
+    if (isDesKing == true && exist[oppoent][des.first][des.second] == 0){
+        isKingDead_ = true;
+    }
+
+
+    if ((ori_b >= 0 && ori_b <= 4)
+            && (des_b == 4 * oppoent)) {
         //All chess that can level up
-        if ((chess >= ROOK_
-                    && chess <= PAWN_)
+        if (int32_t chess = exist[kind][des_a][des_b]; 
+                (chess >= ROOK_
+                 && chess <= PAWN_)
                 && chess != GOLD_) {
             exist[kind][des_a][des_b] += LEVEL_CHANGE_;
         }
@@ -424,7 +430,16 @@ void Interface::MoveChess(
     std::cout << "des_x: " << des_a << " des_y: " << des_b << std::endl;
 #endif
 
-    turn_ = (turn_ + 1) % PLAYER_NUMBER_;
+    //
+    //if (isRepeat()) {
+    //    std::cout << "th........" << std::endl;
+    //}
+    //
+
+    //std::cout << "hi : " << player_to_move_ << std::endl;
+
+    turn_ = (PLAYER_NUMBER_ - 1) - turn_;
+    player_to_move_ = 1 - player_to_move_;
 }
 
 void Interface::PrintBugMessageBoard() const {
@@ -626,8 +641,8 @@ void Interface::make_walking(
                 if (exist[0][x][y] == 0 && exist[1][x][y] == 0) {
                     walking[x][y] = 1;
                 }
-                count_PAWN += (exist[0][x][y] == PAWN_);
-                count_PAWN += (exist[1][x][y] == PAWN_);
+                count_PAWN += (exist[get_turns()][x][y] == PAWN_);
+                //count_PAWN += (exist[1][x][y] == PAWN_);
             }
 
             if (count_PAWN == 1 && kind == PAWN_) {
@@ -1000,4 +1015,78 @@ bool Interface::isWithinBound (std::pair<int32_t, int32_t> TEMP) const {
         return false;
     }
     return true;
+}
+
+bool Interface::isRepeat() {
+    uint32_t c_key = 0;
+    uint32_t c_store[4] = {0};
+
+    int32_t count = 0;
+
+    for (int32_t y = 0 ; y < ROW_SIZE_ ; y++) {
+        for (int32_t x = 0 ; x < COL_SIZE_ ; x++) {
+            uint8_t t_key = 0;
+            for (int32_t i = 0 ; i < PLAYER_NUMBER_ ; i++) {
+                if (int32_t kind = exist[i][x][y];
+                        kind > 0) {
+                    t_key |= i;
+
+                    if (kind >= ROOKUP_) {
+                        kind -= LEVEL_CHANGE_;
+                        t_key |= (1 << 1);
+                    }
+
+                    t_key |= (1 << (kind - 1));
+                }
+
+            }
+            if (t_key > 0) {
+                auto& t_store = c_store[count / 4];
+                t_store |= ( t_key << ((count & 3) << 3) );
+                count += 1;
+
+                c_key |= (1 << (x) << ((y << 2) + y));
+                if (c_key & (31 << ((y << 2) + y + 5))) {
+                    c_key |= (1 << y);
+                }
+            }
+        }
+    }
+
+    bool check = true;
+    for (int32_t j = 0 ; j < 5 ; j++) {
+        if (c_key == key_[j]) {
+            for (int32_t i = 0 ; i < 3 ; i++) {
+                if (c_store[i] != store_[j][i]) {
+                    check = false;
+                    break;
+                }
+            }
+        }else {
+            check = false;
+        }
+
+        if (check == true) {
+            break;
+        }
+    }
+
+    if (check) {
+        repeat_times_ += 1;
+    } else {
+        repeat_times_ = 1;
+    }
+
+    key_[repeat_index_ & 4] = c_key;
+    std::cout << "key: " << key_[repeat_index_ & 4] << std::endl;
+    std::cout << "store: ";
+    for (int32_t i = 0 ; i < 4 ; i++) {
+        store_[repeat_index_ & 4][i] = c_store[i];
+        std::cout << store_[repeat_index_ & 4][i] << " ";
+    }
+    std::cout << std::endl;
+
+    repeat_index_ += 1;
+
+    return repeat_times_ >= 3;
 }

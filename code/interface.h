@@ -29,8 +29,11 @@ typedef struct move {
 
 #endif
 
+
 class Interface {
     public:
+        int32_t player_to_move_ =  LOWER_;
+
         // Declare function
         SDL_Surface *loadSurface(char const *str);
 
@@ -177,9 +180,12 @@ class Interface {
 
         std::pair<int32_t, int32_t> mouseIndex_ = std::make_pair(-1, -1);
         std::pair<int32_t, int32_t> mouseIndexTemp_ = std::make_pair(-1, -1);
-        int32_t turn_ = 0;
+        int32_t turn_ = 1 -LOWER_;
 
         bool isKingDead_ = false;
+        int32_t repeat_index_ = 0;
+        uint32_t key_[5] = {0};
+        uint32_t store_[5][3] = {0};
 
         std::vector<Move> move_;
 
@@ -198,4 +204,7 @@ class Interface {
         static const enum player_{
             UPPER_ = 0,
             LOWER_ = 1};
+
+        int32_t repeat_times_ = 1;
+        bool isRepeat();
 };
