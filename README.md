@@ -7,7 +7,7 @@
 
 ## Demo
 
-![Demo-video](https://imgur.com/dmJ30Rn.gif)
+![Demo-video](https://github.com/yuchen0515/project/blob/interface/project-demo.gif?raw=true)
 
 * 本專題**尚未完成**，目前僅完成 SDL 之介面操作
 * 介面操作包含將棋之升變、俘虜軍、走步提示和遊戲結束
