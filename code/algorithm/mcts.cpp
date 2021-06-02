@@ -11,8 +11,6 @@
 #include <iomanip>
 #include <limits>
 #include <string>
-//#include <stdlib.h>
-//#include <omp.h>
 #include "mcts.h"
 
 #define PRINT
@@ -56,6 +54,7 @@ namespace PURE {
             bool Expanded() const;
     };
 
+    // Build Constructor
     Node::Node(const State& state)
         : V(0),
         N(0),
@@ -72,12 +71,14 @@ namespace PURE {
         moves(state.get_Moves()) {
         }
 
+    // 解構子
     Node::~Node() {
         for (auto child : children) {
             delete child;
         }
     }
 
+    // STEP 1: select
     Node* Node::Select(State& state) {
         auto node = this;
         //while (node->children.size() == node->moves.size()) {
@@ -89,6 +90,8 @@ namespace PURE {
             //double best_value = -2.0;
             double best_value = -std::numeric_limits<double>::max();
             Node* best_child = nullptr;
+
+            // choose the best move to expand
             for (auto child : node->children) {
                 double uct =
                     static_cast<double> (child->V) / (child->N + 1) \
@@ -116,6 +119,7 @@ namespace PURE {
         return node;
     }
 
+    // STEP 2: expansion
     Node* Node::Expansion(State& state) {
         std::mt19937_64 rng(std::chrono::system_clock::now().time_since_epoch().count());
         auto node = this;
@@ -138,18 +142,20 @@ namespace PURE {
         return node;
     }
 
+    // STEP 3: simulate
     double Node::Simulate(State& state) const {
         auto player_to_move = state.get_turns();
         int32_t sim_dep = 7;
-        //
-        //sim_dep = 10;
-        if (player_to_move == 1) { // Lower
-            sim_dep = 7;
-        }
+
+        // if (player_to_move == 1) { // Lower
+        //     sim_dep = 7;
+        // }
+        
         int32_t best_move = 0;
 
         std::mt19937_64 rng(std::chrono::system_clock::now().time_since_epoch().count());
 
+        // 模擬 sim_dep 次 或到 棋局結束
         while (state.is_End() == false) {
             auto moves = state.get_Moves();
             auto move_num = moves.size();
@@ -175,18 +181,24 @@ namespace PURE {
             //
             //std::cout << "Player: " << state.player_to_move_ << std::endl;
         }
+
+    // 平手判斷 (5五將棋原則上不影響)
     if (state.is_Draw() == true) {
         return 0;
     }
+
+    // 勝利
     if (state.get_turns() == player_to_move) {
         //return 30000;
         return 1;
     }
     //return -30000;
+    // 輸掉
     return -1;
     //return -2;
     }
 
+    // STEP 4: update
     void Node::Update(double value) {
         auto node = this;
         while (node != nullptr) {
@@ -198,10 +210,12 @@ namespace PURE {
         }
     }
 
+    // 判斷是否擴展過
     bool Node::Expanded() const {
         return !(children.empty());
     }
 
+    // 跑過一輪 STEP 1 ~ 4
     void Node::OneRound(State state) {
         auto node = this;
         node = node->Select(state);
@@ -227,23 +241,13 @@ namespace PURE {
         //node->Update(node->move.value + result * 3000);
     }
 
+    // 模擬 N 輪
     Move Node::Round(const State& state, int32_t simLimit) {
-        //int sim_cnt = 0;
-        /*//time limit
-          __int64 rtime;
-
-          rtime = clock() + simLimit *  CLOCKS_PER_SEC;
-          while (clock() < rtime){
-          OneRound(state);
-        //sim_cnt++;
-        }
-        */
         //number limit
         while (simLimit--) {
             OneRound(state);
         }
 
-        //std::cout << "sim_cnt=" << sim_cnt << endl;
         auto best_move = State::no_move;
 
         int32_t best_value = -std::numeric_limits<int32_t>::max();
@@ -259,14 +263,13 @@ namespace PURE {
         return best_move;
     }
 
+    // 印出詳情
     std::string Node::detail() const {
         double rate = mean() / 2 + 0.5;
         std::stringstream ss;
         ss << "Move from: ( " << move.from.first << ", " << move.from.second << " )" << " | ";
         ss << "Move to: ( " << move.to.first << ", " << move.to.second << " )" << " | ";
 
-        //ss << "Move:" << static_cast<char>(move % 15 + 65);
-        //ss << getw(2) << (15 - move / 15);
         ss << "\t Value:" << V;
         ss << "\t Visited:" << N;
         ss << "\t ch:" << children.size();
@@ -274,6 +277,7 @@ namespace PURE {
         return ss.str();
     }
 
+    // 印出所有 children
     void Node::print(std::ostream& os) const {
         for (auto child : children) {
             os << child->detail() << std::endl;

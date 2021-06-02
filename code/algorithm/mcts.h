@@ -24,8 +24,4 @@ namespace PURE {
     Move MCTS(State state, int32_t simLimit);
 }
 
-namespace MCTSS {
-    Move MCTS(State state, int32_t simLimit);
-}
-
 //#endif

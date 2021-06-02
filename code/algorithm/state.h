@@ -11,6 +11,7 @@ namespace MN {
     const int32_t G_SIZE = M_SIZE * N_SIZE;
 }
 
+// enum ==> 結果
 enum class Result : int32_t {
     Upper = 0,
     Lower = 1,
@@ -61,6 +62,8 @@ class State : public Interface {
         //int32_t turns_ = LOWER_;
         bool agentDone_ = false;
 
+        // 設定對局型態:
+        // Player or Agnet
         PLAYER_TYPE_ player_setting_[2] = {
             PLAYER_TYPE_::PLAYER_, 
             PLAYER_TYPE_::PLAYER_};

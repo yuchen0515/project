@@ -6,14 +6,18 @@
 
 #define AGENT
 
+// 初始化 (無走步狀態)
 const Move State::no_move = {
     std::make_pair(-1, -1),
     std::make_pair(-1, -1)};
 
+// Declare (避免 compiler error, mcts.h 已定義)
 namespace PURE {
     Move MCTS(State state, int32_t simLimit);
 }
 
+
+// Agent setting
 Move State::Agent(
         const int32_t lowerSimul,
         const int32_t upperSimul) {
@@ -21,6 +25,7 @@ Move State::Agent(
     auto STATE = (*this);
     int32_t simul = 0;
 
+    // 上下手 Agent 模擬次數分別設定
     if (get_turns() == LOWER_){
         simul = lowerSimul;
     } else if (get_turns() == UPPER_){
@@ -37,6 +42,7 @@ Move State::Agent(
     c = (c < 0 || c > 4) ? 0 : c;
     d = (d < 0 || d > 4) ? 0 : d;
 
+    // 檢查邊界
     assert(a >= 0 && a <= 4);
     assert(b >= -2 && b <= 6);
 
@@ -59,6 +65,7 @@ Move State::Agent(
 //std::vector<Move> State::get_Moves() const {
 //}
 
+// 移動走步 (於介面)
 void State::do_Move(Move move) {
     auto &[a, b] = move.from;
     auto &[c, d] = move.to;
@@ -70,6 +77,7 @@ void State::do_Move(Move move) {
     std::cout << a << " " << b << " " << c << " " << d << std::endl;
 #endif
 
+    // 超出邊界
     if ((a < 0 || a > 4)
             || (b < -2 || b > 6)
             || (c < 0 || c > 4)
@@ -85,6 +93,7 @@ void State::do_Move(Move move) {
         isDesKing = true;
     }
 
+    // 移動棋子(資料結構內)
     MoveChess(move.from, move.to);
 
     if (isDesKing == true && exist[ori_turn == 0 ? 1 : 0][c][d] > 0) {
@@ -102,6 +111,7 @@ bool State::is_Draw() const {
     return false;
 }
 
+// Game 運行
 void State::run(){
     // Start up SDL and create window
     if (init() == false) {
@@ -130,8 +140,9 @@ void State::run(){
     std::vector<int32_t> simula_TEMP = {
         150, //UPPER
         //50000,  // Upper
-      100}; // Lowe7r
+      150}; // Lower
 
+    // 對戰選擇
     std::cout << "------Game Setting------" << std::endl;
     std::cout << "Round: ";
     std::cin >> game_number_;
@@ -174,12 +185,14 @@ void State::run(){
         // cover
         show_walking(mouseIndex_);
 
+        // 電腦 vs 電腦 檢查
         int32_t SelfPlay =  ((player_setting_[LOWER_] == PLAYER_TYPE_::AGENT_) && (player_setting_[UPPER_] == PLAYER_TYPE_::AGENT_));
         bool agentCheck = false;
         if (player_setting_[get_turns()] == PLAYER_TYPE_::AGENT_) {
             agentCheck = true;
         }
 
+        // 自我對下 處理走步  
         if (agentCheck == true && agentDone_ == false && isKingDead_ == false){
             auto TEMP = Agent(simula_TEMP[0], simula_TEMP[1]);
             agentDone_ = true;
@@ -188,6 +201,7 @@ void State::run(){
         }
 
         //selfplay
+        // 自我對下 判斷結束
         if (SelfPlay && isKingDead_ == true) {
             InitExist();
             isKingDead_ = false;
@@ -206,17 +220,21 @@ void State::run(){
             std::cerr << std::endl;
         }
 
+        // 偵測 & 無限迴圈跑介面
         while ((SDL_PollEvent(&e) && agentDone_ == false)) {
+            // 離開
             if (e.type == SDL_QUIT
                     || e.key.keysym.sym == SDLK_ESCAPE) {
                 quit = true;
             }
 
+            // 重整
             if (e.key.keysym.sym == SDLK_a) {
                 InitExist();
                 isKingDead_ = false;
             }
 
+            // 王死亡、畫面停止
             if (isKingDead_ == true) {
                 usleep(50000);
                 continue;
@@ -264,6 +282,7 @@ void State::run(){
                     std::cerr << " " << mouseY_;
                     std::cerr << "..............." << std::endl;
 #endif
+                    // 點擊檢查
                     if (isClickChess_
                             && (mFir != mFirTEMP
                                 || mSec != mSecTEMP)) {
@@ -310,6 +329,7 @@ void State::run(){
         SDL_RenderPresent(gRenderer);
     }
 
+    // 對局統計輸出
     if (winner_[UPPER_] > winner_[LOWER_]){
         std::cout << "Winner: Upper" << std::endl;
     } else if (winner_[UPPER_] == winner_[LOWER_]){
@@ -348,6 +368,7 @@ void State::run(){
     close();
 }
 
+// sigmoid 處理審局函數
 double State::sigmoid(const double score) const {
     std::cerr << "turn" << get_turns() << " :";
 
@@ -363,6 +384,7 @@ double State::sigmoid(const double score) const {
     return 2 * ((1.0 / (1.0 + exp(-1 * (step_tangent(score))))) - 0.5);
 }
 
+// 斜率調整
 double State::step_tangent(const double score) const {
     // blank
     double lower_number = 84.0;
@@ -371,6 +393,8 @@ double State::step_tangent(const double score) const {
     return score / lower_number;
 }
 
+
+// 取得盤面分數
 double State::get_board_score(const int32_t player_type) const {
     double res = 0.0;
     for (int32_t y = 0 ; y < ROW_SIZE_ + 2 ; y++) {
@@ -381,7 +405,8 @@ double State::get_board_score(const int32_t player_type) const {
     return res;
 }
 
+
+// 換對局方
 void State::switch_turn() {
     turn_ = (PLAYER_NUMBER_ - 1) - turn_;
 }
-
