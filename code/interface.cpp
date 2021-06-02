@@ -23,7 +23,6 @@ bool Interface::is_End() const {
 
 std::vector<Move> Interface::get_Moves()  const {
     std::mt19937_64 rng(std::chrono::system_clock::now().time_since_epoch().count());
-    //move_.clear();
     std::vector<std::vector<int32_t>> walking(COL_SIZE_, std::vector<int32_t>(ROW_SIZE_, 0));
 
     std::vector<Move> move__;
@@ -74,12 +73,12 @@ std::vector<Move> Interface::get_Moves()  const {
     SA_move.emplace_back(move__[0]);
 
     //SA selection
-    for (int32_t i = 1 ; i < move__.size(); i++) {
+    for (std::size_t i = 1 ; i < move__.size(); i++) {
         if (bool isMyKing = exist[get_turns()][move__[i].from.first][move__[i].from.second] == KING_ ;
                 move__[i].value >= max_span || isMyKing == true){
-            //if (isMyKing == false) {
+            if (isMyKing == false) {
                 max_span = move__[i].value;
-            //}
+            }
             SA_move.emplace_back(move__[i]);
         } else if (std::exp((move__[i].value - max_span + 0.0) / 1e2) > rf(rng)) {
             SA_move.emplace_back(move__[i]);
@@ -88,7 +87,7 @@ std::vector<Move> Interface::get_Moves()  const {
     }
 
     return SA_move;
-    return move__;
+    //return move__;
 }
 
 int32_t Interface::evl_value(int32_t turn, std::pair<int32_t, int32_t> temp)const {
@@ -165,8 +164,9 @@ void Interface::InitMedia() {
 }
 
 void Interface::InitExist() {
-    //memset(exist, 0, sizeof(exist));
-    std::fill(exist.begin(), exist.end(), std::vector<std::vector<int32_t>>(COL_SIZE_, std::vector<int32_t>(7, 0)));
+    std::fill(exist.begin(), exist.end(),
+            std::vector<std::vector<int32_t>>(COL_SIZE_,
+                std::vector<int32_t>(7, 0)));
 
     exist[0][0][0] = exist[1][4][4] = ROOK_;
     exist[0][1][0] = exist[1][3][4] = BISHOP_;
@@ -323,7 +323,6 @@ void Interface::MoveChess(
         std::pair<int32_t, int32_t> ori,
         std::pair<int32_t, int32_t> des) {
 
-
     auto &[ori_a, ori_b] = ori;
     auto &[des_a, des_b] = des;
 
@@ -430,11 +429,10 @@ void Interface::MoveChess(
     std::cout << "des_x: " << des_a << " des_y: " << des_b << std::endl;
 #endif
 
-    //
+    // isRepeat
     //if (isRepeat()) {
     //    std::cout << "th........" << std::endl;
     //}
-    //
 
     //std::cout << "hi : " << player_to_move_ << std::endl;
 
@@ -497,7 +495,6 @@ void Interface::Determine_Draw(const int32_t kind, const int32_t Isupper, const 
         case PAWNUP_:
             gTextureShow = gTexturePawnUp;
             break;
-
         default:
             gTextureShow = nullptr;
     }
@@ -642,7 +639,6 @@ void Interface::make_walking(
                     walking[x][y] = 1;
                 }
                 count_PAWN += (exist[get_turns()][x][y] == PAWN_);
-                //count_PAWN += (exist[1][x][y] == PAWN_);
             }
 
             if (count_PAWN == 1 && kind == PAWN_) {
@@ -756,14 +752,14 @@ void Interface::make_walking(
         }
     }
 
-    static const int32_t dec[8][2] = {
-        {-1 , direction},
+    static const std::vector<std::vector<int32_t>> dec= {
+        {-1, direction},
         {0, direction},
         {1, direction},
         {1, 0},
-        {1, -1 * direction},
-        {0, -1 * direction},
-        {-1, -1 * direction},
+        {1, -direction},
+        {0, -direction},
+        {-1, -direction},
         {-1, 0}
     };
 
@@ -831,20 +827,24 @@ int32_t Interface::check_bound_xy(
         const int32_t add_x,
         const int32_t add_y,
         const int32_t upper) const {
-    if (cur_x + add_x < 0 || cur_x + add_x > 4) {
+
+    const int32_t new_x = cur_x + add_x;
+    const int32_t new_y = cur_y + add_y;
+
+    if (new_x < 0 || new_x > 4) {
         return 0;
     }
 
-    if (cur_y + add_y < 0 || cur_y + add_y > 4) {
+    if (new_y < 0 || new_y > 4) {
         return 0;
     }
 
-    if (exist[upper][cur_x + add_x][cur_y + add_y] > 0) {
+    if (exist[upper][new_x][new_y] > 0) {
         return 2;
     }
 
     if (int32_t notUpper = (upper == 1) ? 0 : 1 ;
-            exist[notUpper][cur_x + add_x][cur_y + add_y] > 0) {
+            exist[notUpper][new_x][new_y] > 0) {
         return 0;
     }
 
@@ -1019,7 +1019,7 @@ bool Interface::isWithinBound (std::pair<int32_t, int32_t> TEMP) const {
 
 bool Interface::isRepeat() {
     uint32_t c_key = 0;
-    uint32_t c_store[4] = {0};
+    std::vector<uint32_t> c_store(4,0);
 
     int32_t count = 0;
 
@@ -1054,16 +1054,17 @@ bool Interface::isRepeat() {
     }
 
     bool check = true;
-    for (int32_t j = 0 ; j < 5 ; j++) {
-        if (c_key == key_[j]) {
-            for (int32_t i = 0 ; i < 3 ; i++) {
-                if (c_store[i] != store_[j][i]) {
-                    check = false;
-                    break;
-                }
-            }
-        }else {
+    for (int32_t j = 0 ; j < 5 ; j += 1) {
+        if (c_key != key_[j]) {
             check = false;
+            continue;
+        }
+
+        for (int32_t i = 0 ; i < 3 ; i += 1) {
+            if (c_store[i] != store_[j][i]) {
+                check = false;
+                break;
+            }
         }
 
         if (check == true) {
@@ -1071,18 +1072,17 @@ bool Interface::isRepeat() {
         }
     }
 
-    if (check) {
-        repeat_times_ += 1;
-    } else {
+    repeat_times_ += 1;
+    if (check == false) {
         repeat_times_ = 1;
     }
 
-    key_[repeat_index_ & 4] = c_key;
-    std::cout << "key: " << key_[repeat_index_ & 4] << std::endl;
+    key_[repeat_index_ % 4] = c_key;
+    std::cout << "key: " << key_[repeat_index_ % 4] << std::endl;
     std::cout << "store: ";
     for (int32_t i = 0 ; i < 4 ; i++) {
-        store_[repeat_index_ & 4][i] = c_store[i];
-        std::cout << store_[repeat_index_ & 4][i] << " ";
+        store_[repeat_index_ % 4][i] = c_store[i];
+        std::cout << store_[repeat_index_ % 4][i] << " ";
     }
     std::cout << std::endl;
 

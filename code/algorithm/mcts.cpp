@@ -222,6 +222,7 @@ namespace PURE {
         }
 
         //node->Update(result);
+        //node->Update((result + state.sigmoid(node->move.value) * 2) / 3);
         node->Update((result + state.sigmoid(node->move.value) * 2) / 3);
         //node->Update(node->move.value + result * 3000);
     }

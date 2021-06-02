@@ -118,7 +118,7 @@ class Interface {
                 const int32_t upper) const;
 
         //void run();
-        void Agent();
+        virtual void Agent();
 
     protected:
         // Screen dimension constants  螢幕寬高設定

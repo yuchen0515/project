@@ -85,15 +85,11 @@ void State::do_Move(Move move) {
         isDesKing = true;
     }
 
-    //std::cerr << get_turns() << "(ori): " << get_board_score(get_turns()) - get_board_score(!get_turns())<< std::endl;
-
     MoveChess(move.from, move.to);
 
     if (isDesKing == true && exist[ori_turn == 0 ? 1 : 0][c][d] > 0) {
         isKingDead_ = true;
     }
-
-    //std::cerr << ori_turn << "(final): " << get_board_score(ori_turn) - get_board_score(!ori_turn)<< std::endl;
 
     //turn_ = 1 - turn_;
     //player_to_move_ = turn_;
@@ -129,14 +125,43 @@ void State::run(){
     bool quit = false;
 
     //init
-    game_number_ = 1000;
-    player_setting_[UPPER_] = PLAYER_TYPE_::AGENT_;
-    //player_setting_[LOWER_] = PLAYER_TYPE_::AGENT_;
+    game_number_ = 25;
 
     std::vector<int32_t> simula_TEMP = {
-        1000, //UPPER
+        150, //UPPER
         //50000,  // Upper
-      1000}; // Lowe7r
+      100}; // Lowe7r
+
+    std::cout << "------Game Setting------" << std::endl;
+    std::cout << "Round: ";
+    std::cin >> game_number_;
+    std::cout << "Simulation(Lower): ";
+    std::cin >> simula_TEMP[LOWER_];
+    std::cout << "Simulation(Upper): ";
+    std::cin >> simula_TEMP[UPPER_];
+    std::cout << "---" << std::endl;
+    std::cout << "<Type>" << std::endl;
+    std::cout << "  | Lower  |  Upper |" << std::endl;
+    std::cout << "---------------------" << std::endl;
+    std::cout << "1 | Player | Player |" << std::endl;
+    std::cout << "2 | Agent  | Player |" << std::endl;
+    std::cout << "3 | Player | Agent  |" << std::endl;
+    std::cout << "4 | Agent  | Agent  |" << std::endl;
+    std::cout << "---------------------" << std::endl;
+    int32_t type = 0;
+    while (type <= 0 || type > 4) {
+        std::cout << "> ";
+        std::cin >> type;
+    }
+
+    if (type == 2) {
+        player_setting_[LOWER_] = PLAYER_TYPE_::AGENT_;
+    } else if (type == 3) {
+        player_setting_[UPPER_] = PLAYER_TYPE_::AGENT_;
+    } else if (type == 4) {
+        player_setting_[LOWER_] = PLAYER_TYPE_::AGENT_;
+        player_setting_[UPPER_] = PLAYER_TYPE_::AGENT_;
+    }
 
 
     //
@@ -171,12 +196,14 @@ void State::run(){
             game_number_ -= 1;
             std::cerr << "Count: " << game_number_ << std::endl;
             std::cerr << "Winner: "; 
+
             if (get_turns() == 0) {
                 std::cerr << "Upper" << std::endl;
 
             }else {
                 std::cerr << "Lower" << std::endl;
             }
+            std::cerr << std::endl;
         }
 
         while ((SDL_PollEvent(&e) && agentDone_ == false)) {
@@ -283,6 +310,14 @@ void State::run(){
         SDL_RenderPresent(gRenderer);
     }
 
+    if (winner_[UPPER_] > winner_[LOWER_]){
+        std::cout << "Winner: Upper" << std::endl;
+    } else if (winner_[UPPER_] == winner_[LOWER_]){
+        std::cout << "Winner: Draw" << std::endl;
+    } else if (winner_[UPPER_] < winner_[LOWER_]){
+        std::cout << "Winner: Lower" << std::endl;
+    }
+
     std::cout << "Upper[";
     if (player_setting_[UPPER_] == PLAYER_TYPE_::PLAYER_) {
         std::cout << "Player";
@@ -314,11 +349,26 @@ void State::run(){
 }
 
 double State::sigmoid(const double score) const {
-    return 1.0 / (1.0 + exp(-score / 20));
+    std::cerr << "turn" << get_turns() << " :";
+
+    if (score >= 10000) {
+        std::cerr << "1.0" << std::endl;
+        return 1.0;
+    } else if (score <= -10000) {
+        std::cerr << "-1.0" << std::endl;
+        return -1.0;
+    }
+
+    std::cerr << 2 * ((1.0 / (1.0 + exp(-1 * (step_tangent(score))))) - 0.5) << std::endl;
+    return 2 * ((1.0 / (1.0 + exp(-1 * (step_tangent(score))))) - 0.5);
 }
 
 double State::step_tangent(const double score) const {
     // blank
+    double lower_number = 84.0;
+    lower_number /= 1.3;
+
+    return score / lower_number;
 }
 
 double State::get_board_score(const int32_t player_type) const {
