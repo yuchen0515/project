@@ -8,10 +8,10 @@
 #include "./algorithm/state.h"
 
 
-
 int main() {
     State game;
     //
+    // 運行
     game.run();
 
     return 0;

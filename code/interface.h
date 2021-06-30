@@ -21,6 +21,7 @@
 #ifndef MOVE
 #define MOVE
 
+// 定義走步
 typedef struct move {
     std::pair<int32_t, int32_t> from;
     std::pair<int32_t, int32_t> to;
@@ -30,6 +31,7 @@ typedef struct move {
 #endif
 
 
+// 介面類別定義
 class Interface {
     public:
         int32_t player_to_move_ =  LOWER_;
@@ -189,6 +191,7 @@ class Interface {
 
         std::vector<Move> move_;
 
+        // enum 給定棋子所代表之數值
         static const enum chessType_ {
             KING_ = 1,
             ROOK_,

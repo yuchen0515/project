@@ -205,8 +205,8 @@ void State::run(){
         if (SelfPlay && isKingDead_ == true) {
             InitExist();
             isKingDead_ = false;
-            lose_[get_turns() == 1 ? 0 : 1] += 1;
-            winner_[get_turns()] += 1;
+            lose_[get_turns()] += 1;
+            winner_[get_turns() == 1 ? 0 : 1] += 1;
             game_number_ -= 1;
             std::cerr << "Count: " << game_number_ << std::endl;
             std::cerr << "Winner: "; 
@@ -263,6 +263,9 @@ void State::run(){
 
                         if (DetectKingExist() == 0) {
                             isKingDead_ = true;
+                            lose_[get_turns()] += 1;
+                            winner_[get_turns() == 1 ? 0 : 1] += 1;
+                            game_number_ -= 1;
                         }
                     } else if (ClickCover(mouseIndex_)
                             && isClickChess_ == true
@@ -290,6 +293,9 @@ void State::run(){
                         isClickChess_ = false;
 
                         if (DetectKingExist() == 0) {
+                            lose_[get_turns()] += 1;
+                            winner_[get_turns() == 1 ? 0 : 1] += 1;
+                            game_number_ -= 1;
                             isKingDead_ = true;
                         }
                     } else if (ClickCover(mouseIndex_)

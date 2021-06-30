@@ -13,21 +13,27 @@ void Interface::Agent(){
     //MoveChess(TEMP.from, TEMP.to);
 }
 
+// 回傳當前下棋的人
 int32_t Interface::get_turns() const {
     return turn_;
 }
 
+// 是否結束
 bool Interface::is_End() const {
     return isKingDead_ == true;
 }
 
+// 得到走步
 std::vector<Move> Interface::get_Moves()  const {
+    // 亂數
     std::mt19937_64 rng(std::chrono::system_clock::now().time_since_epoch().count());
     std::vector<std::vector<int32_t>> walking(COL_SIZE_, std::vector<int32_t>(ROW_SIZE_, 0));
 
     std::vector<Move> move__;
 
     Move TEMP;
+
+    // 所有情況尋訪
     for (int32_t i = 0 ; i < 5 ; i++){
         for (int32_t j = 0 ; j < 7 ; j ++) {
             TEMP.from = std::make_pair(i, j);
@@ -63,6 +69,7 @@ std::vector<Move> Interface::get_Moves()  const {
         }
     };
 
+    // uniform 變數
     std::uniform_real_distribution<long double> rf(0, 1);
 
     shuffle(move__.begin(), move__.end(), rng);
@@ -72,7 +79,8 @@ std::vector<Move> Interface::get_Moves()  const {
     int32_t max_span = move__[0].value;
     SA_move.emplace_back(move__[0]);
 
-    //SA selection
+    // SA selection
+    // 類似 SA 的方式用機率篩選較好走步
     for (std::size_t i = 1 ; i < move__.size(); i++) {
         if (bool isMyKing = exist[get_turns()][move__[i].from.first][move__[i].from.second] == KING_ ;
                 move__[i].value >= max_span || isMyKing == true){
@@ -90,6 +98,7 @@ std::vector<Move> Interface::get_Moves()  const {
     //return move__;
 }
 
+// 回傳子力分
 int32_t Interface::evl_value(int32_t turn, std::pair<int32_t, int32_t> temp)const {
     auto comp = exist[turn][temp.first][temp.second];
 
@@ -118,6 +127,7 @@ int32_t Interface::evl_value(int32_t turn, std::pair<int32_t, int32_t> temp)cons
 }
 
 
+// 介面初始化
 void Interface::InitMedia() {
     loadMedia(
             &gTextureBackground,
@@ -163,6 +173,7 @@ void Interface::InitMedia() {
             const_cast<char *> ("../image/latticecover.bmp"));
 }
 
+// 介面與盤面初始化
 void Interface::InitExist() {
     std::fill(exist.begin(), exist.end(),
             std::vector<std::vector<int32_t>>(COL_SIZE_,
@@ -184,6 +195,7 @@ void Interface::InitExist() {
     turn_ = (turn_ + 1) % 2;
 }
 
+// 偵測 王將是否存在
 bool Interface::DetectKingExist() const {
     int32_t exist_king = 0;
     for (int32_t i = UPPER_; i <= LOWER_; i++) {
@@ -202,6 +214,8 @@ bool Interface::DetectKingExist() const {
     return false;
 }
 
+
+// 初始化 介面上BMP各個位置
 void Interface::InitPosition() {
     setup_bmp_size(&texPosition_[0],
             0,
@@ -251,6 +265,7 @@ void Interface::InitPosition() {
     }
 }
 
+// 全面初始化
 bool Interface::init() {
     InitExist();
     InitPosition();
@@ -303,6 +318,8 @@ bool Interface::init() {
     return true;
 }
 
+
+// 打入俘虜區
 void Interface::CaptivePush(const int32_t kind, int32_t chess) {
     if (chess >= ROOKUP_ && chess <= PAWNUP_) {
         chess -= LEVEL_CHANGE_;
@@ -319,6 +336,7 @@ void Interface::CaptivePush(const int32_t kind, int32_t chess) {
     }
 }
 
+// 棋子移動
 void Interface::MoveChess(
         std::pair<int32_t, int32_t> ori,
         std::pair<int32_t, int32_t> des) {
@@ -333,6 +351,7 @@ void Interface::MoveChess(
         return;
     }
 
+    // 超出邊界
     if (des_a < 0 || des_a > 4 || des_b < 0 || des_b > 4) {
         return;
     }
@@ -407,11 +426,13 @@ void Interface::MoveChess(
     exist[kind][ori_a][ori_b] = 0;
     exist[oppoent][des_a][des_b] = 0;
 
+    // 被吃的是王將
     if (isDesKing == true && exist[oppoent][des.first][des.second] == 0){
         isKingDead_ = true;
     }
 
 
+    // 升級處理
     if ((ori_b >= 0 && ori_b <= 4)
             && (des_b == 4 * oppoent)) {
         //All chess that can level up
@@ -436,10 +457,13 @@ void Interface::MoveChess(
 
     //std::cout << "hi : " << player_to_move_ << std::endl;
 
+    // 攻守方交換
     turn_ = (PLAYER_NUMBER_ - 1) - turn_;
     player_to_move_ = 1 - player_to_move_;
 }
 
+
+// 印出棋盤
 void Interface::PrintBugMessageBoard() const {
     //#ifndef PRINT
     //system("clear");
@@ -459,6 +483,8 @@ void Interface::PrintBugMessageBoard() const {
     std::cout << "------------" << std::endl;
 }
 
+
+// 介面棋子指標個別指向各個BMP
 void Interface::Determine_Draw(const int32_t kind, const int32_t Isupper, const int32_t j, const int32_t k) {
     switch (kind) {
         case KING_:
@@ -527,6 +553,7 @@ void Interface::Determine_Draw(const int32_t kind, const int32_t Isupper, const 
     }
 }
 
+// 點擊判斷 & 點擊後變色
 bool Interface::ClickCover(const std::pair<int32_t, int32_t> fMouseIndex) const {
     if (auto [fir, sec] = fMouseIndex;
             fir >= 0
@@ -569,6 +596,7 @@ bool Interface::ClickCover(const std::pair<int32_t, int32_t> fMouseIndex) const 
     return false;
 }
 
+// 畫出棋子
 void Interface::Show_Chess() {
     for (int32_t i = 0 ; i < 2 ; i++) {
         for (int32_t j = 0 ; j < 5 ; j++) {
@@ -579,6 +607,7 @@ void Interface::Show_Chess() {
     }
 }
 
+// 製造走步 
 void Interface::make_walking(
         const std::pair<int32_t, int32_t> temp,
         std::vector<std::vector<int32_t>>& walking) const {
@@ -631,6 +660,7 @@ void Interface::make_walking(
     }
 
 
+    // 俘虜區打入判斷
     if (isCaptive == true) {
         for (int32_t x = 0 ; x < COL_SIZE_ ; x ++) {
             int32_t count_PAWN = 0;
@@ -752,6 +782,7 @@ void Interface::make_walking(
         }
     }
 
+    // vector list
     static const std::vector<std::vector<int32_t>> dec= {
         {-1, direction},
         {0, direction},
@@ -771,6 +802,7 @@ void Interface::make_walking(
     }
 
 
+    // 角行 & 飛車 處理
     for (int32_t i =
             (kind == BISHOP_
              || kind == BISHOPUP_) ? 0 : 1;
@@ -805,6 +837,8 @@ void Interface::make_walking(
     }
 }
 
+
+// 顯示走步
 void Interface::show_walking(
         const std::pair<int32_t, int32_t> temp) {
     make_walking(temp, this->walking);
@@ -821,6 +855,7 @@ void Interface::show_walking(
     }
 }
 
+// 檢查邊界
 int32_t Interface::check_bound_xy(
         const int32_t cur_x,
         const int32_t cur_y,
@@ -851,6 +886,8 @@ int32_t Interface::check_bound_xy(
     return 1;
 }
 
+
+// 繪畫方格設定
 SDL_Rect* Interface::return_lattice_rect(
         const int32_t x,
         const int32_t y) {
@@ -862,6 +899,8 @@ SDL_Rect* Interface::return_lattice_rect(
     return &temp;
 }
 
+
+// 檢查是否在方格內
 bool Interface::match_rect_xy(
         const int32_t& x,
         const int32_t& y,
@@ -873,6 +912,8 @@ bool Interface::match_rect_xy(
     return false;
 }
 
+
+// 回傳滑鼠點的格子
 std::pair<int32_t, int32_t> Interface::return_MouseIndex(
         const int32_t x,
         const int32_t y) const {
@@ -893,6 +934,8 @@ std::pair<int32_t, int32_t> Interface::return_MouseIndex(
     return std::make_pair(index_x, index_y);
 }
 
+
+// BMP size setting
 void Interface::setup_bmp_size(
         SDL_Rect *dest,
         const int32_t x,
@@ -905,6 +948,8 @@ void Interface::setup_bmp_size(
     dest->h = h;
 }
 
+
+// 圖檔背景載入
 bool Interface::loadMedia(
         SDL_Surface **gHelloWorld,
         char const *str) {
@@ -923,6 +968,8 @@ bool Interface::loadMedia(
     return success;
 }
 
+
+// 圖檔載入
 bool Interface::loadMedia(
         SDL_Texture **gTexture,
         char const *str) {
@@ -941,6 +988,8 @@ bool Interface::loadMedia(
     return success;
 }
 
+
+// 載入表面
 SDL_Surface* Interface::loadSurface(char const *str) {
     // The final optimized image
     SDL_Surface* optimizedSurface = nullptr;
@@ -966,6 +1015,7 @@ SDL_Surface* Interface::loadSurface(char const *str) {
     return optimizedSurface;
 }
 
+// 載入材質
 SDL_Texture* Interface::loadTexture(char const *str) {
     // The final texture
     SDL_Texture* newTexture = nullptr;
@@ -989,6 +1039,8 @@ SDL_Texture* Interface::loadTexture(char const *str) {
     return newTexture;
 }
 
+
+// 關閉介面
 void Interface::close() {
     // Free loaded image
     SDL_DestroyTexture(gTextureBoard);
@@ -1009,6 +1061,7 @@ void Interface::close() {
 }
 
 
+// 邊界內檢查
 bool Interface::isWithinBound (std::pair<int32_t, int32_t> TEMP) const {
     auto& [x, y] = TEMP;
     if (x < 0 || x > 4 || y < -2 || y > 6){
@@ -1017,6 +1070,8 @@ bool Interface::isWithinBound (std::pair<int32_t, int32_t> TEMP) const {
     return true;
 }
 
+
+// 檢查盤面是否重複
 bool Interface::isRepeat() {
     uint32_t c_key = 0;
     std::vector<uint32_t> c_store(4,0);
