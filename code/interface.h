@@ -192,7 +192,7 @@ class Interface {
         std::vector<Move> move_;
 
         // enum 給定棋子所代表之數值
-        static const enum chessType_ {
+        const enum chessType_ {
             KING_ = 1,
             ROOK_,
             BISHOP_ = 3,
@@ -204,7 +204,7 @@ class Interface {
             SLIVERUP_ = 10,
             PAWNUP_ = 11 };
 
-        static const enum player_{
+        const enum player_{
             UPPER_ = 0,
             LOWER_ = 1};
 
