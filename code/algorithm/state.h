@@ -54,7 +54,7 @@ class State : public Interface {
 
         bool is_Draw() const;
 
-        const enum class PLAYER_TYPE_: int32_t {
+        enum class PLAYER_TYPE_: int32_t {
             AGENT_,
             PLAYER_};
         //private:
