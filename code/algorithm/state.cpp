@@ -377,7 +377,7 @@ void State::run(){
     std::cout << ", Lose: " << lose_[LOWER_];
     std::cout << ", Win rate: " << 1.0 * winner_[LOWER_] / (lose_[LOWER_] + winner_[LOWER_]) << std::endl;
 
-    stepRecore.closeFile();
+    stepRecord.closeFile();
 
     close();
 }
