@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "state.h"
+#include "exportHistory.h"
 
 #define AGENT
 
@@ -177,6 +178,9 @@ void State::run(){
 
     //
     std::cout << "------Game Information------" << std::endl;
+    History stepRecord;
+    stepRecord.getCurrentSystemTime();
+    stepRecord.openFile();
 
     while (quit == false && game_number_ > 0) {
         // Clear screen
@@ -197,6 +201,7 @@ void State::run(){
             auto TEMP = Agent(simula_TEMP[0], simula_TEMP[1]);
             agentDone_ = true;
             make_walking(TEMP.from, this->walking);
+            stepRecord.recordStep(TEMP.from, TEMP.to);
             MoveChess(TEMP.from, TEMP.to);
         }
 
@@ -258,6 +263,7 @@ void State::run(){
                     if (isClickChess_
                             && (mFir != mFirTEMP
                                 || mSec != mSecTEMP)) {
+                        stepRecord.recordStep(mouseIndexTemp_, mouseIndex_);
                         MoveChess(mouseIndexTemp_, mouseIndex_);
                         isClickChess_ = false;
 
@@ -289,6 +295,7 @@ void State::run(){
                     if (isClickChess_
                             && (mFir != mFirTEMP
                                 || mSec != mSecTEMP)) {
+                        stepRecord.recordStep(mouseIndexTemp_, mouseIndex_);
                         MoveChess(mouseIndexTemp_, mouseIndex_);
                         isClickChess_ = false;
 
@@ -370,6 +377,7 @@ void State::run(){
     std::cout << ", Lose: " << lose_[LOWER_];
     std::cout << ", Win rate: " << 1.0 * winner_[LOWER_] / (lose_[LOWER_] + winner_[LOWER_]) << std::endl;
 
+    stepRecore.closeFile();
 
     close();
 }
