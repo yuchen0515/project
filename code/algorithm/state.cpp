@@ -220,13 +220,16 @@ void State::run(){
             make_walking(TEMP.from, this->walking);
             stepRecord.recordStep(TEMP.from, TEMP.to);
             MoveChess(TEMP.from, TEMP.to);
+
+            if (DetectKingExist() == 0) {
+                isKingDead_ = true;
+            }
         }
 
         //selfplay
         // 自我對下 判斷結束
-        if (SelfPlay && isKingDead_ == true) {
-            InitExist();
-            isKingDead_ = false;
+        if (agentCheck == true && isKingDead_ == true) {
+        //if (SelfPlay && isKingDead_ == true) {
             lose_[get_turns()] += 1;
             winner_[get_turns() == 1 ? 0 : 1] += 1;
             game_number_ -= 1;
@@ -240,6 +243,8 @@ void State::run(){
                 std::cerr << "Lower" << std::endl;
             }
             std::cerr << std::endl;
+            InitExist();
+            isKingDead_ = false;
         }
 
         // 偵測 & 無限迴圈跑介面
