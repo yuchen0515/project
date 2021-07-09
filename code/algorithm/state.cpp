@@ -143,8 +143,12 @@ void State::run(){
         //50000,  // Upper
       150}; // Lower
 
+    std::string fileName;
+
     // 對戰選擇
     std::cout << "------Game Setting------" << std::endl;
+    std::cout << "Your stepStory? (filename, or \"N\"): ";
+    std::cin >> fileName;
     std::cout << "Round: ";
     std::cin >> game_number_;
     std::cout << "Simulation(Lower): ";
@@ -181,6 +185,19 @@ void State::run(){
     History stepRecord;
     stepRecord.getCurrentSystemTime();
     stepRecord.openFile();
+
+    if (fileName != "N") {
+        stepRecord.importFile(fileName);
+        std::pair<int32_t, int32_t> ori;
+        std::pair<int32_t, int32_t> des;
+
+        while (stepRecord.getStep(ori, des) == true) {
+            make_walking(ori, this->walking);
+            stepRecord.recordStep(ori, des);
+            MoveChess(ori, des);
+        }
+    }
+
 
     while (quit == false && game_number_ > 0) {
         // Clear screen

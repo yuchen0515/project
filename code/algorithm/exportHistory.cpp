@@ -12,9 +12,51 @@ std::string History::getCurrentSystemTime() {
             (int32_t)ptm->tm_sec);
     return std::string(date);
 }
+
 void History::openFile() {
     outFile.open(std::string(date) + ".txt");
     outFile << "<---- Start a new round ---->" << std::endl;
+}
+
+void History::importFile(std::string fileName) {
+    std::cout << "hi" << std::endl;
+    importFile_.open(fileName + ".txt");
+
+    std::string TEMP;
+    while (!importFile_.eof()) {
+        std::getline(importFile_, TEMP);
+        std::stringstream str(TEMP);
+        std::string cmp;
+
+        str >> cmp;
+        if (cmp != "Step") {
+            continue;
+        }
+
+        str >> cmp;
+        str >> cmp;
+
+        str >> cmp;
+        std::pair<int32_t, int32_t> ori;
+        ori.first = cmp[0] - '1';
+        ori.second = cmp[1] - 'A';
+
+        std::cout << ori.first;
+        std::cout << ori.second << std::endl;
+
+        str >> cmp;
+
+
+        str >> cmp;
+        std::pair<int32_t, int32_t> des;
+        des.first = cmp[0] - '1';
+        des.second = cmp[1] - 'A';
+
+        std::cout << des.first;
+        std::cout << des.second << std::endl;
+
+        story.push({ori, des});
+    }
 }
 
 void History::recordStep(std::pair<int32_t, int32_t> ori,
@@ -38,4 +80,20 @@ void History::recordStep(std::pair<int32_t, int32_t> ori,
 
 void History::closeFile() {
     outFile.close();
+}
+
+
+bool History::getStep(std::pair<int32_t, int32_t> &ori,
+        std::pair<int32_t, int32_t> &des) {
+    if (story.empty()) {
+        return false;
+    }
+
+    auto res = story.front();
+    story.pop();
+
+    ori = res.first;
+    des = res.second;
+
+    return true;
 }
