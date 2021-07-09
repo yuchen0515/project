@@ -19,7 +19,6 @@ void History::openFile() {
 }
 
 void History::importFile(std::string fileName) {
-    std::cout << "hi" << std::endl;
     importFile_.open(fileName + ".txt");
 
     std::string TEMP;
@@ -41,9 +40,6 @@ void History::importFile(std::string fileName) {
         ori.first = cmp[0] - '1';
         ori.second = cmp[1] - 'A';
 
-        std::cout << ori.first;
-        std::cout << ori.second << std::endl;
-
         str >> cmp;
 
 
@@ -51,9 +47,6 @@ void History::importFile(std::string fileName) {
         std::pair<int32_t, int32_t> des;
         des.first = cmp[0] - '1';
         des.second = cmp[1] - 'A';
-
-        std::cout << des.first;
-        std::cout << des.second << std::endl;
 
         story.push({ori, des});
     }
