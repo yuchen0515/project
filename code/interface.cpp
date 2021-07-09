@@ -69,6 +69,39 @@ std::vector<Move> Interface::get_Moves()  const {
         }
     };
 
+    int32_t turnPlayer = get_turns() == 1 ? 0 : 1;
+    //int32_t turnPlayer = get_turns();
+    
+    
+   
+    auto [king_a, king_b] = std::make_pair(0, 0);
+    for (int32_t i = 0 ; i < 5 ; i++) {
+        for (int32_t j = 0 ; j < 5 ; j++) {
+            if (exist[turnPlayer][i][j] == KING_) {
+                king_a = i;
+                king_b = j;
+                j = 5;
+                break;
+            }
+        }
+    }
+
+    std::vector<std::pair<int32_t, int32_t>> attackChess;
+    bool isWillBeKilled = false;
+    for (int32_t i = 0 ; i < 5 ; i++) {
+        for (int32_t j = 0 ; j < 5 ; j++) {
+            if (exist[turnPlayer == 1 ? 0 : 1][i][j] > 0) {
+                TEMP.from = std::make_pair(i, j);
+                make_walking(TEMP.from, walking);
+                if (walking[king_a][king_b] > 0) {
+                    isWillBeKilled = true;
+                    attackChess.emplace_back(TEMP.from);
+                    j = 5;
+                }
+            }
+        }
+    }
+
     // uniform 變數
     std::uniform_real_distribution<long double> rf(0, 1);
 
@@ -77,18 +110,38 @@ std::vector<Move> Interface::get_Moves()  const {
     std::vector<Move> SA_move;
 
     int32_t max_span = move__[0].value;
-    SA_move.emplace_back(move__[0]);
 
     // SA selection
     // 類似 SA 的方式用機率篩選較好走步
-    for (std::size_t i = 1 ; i < move__.size(); i++) {
+    for (std::size_t i = 0 ; i < move__.size(); i++) {
+        int32_t checkForce = false;
+
+        if (isWillBeKilled == true) {
+            for (std::size_t l = 0 ; l < attackChess.size(); l++) {
+                if (attackChess[l] == move__[i].to) {
+                    checkForce = true;
+                    break;
+
+                }
+            }
+        }
+ 
+
         if (bool isMyKing = exist[get_turns()][move__[i].from.first][move__[i].from.second] == KING_ ;
-                move__[i].value >= max_span || isMyKing == true){
+                (move__[i].value >= max_span && isWillBeKilled == false)
+                || ((isMyKing == true || checkForce == true) && isWillBeKilled == true) 
+                || (exist[get_turns() == 1 ? 0 : 1][move__[i].to.first][move__[i].to.second] > 0)) {
+
+
             if (isMyKing == false) {
                 max_span = move__[i].value;
+            } else if (isWillBeKilled == true) {
+                move__[i].value = 10000;
             }
+        
+
             SA_move.emplace_back(move__[i]);
-        } else if (std::exp((move__[i].value - max_span + 0.0) / 1e2) > rf(rng)) {
+        } else if (isWillBeKilled == false && std::exp((move__[i].value - max_span + 0.0) / 1e2) > rf(rng)) {
             SA_move.emplace_back(move__[i]);
             //max_span = move__[i].value;
         }
