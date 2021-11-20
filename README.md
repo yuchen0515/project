@@ -3,13 +3,13 @@
 * Instructor: Shun-Shii Lin 林順喜教授
 
 ## 投影片
-* [Available](https://docs.google.com/presentation/d/16CuZX9PbxWSvQEs8notf7pUVr0hBSYzq?rtpof=true&authuser=40771131h%40gapps.ntnu.edu.tw&usp=drive_fs)
+* [Available](https://reurl.cc/bnojyl)
 
 ## Demo
 
 ![Demo-video](https://github.com/yuchen0515/project/blob/interface/project-demo.gif?raw=true)
 
-* 本專題**尚未完成**，目前僅完成 SDL 之介面操作
+* 本專題*已完成介面及*引擎開發，並代表實驗室參加 TCGA2021 5五將棋 之對弈競賽
 * 介面操作包含將棋之升變、俘虜軍、走步提示和遊戲結束
 
 ## 名詞解釋
