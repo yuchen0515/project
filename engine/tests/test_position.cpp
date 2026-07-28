@@ -40,7 +40,7 @@ TEST(sfen_round_trip) {
         "rbsgk/4p/5/P4/KGSBR b - 1",
         "4k/5/5/5/K4 w - 12",
         "+r3k/5/5/5/K3+b b 2Pgs 7",
-        "k4/5/2+P2/5/4K w RBGSPrbgsp 40",
+        "k4/5/2+P2/5/4K w RBGSrbgs 40",
     };
     for (const char* s : cases) {
         Position pos = from(s);
@@ -63,6 +63,9 @@ TEST(sfen_rejects_malformed) {
         "rbsgk/4p/5/P4/KGSBR b - 0",  // ply is 1-based
         "R3k/5/5/5/K4 b - 1",         // white king already capturable
         "4k/5/5/5/K3r w - 1",         // same, colors reversed
+        "r3k/5/5/5/K3R b Rr 1",       // four rooks; only two exist
+        "4k/5/2+P2/5/K4 b 2P 1",      // three pawns counting the promoted one
+        "k3k/5/5/5/K4 b - 1",         // two white kings
     };
     for (const char* s : bad) CHECK(!pos.set(s));
 }

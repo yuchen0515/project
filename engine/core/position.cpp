@@ -127,6 +127,17 @@ bool Position::set(const std::string& sfen) {
 
     if (!pieces(BLACK, KING) || !pieces(WHITE, KING)) return false;
 
+    // Only two of each piece type exist, counting both colors, both
+    // hands and promoted pieces as their base type. Studies may use
+    // fewer, but more can never occur - and would overflow a hand
+    // during search rather than failing here.
+    for (PieceType pt : HAND_ORDER) {
+        int total = popcount(by_type_[pt]) +
+                    hands_[BLACK][hand_index(pt)] + hands_[WHITE][hand_index(pt)];
+        if (is_promotable(pt)) total += popcount(by_type_[promoted(pt)]);
+        if (total > MAX_HAND_COUNT) return false;
+    }
+
     // The side that just moved may not have left its own king capturable;
     // such a position can never arise in play and would let move
     // generation produce a king capture, so reject it at the door.
