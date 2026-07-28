@@ -24,6 +24,9 @@ class Game {
     bool set(const std::string& sfen);
 
     const Position& position() const { return pos_; }
+    // The position the game started from, so a driver can hand an
+    // external engine the full history rather than a bare snapshot.
+    const std::string& initial_sfen() const { return initial_sfen_; }
     Color side_to_move() const { return pos_.side_to_move(); }
 
     // Rejects anything not legal in the current position.
@@ -45,6 +48,7 @@ class Game {
 
    private:
     Position pos_;
+    std::string initial_sfen_;
     std::vector<uint64_t> keys_;  // one per position, starting position first
     std::vector<Move> moves_;
 };

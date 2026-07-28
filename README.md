@@ -33,21 +33,40 @@ The legacy GUI still runs, and remains the only way to play with a mouse.
 Its agent does not actually search; [legacy/README.md](legacy/README.md)
 documents why, since that finding is what motivated the rewrite.
 
-## Building
-
-Requires a C++17 compiler. The engine has no dependencies; the legacy GUI
-needs SDL2.
+## Playing it
 
 ```sh
-cd engine && make          # runs the test suite, builds ./pioneer and tools/perft
+cd engine && make          # runs the tests, builds the engine and tools
+tools/play                 # play in the terminal
 ```
+
+For a board and a mouse, build the SDL front end. It is a client of the
+engine: `Game` decides what is legal, so the rules it enforces are the ones
+the tests cover.
 
 ```sh
 brew install sdl2          # macOS; Debian/Ubuntu: apt install libsdl2-dev
-cd legacy && make run      # the original GUI
+cd engine && make gui && tools/gui
 ```
 
-## Using the engine
+Click a piece, then a highlighted square; click a captured piece to drop it.
+Promotion is automatic when it is the only option and default when it is a
+choice — hold Shift to decline. `n` starts a new game, `u` takes back a move.
+Both front ends take an agent name (`tools/gui mcts-s2000`) and `--white` to
+swap sides.
+
+The original 2021 GUI still builds too, driving its own engine:
+
+```sh
+cd legacy && make run
+```
+
+## Building
+
+Requires a C++17 compiler. The engine itself has no dependencies; only the
+SDL front ends need SDL2.
+
+## Driving the engine from other software
 
 `pioneer` speaks [USI](http://hgm.nubati.net/usi.html), so any USI GUI or
 match runner can drive it. It plays alpha-beta at depth 4 unless another

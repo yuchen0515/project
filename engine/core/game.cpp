@@ -9,6 +9,7 @@ bool Game::set(const std::string& sfen) {
     if (!parsed.set(sfen)) return false;
 
     pos_ = parsed;
+    initial_sfen_ = pos_.sfen();
     keys_.assign(1, pos_.key());
     moves_.clear();
     return true;
