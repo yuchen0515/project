@@ -3,7 +3,7 @@
 std::string History::getCurrentSystemTime() {
     auto time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     struct tm* ptm = localtime(&time);
-    sprintf(date, "%d-%02d-%02d_%02d.%02d.%02d",
+    snprintf(date, sizeof(date), "%d-%02d-%02d_%02d.%02d.%02d",
             (int32_t)ptm->tm_year + 1900,
             (int32_t)ptm->tm_mon + 1,
             (int32_t)ptm->tm_mday,

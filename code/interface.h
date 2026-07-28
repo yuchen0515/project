@@ -11,7 +11,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <SDL.h>
-#include <SDL_image.h>
 #include <iostream>
 #include <vector>
 #include <utility>
@@ -121,7 +120,6 @@ class Interface {
                 const int32_t upper) const;
 
         //void run();
-        virtual void Agent();
 
     protected:
         // Screen dimension constants  螢幕寬高設定
@@ -188,7 +186,7 @@ class Interface {
         bool isKingDead_ = false;
         int32_t repeat_index_ = 0;
         uint32_t key_[5] = {0};
-        uint32_t store_[5][3] = {0};
+        uint32_t store_[5][3] = {};
 
         std::vector<Move> move_;
 

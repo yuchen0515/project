@@ -1,8 +1,19 @@
+# OS / editor noise
 .DS_Store
+.*.swp
+
+# Build artifacts
+*.o
+*.d
+code/Pioneer
+
+# Runtime output (game records are written to the working directory)
+code/*.txt
+
+# Local recordings / documents
 *.mov
 *.pdf
-*.o
-.*.swp
-./code/OOGex/*
-code/data/*
-code/test/*
+
+# Local workspace, never committed
+.trash/
+planning_*.md

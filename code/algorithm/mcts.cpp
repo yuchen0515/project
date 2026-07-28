@@ -151,8 +151,6 @@ namespace PURE {
         //     sim_dep = 7;
         // }
         
-        int32_t best_move = 0;
-
         std::mt19937_64 rng(std::chrono::system_clock::now().time_since_epoch().count());
 
         // 模擬 sim_dep 次 或到 棋局結束
