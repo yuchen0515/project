@@ -30,6 +30,37 @@ Measured over 100 games each unless noted, alternating colours:
 | `alphabeta-d3` vs `mcts-s400` | 99–1 | +798 [+496, +1101] |
 | `alphabeta-d3` vs `mcts-s1600` | 60–0 (60 games) | > +477 |
 
+## Where that ladder actually sits
+
+Ratings measured only against your own agents say how they are ordered,
+never where they stand. [Fairy-Stockfish](https://fairy-stockfish.github.io/)
+14.0.1 plays minishogi, speaks USI, and shares no code with this, so the
+arena drives it as an ordinary agent:
+
+```sh
+brew install fairy-stockfish
+tools/arena alphabeta-d4 fsf-d6 40
+```
+
+| Match | Result | Elo |
+| --- | --- | --- |
+| `alphabeta-d4` vs `fsf-d2` | 17-23 | -53 [-160, +55] |
+| `alphabeta-d4` vs `fsf-d4` | 13-27 | -127 [-240, -14] |
+| `alphabeta-d4` vs `fsf-d6` | 6-34 | -301 [-448, -155] |
+
+So the engine as it stands is about level with Fairy-Stockfish searching two
+plies, and roughly 300 Elo behind it at six. Depths are not comparable
+between engines - theirs includes extensions and reductions ours does not
+have - but the ranking is the point, and now every future change can be
+measured against something outside this repository rather than only against
+its own past.
+
+Two caveats worth stating. Fairy-Stockfish does not enforce uchifuzume (see
+verification.md), so it may offer a pawn-drop mate that our rules refuse; the
+arena scores that as a forfeit and counts it separately, and it has not
+happened in the matches above. And a fixed depth keeps the match
+reproducible, where a time limit would not.
+
 ## What the numbers say
 
 **Search depth is worth about 370 Elo per ply** here (`d3` beats `d2` 89–11,
