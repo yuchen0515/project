@@ -2,7 +2,9 @@
 
 #include "../agents/alphabeta_agent.h"
 #include "../agents/eval.h"
+#include "../agents/factory.h"
 #include "../agents/greedy_agent.h"
+#include "../agents/mcts_agent.h"
 #include "../agents/random_agent.h"
 #include "../arena/match.h"
 #include "test.h"
@@ -178,4 +180,41 @@ TEST(agents_return_no_move_when_there_are_none) {
     GreedyAgent greedy;
     CHECK_EQ(random_agent.choose(mated), MOVE_NONE);
     CHECK_EQ(greedy.choose(mated), MOVE_NONE);
+}
+
+TEST(mcts_finds_mate_in_one_given_a_reasonable_budget) {
+    Game game = game_of("k2r1/5/1B3/5/4K b G 1");
+    for (uint64_t trial = 0; trial < 5; ++trial) {
+        MctsAgent agent(400, trial);
+        CHECK_EQ(usi_move(agent.choose(game)), std::string("G*5b"));
+    }
+}
+
+TEST(mcts_beats_random_and_greedy) {
+    auto random_agent = make_agent("random", 2);
+    MctsAgent mcts(200, 1);
+    const MatchResult vs_random = play_match(mcts, *random_agent, 20, 21);
+    CHECK(vs_random.score_a() > 0.85);
+    CHECK_EQ(vs_random.illegal, 0);
+}
+
+TEST(more_playouts_beat_fewer) {
+    // The MCTS counterpart of deeper-beats-shallower: if extra budget
+    // does not help, the tree is not doing anything.
+    MctsAgent rich(800, 1), poor(200, 2);
+    const MatchResult result = play_match(rich, poor, 20, 31);
+    CHECK_EQ(result.illegal, 0);
+    CHECK(result.score_a() > 0.65);
+}
+
+TEST(alphabeta_outplays_mcts_in_this_game) {
+    // Recorded because it is a finding, not an accident: random playouts
+    // carry almost no signal in a game where dropped pieces make every
+    // position sharp, so plain UCT loses badly to a shallow material
+    // search. Replacing rollouts with a learned value is what phase 3 is
+    // for; if that ever lands, this test is the thing that should flip.
+    auto search = make_agent("alphabeta-d3", 1);
+    MctsAgent mcts(400, 2);
+    const MatchResult result = play_match(*search, mcts, 20, 41);
+    CHECK(result.score_a() > 0.85);
 }
