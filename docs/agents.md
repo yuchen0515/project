@@ -30,6 +30,75 @@ Measured over 100 games each unless noted, alternating colours:
 | `alphabeta-d3` vs `mcts-s400` | 99–1 | +798 [+496, +1101] |
 | `alphabeta-d3` vs `mcts-s1600` | 60–0 (60 games) | > +477 |
 
+## Where that ladder actually sits
+
+Ratings measured only against your own agents say how they are ordered,
+never where they stand. [Fairy-Stockfish](https://fairy-stockfish.github.io/)
+14.0.1 plays minishogi, speaks USI, and shares no code with this, so the
+arena drives it as an ordinary agent:
+
+```sh
+brew install fairy-stockfish
+tools/arena alphabeta-d4 fsf-d6 40
+```
+
+| Match | Result | Elo |
+| --- | --- | --- |
+| `alphabeta-d4` vs `fsf-d2` | 17-23 | -53 [-160, +55] |
+| `alphabeta-d4` vs `fsf-d4` | 13-27 | -127 [-240, -14] |
+| `alphabeta-d4` vs `fsf-d6` | 6-34 | -301 [-448, -155] |
+
+So the engine as it stands is about level with Fairy-Stockfish searching two
+plies, and roughly 300 Elo behind it at six. Depths are not comparable
+between engines - theirs includes extensions and reductions ours does not
+have - but the ranking is the point, and now every future change can be
+measured against something outside this repository rather than only against
+its own past.
+
+Two caveats worth stating. Fairy-Stockfish does not enforce uchifuzume (see
+verification.md), so it may offer a pawn-drop mate that our rules refuse; the
+arena scores that as a forfeit and counts it separately, and it has not
+happened in the matches above. And a fixed depth keeps the match
+reproducible, where a time limit would not.
+
+## Self-play can be actively misleading
+
+Placement tables and a king-safety term were written, measured, and then
+switched off. The measurements are why.
+
+| Match | Result | Elo |
+| --- | --- | --- |
+| `alphabeta-d4+pst+ks` vs `alphabeta-d4` (self-play, 80) | 63-17 | +228 [+136, +320] |
+| `alphabeta-d4+pst` vs `alphabeta-d4` (self-play, 80) | 52-28 | +108 [+28, +187] |
+| `alphabeta-d4+ks` vs `alphabeta-d4` (self-play, 80) | 60-20 | +191 [+104, +278] |
+| `alphabeta-d4+pst+ks` vs `fsf-d6` (150) | 14-136 | -395 [-489, -301] |
+| `alphabeta-d4` vs `fsf-d6` (150) | 42-108 | **-164 [-226, -102]** |
+
+In self-play the positional terms are worth +228 Elo. Against an engine that
+does not share them they cost about 230. The intervals in the last two rows
+do not overlap, so this is not sampling noise.
+
+The explanation is the ordinary one: in self-play both sides evaluate with
+the same function, so extra terms mostly find the blind spots of an opponent
+that has the same blind spots. That is a statement about the opponent, not
+about minishogi. The terms remain in the code behind `+pst` and `+ks` as
+material for tuning later — against an outside reference, which is the only
+measurement that turned out to mean anything here.
+
+This is the single most useful thing the external benchmark has produced,
+and it would have shipped as an improvement without it.
+
+## Odd and even depths are not comparable
+
+With the positional terms on, `alphabeta-d3` does not beat `alphabeta-d2`
+(43.3% over 120 games) even though `alphabeta-d4` beats `alphabeta-d2`
+93.8% and `alphabeta-d5` beats `alphabeta-d3` 88.3%. Within a parity,
+deeper is decisively better; across it, the odd depth is flattered.
+
+An odd-depth search evaluates immediately after its own move and scores a
+tempo it has not yet paid for; an even one evaluates after the reply. Fixed
+depths meant for play should be even, which is why the default is 4.
+
 ## What the numbers say
 
 **Search depth is worth about 370 Elo per ply** here (`d3` beats `d2` 89–11,

@@ -21,7 +21,12 @@ GUI_BIN   := tools/gui
 SDL_CFLAGS := $(shell sdl2-config --cflags 2>/dev/null)
 SDL_LIBS   := $(shell sdl2-config --libs 2>/dev/null)
 
-all: test $(USI_BIN) $(PERFT_BIN) $(ARENA_BIN) $(PLAY_BIN)
+# Binaries first, then tests. With tests as a prerequisite of the
+# binaries, a failing test aborts the build and leaves stale tools in
+# place - which silently invalidates whatever you measure with them.
+all: build test
+
+build: $(TEST_BIN) $(USI_BIN) $(PERFT_BIN) $(ARENA_BIN) $(PLAY_BIN)
 
 $(TEST_BIN): $(LIB_OBJS) $(TEST_OBJS)
 	$(CXX) $(CXXFLAGS) $^ -o $@
@@ -57,4 +62,4 @@ clean:
 
 -include $(DEPS)
 
-.PHONY: all test clean gui
+.PHONY: all build test clean gui

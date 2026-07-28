@@ -21,3 +21,6 @@ legacy/*.txt
 .trash/
 planning_*.md
 engine/tools/arena
+engine/tools/play
+engine/tools/gui
+engine/tools/*.dSYM/

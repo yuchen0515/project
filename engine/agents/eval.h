@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <array>
+
 #include "../core/position.h"
 
 namespace pioneer {
@@ -34,6 +36,29 @@ constexpr int PIECE_VALUE[PIECE_TYPE_NB] = {
 // same piece committed to a square.
 constexpr int HAND_BONUS_PERCENT = 10;
 
-int evaluate(const Position& pos);
+// Each term as a percentage, so a term can be switched on and the
+// difference measured in the arena rather than argued about.
+//
+// Placement and king safety default to off, and that is a measured
+// decision, not an oversight: with them on the engine wins self-play by
+// +228 elo and loses about 230 against an outside opponent. See
+// docs/agents.md - hand-picked positional weights turned out to exploit
+// an opponent that shares them rather than to understand the game.
+struct EvalWeights {
+    int material = 100;
+    int placement = 0;
+    int king_safety = 0;
+};
+
+inline constexpr EvalWeights DEFAULT_WEIGHTS{};
+
+// The board has no left-right symmetry between the players: the two
+// sides start rotated 180 degrees from each other, not reflected. So the
+// mirror of a square flips both rank and file.
+constexpr Square mirror(Square s) {
+    return make_square(RANK_NB - 1 - rank_of(s), FILE_NB - 1 - col_of(s));
+}
+
+int evaluate(const Position& pos, const EvalWeights& weights = DEFAULT_WEIGHTS);
 
 }  // namespace pioneer
