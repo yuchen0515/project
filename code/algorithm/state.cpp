@@ -232,13 +232,14 @@ void State::run(){
             winner_[get_turns() == 1 ? 0 : 1] += 1;
             game_number_ -= 1;
             std::cerr << "Count: " << game_number_ << std::endl;
-            std::cerr << "Winner: "; 
+            // get_turns() is the side whose king just fell (turn already
+            // switched to them), i.e. the loser.
+            std::cerr << "Winner: ";
 
             if (get_turns() == 0) {
-                std::cerr << "Upper" << std::endl;
-
-            }else {
                 std::cerr << "Lower" << std::endl;
+            } else {
+                std::cerr << "Upper" << std::endl;
             }
             std::cerr << std::endl;
             InitExist();
