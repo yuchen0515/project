@@ -122,7 +122,7 @@ TEST(random_agent_is_reproducible_across_games) {
     Game game;
     Move first[4], second[4];
     for (int i = 0; i < 4; ++i) first[i] = a.choose(game);
-    b.new_game();
+    b.new_game(0);
     for (int i = 0; i < 4; ++i) second[i] = b.choose(game);
     for (int i = 0; i < 4; ++i) CHECK_EQ(first[i], second[i]);
 

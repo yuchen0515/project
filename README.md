@@ -20,9 +20,14 @@ docs/     roadmap, verification method, the original write-up
 The engine core is complete and verified: full minishogi rules including
 drops, optional promotion, nifu, uchifuzume and the fourth-repetition loss,
 with move generation cross-checked against an independent implementation
-(see [docs/verification.md](docs/verification.md)). Search is next — the
-current agent plays at random, which is the baseline everything else will be
-measured against, not a claim of strength.
+(see [docs/verification.md](docs/verification.md)).
+
+Four agents play it — random, greedy, alpha-beta with quiescence, and UCT —
+and an arena measures them against each other with seeded, reproducible
+matches and Elo intervals. [docs/agents.md](docs/agents.md) has the ladder
+and what the numbers mean; the short version is that each extra ply of
+search is worth about 370 Elo, and that alpha-beta beats plain MCTS badly
+in a game where drops make random playouts nearly worthless.
 
 The legacy GUI still runs, and remains the only way to play with a mouse.
 Its agent does not actually search; [legacy/README.md](legacy/README.md)
@@ -45,7 +50,8 @@ cd legacy && make run      # the original GUI
 ## Using the engine
 
 `pioneer` speaks [USI](http://hgm.nubati.net/usi.html), so any USI GUI or
-match runner can drive it.
+match runner can drive it. It plays alpha-beta at depth 4 unless another
+agent is named: `./pioneer mcts-s2000`.
 
 ```
 $ ./pioneer
@@ -73,6 +79,8 @@ Beyond USI it also accepts `d` (show the board), `moves` (list legal moves),
 tools/perft 6                            # node counts, start position
 tools/perft 5 "4k/5/5/5/K4 b RBGSP 1"    # any position
 tools/perft 3 --divide                   # per-move breakdown
+
+tools/arena alphabeta-d3 greedy 200      # measured match with elo interval
 ```
 
 ## Playing the legacy GUI

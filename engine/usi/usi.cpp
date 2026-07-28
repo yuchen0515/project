@@ -93,7 +93,7 @@ bool UsiEngine::handle(const std::string& line, std::ostream& out) {
         out << "readyok" << std::endl;
     } else if (command == "usinewgame") {
         game_.set(START_SFEN);
-        agent_->new_game();
+        agent_->new_game(++game_seed_);
     } else if (command == "position") {
         set_position(rest, out);
     } else if (command == "go") {
