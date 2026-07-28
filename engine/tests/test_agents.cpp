@@ -1,8 +1,10 @@
 #include <string>
 
+#include "../agents/alphabeta_agent.h"
 #include "../agents/eval.h"
 #include "../agents/greedy_agent.h"
 #include "../agents/random_agent.h"
+#include "../arena/match.h"
 #include "test.h"
 
 using namespace pioneer;
@@ -95,6 +97,51 @@ TEST(greedy_avoids_hanging_its_own_piece) {
     // Recorded so the change is visible the moment a deeper agent runs
     // on this position and chooses otherwise.
     CHECK_EQ(usi_move(agent.choose(game)), std::string("3c3b"));
+}
+
+TEST(alphabeta_finds_mate_in_one) {
+    Game game = game_of("k2r1/5/1B3/5/4K b G 1");
+    for (int depth = 1; depth <= 4; ++depth) {
+        AlphaBetaAgent agent(depth);
+        CHECK_EQ(usi_move(agent.choose(game)), std::string("G*5b"));
+    }
+}
+
+TEST(alphabeta_declines_the_poisoned_pawn) {
+    // The pawn on 3b is defended by the king on 2a. Greedy takes it and
+    // loses the rook; a search that sees one reply does not. Any safe
+    // rook move will do, so the assertion is on what it avoids.
+    Game game = game_of("3k1/2p2/2R2/5/K4 b - 1");
+    CHECK_EQ(usi_move(GreedyAgent().choose(game)), std::string("3c3b"));
+
+    for (int depth = 2; depth <= 4; ++depth) {
+        AlphaBetaAgent agent(depth);
+        const Move chosen = agent.choose(game);
+        CHECK(usi_move(chosen) != std::string("3c3b"));
+
+        MoveList legal;
+        generate_legal(game.position(), legal);
+        CHECK(legal.contains(chosen));
+    }
+}
+
+TEST(alphabeta_prolongs_a_lost_position_and_hurries_a_won_one) {
+    // Mate scores carry the ply, so a forced mate is taken at once
+    // rather than after an idle shuffle.
+    Game game = game_of("k2r1/5/1B3/5/4K b G 1");
+    AlphaBetaAgent agent(4);
+    Position after = game.position();
+    after.apply(agent.choose(game));
+    CHECK(is_checkmate(after));
+}
+
+TEST(deeper_search_beats_shallower) {
+    // The one result that shows a search is really searching. Fixed
+    // seed, so it cannot flake.
+    AlphaBetaAgent deep(3, 1), shallow(2, 2);
+    const MatchResult result = play_match(deep, shallow, 20, 11);
+    CHECK_EQ(result.illegal, 0);
+    CHECK(result.score_a() > 0.7);
 }
 
 TEST(agents_are_reproducible_from_their_seed) {
