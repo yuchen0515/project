@@ -135,6 +135,15 @@ TEST(alphabeta_prolongs_a_lost_position_and_hurries_a_won_one) {
     CHECK(is_checkmate(after));
 }
 
+TEST(quiescence_beats_the_same_depth_without_it) {
+    // Evaluating in the middle of an exchange is what quiescence is
+    // there to prevent, and at equal depth the difference is large.
+    AlphaBetaAgent with_qs(2, 1, true), without_qs(2, 2, false);
+    const MatchResult result = play_match(with_qs, without_qs, 20, 3);
+    CHECK_EQ(result.illegal, 0);
+    CHECK(result.score_a() > 0.65);
+}
+
 TEST(deeper_search_beats_shallower) {
     // The one result that shows a search is really searching. Fixed
     // seed, so it cannot flake.

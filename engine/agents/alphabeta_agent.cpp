@@ -30,13 +30,59 @@ void order_moves(const Position& pos, MoveList& moves, std::vector<Move>& out) {
     });
 }
 
+bool is_capture(const Position& pos, Move m) {
+    return !is_drop(m) && pos.piece_on(to_sq(m)) != NO_PIECE;
+}
+
 }  // namespace
 
-AlphaBetaAgent::AlphaBetaAgent(int depth, uint64_t seed)
+AlphaBetaAgent::AlphaBetaAgent(int depth, uint64_t seed, bool quiescence)
     : depth_(std::max(1, depth)),
       seed_(seed),
-      name_("alphabeta-d" + std::to_string(std::max(1, depth))),
+      quiescence_(quiescence),
+      name_("alphabeta-d" + std::to_string(std::max(1, depth)) +
+            (quiescence ? "" : "-noqs")),
       rng_(mix_seeds(seed, 0)) {}
+
+// Evaluating in the middle of an exchange reads whatever the last
+// capture left behind, so the search keeps going until the position is
+// quiet. Without this, a depth-N search happily hangs a rook on ply N+1.
+int AlphaBetaAgent::quiesce(const Position& pos, int alpha, int beta, int ply) {
+    ++nodes_;
+
+    MoveList moves;
+    generate_legal(pos, moves);
+    if (moves.empty()) return -MATE_SCORE + ply;
+    if (ply >= MAX_QUIESCENCE_PLY) return evaluate(pos);
+
+    // In check there is nothing quiet about the position and every
+    // evasion has to be considered - standing pat would assume an
+    // option the side to move does not have.
+    const bool in_check = pos.in_check();
+
+    int best = -MATE_SCORE - 1;
+    if (!in_check) {
+        best = evaluate(pos);
+        if (best >= beta) return best;
+        if (best > alpha) alpha = best;
+    }
+
+    std::vector<Move> ordered;
+    order_moves(pos, moves, ordered);
+
+    for (Move m : ordered) {
+        if (!in_check && !is_capture(pos, m)) continue;
+
+        Position next = pos;
+        next.apply(m);
+        const int score = -quiesce(next, -beta, -alpha, ply + 1);
+
+        if (score > best) best = score;
+        if (best > alpha) alpha = best;
+        if (alpha >= beta) break;
+    }
+    return best;
+}
 
 int AlphaBetaAgent::search(const Position& pos, int depth, int alpha, int beta,
                            int ply) {
@@ -50,7 +96,8 @@ int AlphaBetaAgent::search(const Position& pos, int depth, int alpha, int beta,
     // makes the engine prolong its own losses.
     if (moves.empty()) return -MATE_SCORE + ply;
 
-    if (depth <= 0) return evaluate(pos);
+    if (depth <= 0)
+        return quiescence_ ? quiesce(pos, alpha, beta, ply) : evaluate(pos);
 
     std::vector<Move> ordered;
     order_moves(pos, moves, ordered);

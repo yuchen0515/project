@@ -1,4 +1,4 @@
-// Fixed-depth negamax with alpha-beta pruning.
+// Fixed-depth negamax with alpha-beta pruning and a quiescence search.
 //
 // The first agent here that actually searches. Everything it needs is
 // already verified - legal moves, a material evaluation, and an arena to
@@ -14,9 +14,17 @@
 
 namespace pioneer {
 
+// Depth at which quiescence stops chasing captures. Captures strictly
+// reduce the pieces on the board so the recursion terminates on its own;
+// this only guards against a pathological position.
+constexpr int MAX_QUIESCENCE_PLY = 32;
+
 class AlphaBetaAgent : public Agent {
    public:
-    explicit AlphaBetaAgent(int depth = 4, uint64_t seed = 0x7EED);
+    // quiescence off is the control variant used to measure what it is
+    // worth; it is not something you would play with.
+    explicit AlphaBetaAgent(int depth = 4, uint64_t seed = 0x7EED,
+                            bool quiescence = true);
 
     const char* name() const override { return name_.c_str(); }
     Move choose(const Game& game) override;
@@ -28,9 +36,11 @@ class AlphaBetaAgent : public Agent {
 
    private:
     int search(const Position& pos, int depth, int alpha, int beta, int ply);
+    int quiesce(const Position& pos, int alpha, int beta, int ply);
 
     int depth_;
     uint64_t seed_;
+    bool quiescence_;
     std::string name_;
     std::mt19937_64 rng_;
     uint64_t nodes_ = 0;

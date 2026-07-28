@@ -19,13 +19,14 @@ std::unique_ptr<Agent> make_agent(const std::string& name, uint64_t seed) {
         int depth = 4;
         if (const size_t d = name.find("-d"); d != std::string::npos)
             depth = std::atoi(name.c_str() + d + 2);
-        return std::make_unique<AlphaBetaAgent>(depth, seed);
+        const bool quiescence = name.find("-noqs") == std::string::npos;
+        return std::make_unique<AlphaBetaAgent>(depth, seed, quiescence);
     }
     return nullptr;
 }
 
 std::vector<std::string> agent_names() {
-    return {"random", "greedy", "alphabeta[-dN]"};
+    return {"random", "greedy", "alphabeta[-dN][-noqs]"};
 }
 
 }  // namespace pioneer
