@@ -24,3 +24,6 @@ engine/tools/arena
 engine/tools/play
 engine/tools/gui
 engine/tools/*.dSYM/
+HANDOFF_*.md
+_worklog_*.md
+pending_advisor_review.md

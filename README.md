@@ -109,6 +109,12 @@ to play, the MCTS simulation budget per side, and who plays which colour.
 Left-click a piece to see its moves, click a highlighted square to move,
 click a captured piece to drop it. `a` starts a new game, `Esc` quits.
 
+## Contributing
+
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) covers the layout, how to add an
+agent, and how strength claims are measured here - including why self-play
+numbers are treated as a screening step rather than a verdict.
+
 ## Roadmap
 
 [docs/ROADMAP.md](docs/ROADMAP.md) has the full arc: baseline agents and a
