@@ -20,3 +20,4 @@ legacy/*.txt
 # Local workspace, never committed
 .trash/
 planning_*.md
+engine/tools/arena
