@@ -6,6 +6,7 @@
 *.o
 *.d
 code/Pioneer
+engine/tests/run_tests
 
 # Runtime output (game records are written to the working directory)
 code/*.txt
