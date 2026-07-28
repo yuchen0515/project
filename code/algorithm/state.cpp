@@ -10,7 +10,8 @@
 // 初始化 (無走步狀態)
 const Move State::no_move = {
     std::make_pair(-1, -1),
-    std::make_pair(-1, -1)};
+    std::make_pair(-1, -1),
+    0.0};
 
 // Declare (避免 compiler error, mcts.h 已定義)
 namespace PURE {
@@ -82,7 +83,7 @@ void State::do_Move(Move move) {
     if ((a < 0 || a > 4)
             || (b < -2 || b > 6)
             || (c < 0 || c > 4)
-            || (d < 0 && d > 4)) {
+            || (d < 0 || d > 4)) {
         std::cerr << "Error: " << __FUNCTION__ << std::endl;
         return;
     }
@@ -206,8 +207,6 @@ void State::run(){
         // cover
         show_walking(mouseIndex_);
 
-        // 電腦 vs 電腦 檢查
-        int32_t SelfPlay =  ((player_setting_[LOWER_] == PLAYER_TYPE_::AGENT_) && (player_setting_[UPPER_] == PLAYER_TYPE_::AGENT_));
         bool agentCheck = false;
         if (player_setting_[get_turns()] == PLAYER_TYPE_::AGENT_) {
             agentCheck = true;
@@ -229,7 +228,6 @@ void State::run(){
         //selfplay
         // 自我對下 判斷結束
         if (agentCheck == true && isKingDead_ == true) {
-        //if (SelfPlay && isKingDead_ == true) {
             lose_[get_turns()] += 1;
             winner_[get_turns() == 1 ? 0 : 1] += 1;
             game_number_ -= 1;

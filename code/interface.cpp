@@ -7,12 +7,6 @@
 #include "interface.h"
 //#define PRINT
 
-void Interface::Agent(){
-    //State state;
-    //auto TEMP = PURE::MCTS(state, 1000);
-    //MoveChess(TEMP.from, TEMP.to);
-}
-
 // 回傳當前下棋的人
 int32_t Interface::get_turns() const {
     return turn_;
@@ -398,7 +392,6 @@ void Interface::MoveChess(
     auto &[des_a, des_b] = des;
 
     bool isCaptive = false;
-    bool isUpperCaptive = false;
 
     if (isWithinBound(ori) == false) {
         return;
@@ -415,7 +408,6 @@ void Interface::MoveChess(
     }
     if (ori_b > 4) {
         isCaptive = true;
-        isUpperCaptive = true;
     }
     if (ori_b < 0) {
         ori_b += 7;
