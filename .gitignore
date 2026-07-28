@@ -5,12 +5,13 @@
 # Build artifacts
 *.o
 *.d
-code/Pioneer
+legacy/Pioneer
 engine/tests/run_tests
+engine/pioneer
 engine/tools/perft
 
 # Runtime output (game records are written to the working directory)
-code/*.txt
+legacy/*.txt
 
 # Local recordings / documents
 *.mov

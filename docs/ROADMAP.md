@@ -11,21 +11,25 @@ Modern toolchains could no longer build the project. Fixed the build, removed
 dead prototype code and a checked-in binary, cleaned all compiler warnings,
 rewrote the Makefile (incremental, `-Wall -Wextra`), restructured the docs.
 
-## Phase 1 — Engine core rewrite
+## Phase 1 — Engine core rewrite (done)
 
 An audit of the legacy engine found fundamental defects in the search
 (moves silently rejected inside the tree because move legality depended on
 GUI state; child nodes expanded with the parent position's move list), plus
-missing rules (repetition, pawn-drop-mate ban, optional promotion). Rather
-than patch around them:
+missing rules. Rather than patch around them, the core was rebuilt:
 
-- New self-contained engine core: position, full legal move generation,
-  do/undo, Zobrist hashing, position serialization.
-- Correctness proven by perft and a rules-edge-case test suite
-  (nifu, uchifuzume, optional promotion, sennichite).
-- A thin USI-style protocol layer so any GUI or match runner can drive the
-  engine. The SDL front end becomes one client among others.
-- The legacy engine moves to `legacy/`, kept buildable as a museum piece.
+- Self-contained engine core: bitboards with compile-time attack tables,
+  position with SFEN I/O and incremental Zobrist hashing, full legal move
+  generation, and a game layer holding the history that repetition needs.
+- Every rule covered: optional promotion (compulsory only for a pawn on the
+  last rank), nifu, the last-rank pawn drop ban, uchifuzume, and the
+  fourth-repetition loss for the first player.
+- Correctness cross-checked against an independent engine and reconciled
+  exactly, not approximately — see `verification.md`.
+- USI protocol layer plus an `Agent` interface, so GUIs, match runners and
+  future agents all attach at the same seam.
+- The legacy engine moved to `legacy/`, still buildable and playable, with
+  its defects documented rather than quietly discarded.
 
 ## Phase 2 — Baseline agents and tactical search
 

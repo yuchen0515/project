@@ -2,75 +2,96 @@
 
 Minishogi is shogi on a 5x5 board: six piece types, drops, promotion, and a
 branching factor that makes it a genuinely hard game squeezed into 25 squares.
-Pioneer is a minishogi program with an SDL2 GUI and an MCTS-based agent,
-started as a 2020–2021 undergraduate capstone at NTNU CSIE (advisor:
-Prof. Shun-Shii Lin) and fielded at the TCGA 2021 computer game tournament.
+Pioneer began as a 2020–2021 undergraduate capstone at NTNU CSIE (advisor:
+Prof. Shun-Shii Lin) and was fielded at the TCGA 2021 computer game
+tournament. It is being rebuilt as a verified engine with a rated arena.
 
 ![Demo](./project-demo.gif)
 
-## Current state
+## What is here
 
-The original GUI is fully playable: human vs human, human vs agent, and
-agent vs agent, with legal-move hints, drops from the captured-piece stand,
-promotion, and game records written to disk for replay.
+```
+engine/   the current engine: rules, USI protocol, agents
+legacy/   the original 2021 program and SDL GUI, still playable
+image/    board and piece bitmaps used by the GUI
+docs/     roadmap, verification method, the original write-up
+```
 
-A 2026 audit of the legacy engine found fundamental defects in its search
-layer (documented in [docs/ROADMAP.md](docs/ROADMAP.md)), so the engine core
-is being rebuilt from the ground up: full rules coverage proven by perft and
-tests, a USI-style protocol, stronger agents, and a rated self-play arena.
-The roadmap describes the whole arc.
+The engine core is complete and verified: full minishogi rules including
+drops, optional promotion, nifu, uchifuzume and the fourth-repetition loss,
+with move generation cross-checked against an independent implementation
+(see [docs/verification.md](docs/verification.md)). Search is next — the
+current agent plays at random, which is the baseline everything else will be
+measured against, not a claim of strength.
+
+The legacy GUI still runs, and remains the only way to play with a mouse.
+Its agent does not actually search; [legacy/README.md](legacy/README.md)
+documents why, since that finding is what motivated the rewrite.
 
 ## Building
 
-Dependencies: a C++17 compiler and SDL2.
+Requires a C++17 compiler. The engine has no dependencies; the legacy GUI
+needs SDL2.
 
 ```sh
-# macOS
-brew install sdl2
-
-# Debian/Ubuntu
-sudo apt install libsdl2-dev
+cd engine && make          # runs the test suite, builds ./pioneer and tools/perft
 ```
 
 ```sh
-cd code
-make        # builds ./Pioneer
-make run    # builds and starts the game
+brew install sdl2          # macOS; Debian/Ubuntu: apt install libsdl2-dev
+cd legacy && make run      # the original GUI
 ```
 
-Developed and tested on macOS (Apple Silicon, Apple clang 17); Linux should
-work with the same Makefile. The binary loads assets from `../image`, so
-start it from the `code/` directory.
+## Using the engine
 
-## Playing
-
-On startup the program asks a few questions on stdin:
-
-| Prompt | Meaning |
-| --- | --- |
-| `Your stepStory?` | Name of a previous game record to replay (without `.txt`), or `N` to start fresh |
-| `Round` | Number of games to play in a row |
-| `Simulation(Lower)` / `(Upper)` | MCTS simulation budget for each side's agent |
-| `Type` | 1 human vs human, 2/3 agent on one side, 4 agent vs agent |
-
-In game: left-click a piece to see its moves, click a highlighted square to
-move; click a captured piece on the stand to drop it. Press `a` for a new
-game, `Esc` to quit. Pieces promote on reaching the far rank. Game records
-are written to the working directory as timestamped `.txt` files.
-
-## Layout
+`pioneer` speaks [USI](http://hgm.nubati.net/usi.html), so any USI GUI or
+match runner can drive it.
 
 ```
-code/            game + legacy engine (SDL2 GUI, MCTS agent)
-  algorithm/     search, game state, record I/O
-image/           board and piece bitmaps
-docs/            roadmap and the original 2021 write-up (zh-TW)
+$ ./pioneer
+usi
+id name Pioneer
+id author Yu-Chen Lin
+usiok
+position startpos moves 5d5c 1b1c
+d
+  5 4 3 2 1
+a r b s g k
+b . . . . .
+c P . . . p
+d . . . . .
+e K G S B R
+black to move, ply 3
+go
+bestmove 4e4d
 ```
+
+Beyond USI it also accepts `d` (show the board), `moves` (list legal moves),
+`sfen` (print the position) and `go perft N`.
+
+```sh
+tools/perft 6                            # node counts, start position
+tools/perft 5 "4k/5/5/5/K4 b RBGSP 1"    # any position
+tools/perft 3 --divide                   # per-move breakdown
+```
+
+## Playing the legacy GUI
+
+On startup it asks for a game record to replay (`N` for none), how many games
+to play, the MCTS simulation budget per side, and who plays which colour.
+Left-click a piece to see its moves, click a highlighted square to move,
+click a captured piece to drop it. `a` starts a new game, `Esc` quits.
+
+## Roadmap
+
+[docs/ROADMAP.md](docs/ROADMAP.md) has the full arc: baseline agents and a
+mate solver, then self-play strength work, then a rated arena and an online
+ladder where outside agents can compete.
 
 ## History
 
-The original Chinese capstone report — including the threat-space MCTS idea
-the project explored — is preserved verbatim in
+The original Chinese capstone report, including the threat-space MCTS idea
+the project set out to explore, is preserved verbatim in
 [docs/report-2021_zh.md](docs/report-2021_zh.md), with slides
 [here](https://reurl.cc/bnojyl).
 
