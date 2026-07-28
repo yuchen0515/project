@@ -22,9 +22,11 @@ class Agent {
     // game is not already over.
     virtual Move choose(const Game& game) = 0;
 
-    // Called before each new game. Agents holding search state or an
-    // RNG stream reset it here; a fixed seed keeps matches reproducible.
-    virtual void new_game() {}
+    // Called before each game. The seed comes from the driver and is
+    // the only source of randomness an agent may use: replaying a match
+    // with the same seeds must reproduce it move for move. Deterministic
+    // agents ignore it.
+    virtual void new_game(uint64_t seed) { (void)seed; }
 };
 
 }  // namespace pioneer
