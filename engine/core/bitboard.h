@@ -79,7 +79,7 @@ constexpr auto build_step_attacks() {
 }
 inline constexpr auto STEP_ATTACKS = build_step_attacks();
 
-// Column masks (nifu checks).
+// Column masks (nifu checks) and rank masks (drop/promotion zones).
 constexpr auto build_file_bb() {
     std::array<Bitboard, FILE_NB> t{};
     for (int c = 0; c < FILE_NB; ++c)
@@ -87,6 +87,14 @@ constexpr auto build_file_bb() {
     return t;
 }
 inline constexpr auto FILE_BB = build_file_bb();
+
+constexpr auto build_rank_bb() {
+    std::array<Bitboard, RANK_NB> t{};
+    for (int r = 0; r < RANK_NB; ++r)
+        for (int c = 0; c < FILE_NB; ++c) t[r] |= 1u << (r * 5 + c);
+    return t;
+}
+inline constexpr auto RANK_BB = build_rank_bb();
 
 inline Bitboard slider_attacks(Square s, Bitboard occupied, const int dirs[4]) {
     Bitboard b = 0;

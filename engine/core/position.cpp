@@ -125,7 +125,12 @@ bool Position::set(const std::string& sfen) {
         if (ply_ < 1) return false;
     }
 
-    return pieces(BLACK, KING) && pieces(WHITE, KING);
+    if (!pieces(BLACK, KING) || !pieces(WHITE, KING)) return false;
+
+    // The side that just moved may not have left its own king capturable;
+    // such a position can never arise in play and would let move
+    // generation produce a king capture, so reject it at the door.
+    return attackers_to(king_square(~side_), side_) == 0;
 }
 
 std::string Position::sfen() const {

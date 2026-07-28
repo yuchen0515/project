@@ -61,6 +61,8 @@ TEST(sfen_rejects_malformed) {
         "rbsg1/4p/5/P4/KGSBR b - 1",  // white king missing
         "+k3K/5/5/5/5 b - 1",         // king cannot be promoted
         "rbsgk/4p/5/P4/KGSBR b - 0",  // ply is 1-based
+        "R3k/5/5/5/K4 b - 1",         // white king already capturable
+        "4k/5/5/5/K3r w - 1",         // same, colors reversed
     };
     for (const char* s : bad) CHECK(!pos.set(s));
 }
