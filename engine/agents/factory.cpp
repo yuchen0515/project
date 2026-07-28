@@ -18,11 +18,12 @@ std::unique_ptr<Agent> make_agent(const std::string& name, uint64_t seed) {
     // which matters because search depth is part of an agent's identity
     // for rating purposes.
     if (name.rfind("alphabeta", 0) == 0) {
-        int depth = 4;
+        AlphaBetaAgent::Options options;
         if (const size_t d = name.find("-d"); d != std::string::npos)
-            depth = std::atoi(name.c_str() + d + 2);
-        const bool quiescence = name.find("-noqs") == std::string::npos;
-        return std::make_unique<AlphaBetaAgent>(depth, seed, quiescence);
+            options.depth = std::atoi(name.c_str() + d + 2);
+        options.quiescence = name.find("-noqs") == std::string::npos;
+        options.transposition = name.find("-nott") == std::string::npos;
+        return std::make_unique<AlphaBetaAgent>(options, seed);
     }
     // "mcts" defaults to 1000 playouts; "mcts-s5000" names the budget,
     // which is part of the agent's identity for rating purposes.
@@ -45,7 +46,7 @@ std::unique_ptr<Agent> make_agent(const std::string& name, uint64_t seed) {
 }
 
 std::vector<std::string> agent_names() {
-    return {"random", "greedy", "alphabeta[-dN][-noqs]", "mcts[-sN]", "fsf[-dN] (external)"};
+    return {"random", "greedy", "alphabeta[-dN][-noqs][-nott]", "mcts[-sN]", "fsf[-dN] (external)"};
 }
 
 }  // namespace pioneer
