@@ -23,6 +23,10 @@ std::unique_ptr<Agent> make_agent(const std::string& name, uint64_t seed) {
             options.depth = std::atoi(name.c_str() + d + 2);
         options.quiescence = name.find("-noqs") == std::string::npos;
         options.transposition = name.find("-nott") == std::string::npos;
+        // Opt-in, because measured against an outside engine these cost
+        // more than they give; kept for tuning, not for playing.
+        if (name.find("+pst") != std::string::npos) options.weights.placement = 100;
+        if (name.find("+ks") != std::string::npos) options.weights.king_safety = 100;
         return std::make_unique<AlphaBetaAgent>(options, seed);
     }
     // "mcts" defaults to 1000 playouts; "mcts-s5000" names the budget,
@@ -46,7 +50,7 @@ std::unique_ptr<Agent> make_agent(const std::string& name, uint64_t seed) {
 }
 
 std::vector<std::string> agent_names() {
-    return {"random", "greedy", "alphabeta[-dN][-noqs][-nott]", "mcts[-sN]", "fsf[-dN] (external)"};
+    return {"random", "greedy", "alphabeta[-dN][-noqs][-nott][+pst][+ks]", "mcts[-sN]", "fsf[-dN] (external)"};
 }
 
 }  // namespace pioneer

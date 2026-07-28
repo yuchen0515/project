@@ -30,22 +30,35 @@ Game game_of(const std::string& sfen) {
 TEST(evaluation_is_symmetric_and_zero_at_the_start) {
     CHECK_EQ(evaluate(Position()), 0);
 
-    // Mirrored positions must evaluate identically for the side to move,
-    // otherwise the search has a built-in colour bias.
-    CHECK_EQ(evaluate(position_of("4k/5/5/5/K4 b RBGSP 1")),
-             evaluate(position_of("4k/5/5/5/K4 w rbgsp 1")));
+    // The two sides sit 180 degrees apart, so the mirror of a position
+    // flips rank and file and swaps colours. It must evaluate the same
+    // for whoever is to move, or the engine has a built-in colour bias
+    // that no amount of search can correct.
+    CHECK_EQ(evaluate(position_of("2gk1/4p/5/P4/KG3 b S 1")),
+             evaluate(position_of("3gk/4p/5/P4/1KG2 w s 1")));
+
+    // A position that is its own mirror must score the same whoever is
+    // to move, which catches a term that forgets to flip.
+    CHECK_EQ(evaluate(position_of("1r2k/5/5/5/K2R1 b - 1")),
+             evaluate(position_of("1r2k/5/5/5/K2R1 w - 1")));
 }
 
 TEST(evaluation_counts_material_and_hands) {
     // A rook up, from the side that has it. It sits on 4e rather than
     // 1e so that it is not already attacking the white king, which
     // would make the position illegal with Black to move.
-    const int with_rook = evaluate(position_of("4k/5/5/5/KR3 b - 1"));
+    // Material only, so the placement and safety terms do not muddy
+    // what this test is about.
+    constexpr EvalWeights only_material{100, 0, 0};
+
+    const int with_rook = evaluate(position_of("4k/5/5/5/KR3 b - 1"), only_material);
     CHECK_EQ(with_rook, PIECE_VALUE[ROOK]);
-    CHECK_EQ(evaluate(position_of("4k/5/5/5/KR3 w - 1")), -PIECE_VALUE[ROOK]);
+    CHECK_EQ(evaluate(position_of("4k/5/5/5/KR3 w - 1"), only_material),
+             -PIECE_VALUE[ROOK]);
 
     // The same rook in hand is worth slightly more than on the board.
-    const int in_hand = evaluate(position_of("4k/5/5/5/K4 b R 1"));
+    const int in_hand =
+        evaluate(position_of("4k/5/5/5/K4 b R 1"), only_material);
     CHECK(in_hand > with_rook);
     CHECK_EQ(in_hand, PIECE_VALUE[ROOK] * (100 + HAND_BONUS_PERCENT) / 100);
 }
@@ -147,12 +160,26 @@ TEST(quiescence_beats_the_same_depth_without_it) {
 }
 
 TEST(deeper_search_beats_shallower) {
-    // The one result that shows a search is really searching. Fixed
-    // seed, so it cannot flake.
-    AlphaBetaAgent deep(3, 1), shallow(2, 2);
+    // The one result that shows a search is really searching. Depths of
+    // the same parity, for the reason the next test documents.
+    AlphaBetaAgent deep(4, 1), shallow(2, 2);
     const MatchResult result = play_match(deep, shallow, 20, 11);
     CHECK_EQ(result.illegal, 0);
     CHECK(result.score_a() > 0.7);
+}
+
+TEST(positional_terms_stay_off_until_they_are_tuned) {
+    // They win self-play and lose to an outside engine, so they are
+    // opt-in. This pins that down: a later change that quietly enables
+    // them should have to argue with a failing test.
+    CHECK_EQ(DEFAULT_WEIGHTS.placement, 0);
+    CHECK_EQ(DEFAULT_WEIGHTS.king_safety, 0);
+    CHECK_EQ(std::string(AlphaBetaAgent(4, 1).name()), "alphabeta-d4");
+
+    AlphaBetaAgent::Options tuned;
+    tuned.weights.placement = 100;
+    tuned.weights.king_safety = 100;
+    CHECK_EQ(std::string(AlphaBetaAgent(tuned, 1).name()), "alphabeta-d4+pst+ks");
 }
 
 TEST(agents_are_reproducible_from_their_seed) {

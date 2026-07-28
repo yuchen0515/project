@@ -61,6 +61,44 @@ arena scores that as a forfeit and counts it separately, and it has not
 happened in the matches above. And a fixed depth keeps the match
 reproducible, where a time limit would not.
 
+## Self-play can be actively misleading
+
+Placement tables and a king-safety term were written, measured, and then
+switched off. The measurements are why.
+
+| Match | Result | Elo |
+| --- | --- | --- |
+| `alphabeta-d4+pst+ks` vs `alphabeta-d4` (self-play, 80) | 63-17 | +228 [+136, +320] |
+| `alphabeta-d4+pst` vs `alphabeta-d4` (self-play, 80) | 52-28 | +108 [+28, +187] |
+| `alphabeta-d4+ks` vs `alphabeta-d4` (self-play, 80) | 60-20 | +191 [+104, +278] |
+| `alphabeta-d4+pst+ks` vs `fsf-d6` (150) | 14-136 | -395 [-489, -301] |
+| `alphabeta-d4` vs `fsf-d6` (150) | 42-108 | **-164 [-226, -102]** |
+
+In self-play the positional terms are worth +228 Elo. Against an engine that
+does not share them they cost about 230. The intervals in the last two rows
+do not overlap, so this is not sampling noise.
+
+The explanation is the ordinary one: in self-play both sides evaluate with
+the same function, so extra terms mostly find the blind spots of an opponent
+that has the same blind spots. That is a statement about the opponent, not
+about minishogi. The terms remain in the code behind `+pst` and `+ks` as
+material for tuning later — against an outside reference, which is the only
+measurement that turned out to mean anything here.
+
+This is the single most useful thing the external benchmark has produced,
+and it would have shipped as an improvement without it.
+
+## Odd and even depths are not comparable
+
+With the positional terms on, `alphabeta-d3` does not beat `alphabeta-d2`
+(43.3% over 120 games) even though `alphabeta-d4` beats `alphabeta-d2`
+93.8% and `alphabeta-d5` beats `alphabeta-d3` 88.3%. Within a parity,
+deeper is decisively better; across it, the odd depth is flattered.
+
+An odd-depth search evaluates immediately after its own move and scores a
+tempo it has not yet paid for; an even one evaluates after the reply. Fixed
+depths meant for play should be even, which is why the default is 4.
+
 ## What the numbers say
 
 **Search depth is worth about 370 Elo per ply** here (`d3` beats `d2` 89–11,

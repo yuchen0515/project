@@ -43,6 +43,8 @@ std::string describe(const AlphaBetaAgent::Options& options) {
     std::string name = "alphabeta-d" + std::to_string(options.depth);
     if (!options.quiescence) name += "-noqs";
     if (!options.transposition) name += "-nott";
+    if (options.weights.placement) name += "+pst";
+    if (options.weights.king_safety) name += "+ks";
     return name;
 }
 
@@ -84,7 +86,7 @@ int AlphaBetaAgent::quiesce(const Position& pos, int alpha, int beta, int ply) {
     MoveList moves;
     generate_legal(pos, moves);
     if (moves.empty()) return -MATE_SCORE + ply;
-    if (ply >= MAX_QUIESCENCE_PLY) return evaluate(pos);
+    if (ply >= MAX_QUIESCENCE_PLY) return evaluate(pos, options_.weights);
 
     // In check there is nothing quiet about the position and every
     // evasion has to be considered - standing pat would assume an
@@ -93,7 +95,7 @@ int AlphaBetaAgent::quiesce(const Position& pos, int alpha, int beta, int ply) {
 
     int best = -MATE_SCORE - 1;
     if (!in_check) {
-        best = evaluate(pos);
+        best = evaluate(pos, options_.weights);
         if (best >= beta) return best;
         if (best > alpha) alpha = best;
     }
@@ -147,7 +149,7 @@ int AlphaBetaAgent::search(const Position& pos, int depth, int alpha, int beta,
 
     if (depth <= 0)
         return options_.quiescence ? quiesce(pos, alpha, beta, ply)
-                                   : evaluate(pos);
+                                   : evaluate(pos, options_.weights);
 
     std::vector<Move> ordered;
     order_moves(pos, moves, tt_move, ordered);

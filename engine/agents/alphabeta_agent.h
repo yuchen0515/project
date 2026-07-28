@@ -30,6 +30,7 @@ class AlphaBetaAgent : public Agent {
         // is worth; neither is something you would play with.
         bool transposition = true;
         size_t table_mb = 16;
+        EvalWeights weights;
     };
 
     explicit AlphaBetaAgent(int depth = 4, uint64_t seed = 0x7EED,
