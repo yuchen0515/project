@@ -61,6 +61,48 @@ arena scores that as a forfeit and counts it separately, and it has not
 happened in the matches above. And a fixed depth keeps the match
 reproducible, where a time limit would not.
 
+## The honest scale: equal clocks
+
+Fixed-depth matches understate the gap, because pinning Fairy-Stockfish to
+depth 6 is a handicap we impose on it. With move time budgets on both sides
+the comparison is fair, and it is sobering:
+
+| Match | Result |
+| --- | --- |
+| `alphabeta-t100` vs `fsf-t100` | 0-150 — upper bound -637 Elo |
+| `alphabeta-t100` vs `fsf-d6` | 28.0%, -164 [-226, -102] |
+
+At equal time Fairy-Stockfish searches far deeper than we do in the same
+100ms: decades of search technique - null-move pruning, late move
+reductions, aspiration windows, staged generation - compound into that gap.
+The fixed-depth ladder stays useful as a cheap regression scale with good
+resolution, but the equal-clock number is the true coordinate, and the
+roadmap items that close it are search techniques and a tuned evaluation.
+
+## The mate solver
+
+`solve_mate` is a df-pn (depth-first proof-number) search: the attacker
+plays only checking moves, the defender everything, and "proven" is a real
+proof of forced mate within the horizon, not a heuristic. This is the sound
+version of the 2021 capstone's threat-space idea - the original filtered
+move generation down to threatening moves, which prunes winning moves and
+proves nothing.
+
+Proof numbers are dramatically better than alpha-beta at forced sequences:
+
+| Puzzle | df-pn nodes | alpha-beta nodes |
+| --- | ---: | ---: |
+| mate in 3 | 6 | 147 |
+| mate in 5 | 246 | 38,285 |
+| mate in 7 | 43 | 106,267 |
+
+Thirteen frozen puzzles pin the solver in place, each verified three
+independent ways (df-pn, a plain OR/AND reference search, alpha-beta exact
+scores), with negative cases for every defence class and for the pawn-drop
+mate the rules forbid. The v1 repetition policy is conservative and
+documented in the header, along with its integration limit: proven is a
+fresh-puzzle claim until pre-root game history is supplied.
+
 ## Self-play can be actively misleading
 
 Placement tables and a king-safety term were written, measured, and then
