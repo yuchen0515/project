@@ -70,7 +70,15 @@ the comparison is fair, and it is sobering:
 | Match | Result |
 | --- | --- |
 | `alphabeta-t100` vs `fsf-t100` | 0-150 — upper bound -637 Elo |
-| `alphabeta-t100` vs `fsf-d6` | 28.0%, -164 [-226, -102] |
+| `alphabeta-t100` vs `fsf-d6` | 33.3%, -120 [-179, -62] (was 28.0% before pruning) |
+| `alphabeta-d6` vs `fsf-d6` | 38.0%, -85 [-142, -28] (was 32.7%) |
+
+Null-move pruning and late move reductions moved both measurable scales by
+about +40 Elo apiece (intervals still overlap - directional, not yet
+statistically separated) while cutting fixed-depth nodes by half. The
+equal-clock wall did not move: 0-150 before, 0-150 after. Closing that
+needs the rest of the arsenal - aspiration windows, PVS, a tuned
+evaluation, and the mate solver in the search loop.
 
 At equal time Fairy-Stockfish searches far deeper than we do in the same
 100ms: decades of search technique - null-move pruning, late move
