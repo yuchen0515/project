@@ -85,6 +85,7 @@ class Position {
     }
 
     Bitboard attackers_to(Square s, Color by) const;
+    Bitboard attackers_to(Square s, Color by, Bitboard occupied) const;
     bool in_check() const {
         return attackers_to(king_square(side_), ~side_) != 0;
     }

@@ -73,7 +73,7 @@ TEST(perft_positions_with_pieces_in_hand) {
 }
 
 TEST(perft_is_color_symmetric) {
-    // The start position mirrored: same tree, opposite side to move.
+    // Bare kings with all pieces in hand: same tree, opposite side to move.
     CHECK_EQ(perft(from("4k/5/5/5/K4 b RBGSP 1"), 5),
              perft(from("4k/5/5/5/K4 w rbgsp 1"), 5));
 }

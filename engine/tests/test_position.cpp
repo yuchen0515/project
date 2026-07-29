@@ -173,3 +173,36 @@ TEST(attackers_to_and_check_detection) {
              square_bb(horse_sq));  // diagonal
     CHECK_EQ(horse.attackers_to(parse_usi_square("3d"), BLACK), Bitboard(0));
 }
+
+TEST(attackers_to_with_hypothetical_occupancy) {
+    const Square black_king = parse_usi_square("5e");
+    const Square white_rook = parse_usi_square("5a");
+    const Square rook_blocker = parse_usi_square("5b");
+
+    Position rook_xray = from("r3k/G4/5/5/K4 b - 1");
+    CHECK_EQ(rook_xray.attackers_to(black_king, WHITE), Bitboard(0));
+    const Bitboard rook_blocker_removed =
+        rook_xray.occupied() & ~square_bb(rook_blocker);
+    CHECK_EQ(rook_xray.attackers_to(black_king, WHITE,
+                                   rook_blocker_removed),
+             square_bb(white_rook));
+
+    Position open_rook_file = from("r3k/5/5/5/K4 b - 1");
+    CHECK_EQ(open_rook_file.attackers_to(black_king, WHITE),
+             square_bb(white_rook));
+    const Bitboard artificial_blocker =
+        open_rook_file.occupied() | square_bb(parse_usi_square("5c"));
+    CHECK_EQ(open_rook_file.attackers_to(black_king, WHITE,
+                                        artificial_blocker),
+             Bitboard(0));
+
+    const Square white_bishop = parse_usi_square("1a");
+    const Square bishop_blocker = parse_usi_square("3c");
+    Position bishop_xray = from("k3b/5/2G2/5/K4 b - 1");
+    CHECK_EQ(bishop_xray.attackers_to(black_king, WHITE), Bitboard(0));
+    const Bitboard bishop_blocker_removed =
+        bishop_xray.occupied() & ~square_bb(bishop_blocker);
+    CHECK_EQ(bishop_xray.attackers_to(black_king, WHITE,
+                                     bishop_blocker_removed),
+             square_bb(white_bishop));
+}

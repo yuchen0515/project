@@ -189,15 +189,18 @@ std::string Position::sfen() const {
 }
 
 Bitboard Position::attackers_to(Square s, Color by) const {
-    const Bitboard occ = occupied();
+    return attackers_to(s, by, occupied());
+}
+
+Bitboard Position::attackers_to(Square s, Color by, Bitboard occupied) const {
     // For every step pattern here, "X on x attacks s" is equivalent to
     // "a piece of the opposite color on s attacks x", so the tables can
     // be read backwards from s.
     const Color rev = ~by;
 
-    Bitboard att = bishop_attacks(s, occ) &
+    Bitboard att = bishop_attacks(s, occupied) &
                    (pieces(by, BISHOP) | pieces(by, HORSE));
-    att |= rook_attacks(s, occ) & (pieces(by, ROOK) | pieces(by, DRAGON));
+    att |= rook_attacks(s, occupied) & (pieces(by, ROOK) | pieces(by, DRAGON));
     att |= STEP_ATTACKS[rev][PAWN][s] & pieces(by, PAWN);
     att |= STEP_ATTACKS[rev][SILVER][s] & pieces(by, SILVER);
     att |= STEP_ATTACKS[rev][GOLD][s] &
