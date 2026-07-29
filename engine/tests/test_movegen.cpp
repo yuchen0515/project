@@ -14,6 +14,80 @@ Position from(const std::string& sfen) {
     return pos;
 }
 
+// Frozen copy-make legality oracle. Keep this deliberately independent
+// from the optimized legal generator: it may use only pseudo generation,
+// apply(), attackers_to(), and the other reference functions below.
+bool reference_is_checkmate(const Position& pos);
+
+bool reference_is_legal(const Position& pos, Move m) {
+    const Color us = pos.side_to_move();
+    Position next = pos;
+    next.apply(m);
+
+    if (next.attackers_to(next.king_square(us), ~us)) return false;
+    if (is_drop(m) && drop_type(m) == PAWN &&
+        reference_is_checkmate(next))
+        return false;
+    return true;
+}
+
+bool reference_has_legal_move(const Position& pos) {
+    MoveList pseudo;
+    generate_pseudo_legal(pos, pseudo);
+    for (Move m : pseudo)
+        if (reference_is_legal(pos, m)) return true;
+    return false;
+}
+
+bool reference_is_checkmate(const Position& pos) {
+    const Color us = pos.side_to_move();
+    return pos.attackers_to(pos.king_square(us), ~us) &&
+           !reference_has_legal_move(pos);
+}
+
+void generate_legal_reference(const Position& pos, MoveList& list) {
+    MoveList pseudo;
+    generate_pseudo_legal(pos, pseudo);
+    list.clear();
+    for (Move m : pseudo)
+        if (reference_is_legal(pos, m)) list.add(m);
+}
+
+std::string ordered_moves(const MoveList& list) {
+    std::string out;
+    for (Move m : list) {
+        if (!out.empty()) out += ' ';
+        out += usi_move(m);
+    }
+    return out;
+}
+
+bool same_move_order(const MoveList& a, const MoveList& b) {
+    if (a.size() != b.size()) return false;
+    for (int i = 0; i < a.size(); ++i)
+        if (a[i] != b[i]) return false;
+    return true;
+}
+
+// The recursion is driven exclusively by the reference list. If the fast
+// generator omits a move, its missing subtree cannot disappear from the test.
+bool legal_tree_matches_reference(const Position& pos, int plies_left) {
+    MoveList reference;
+    MoveList actual;
+    generate_legal_reference(pos, reference);
+    generate_legal(pos, actual);
+    if (!same_move_order(reference, actual)) return false;
+    if (plies_left == 0) return true;
+
+    for (Move m : reference) {
+        Position next = pos;
+        next.apply(m);
+        if (!legal_tree_matches_reference(next, plies_left - 1))
+            return false;
+    }
+    return true;
+}
+
 // Sorted and space-joined so a mismatch reads as a diff of two lines.
 std::string legal_moves(const Position& pos) {
     MoveList list;
@@ -180,4 +254,134 @@ TEST(every_generated_move_keeps_the_position_consistent) {
         CHECK(next.is_consistent());
         CHECK(!next.attackers_to(next.king_square(BLACK), WHITE));
     }
+}
+
+TEST(reference_oracle_is_pinned_to_hand_checked_results) {
+    MoveList start;
+    generate_legal_reference(Position(), start);
+    CHECK_EQ(
+        ordered_moves(start),
+        std::string("5d5c 5e4d 4e4d 4e3d 3e4d 3e3d 3e2d 2e5b 2e4c "
+                    "2e3d 2e1d 1e1b 1e1c 1e1d"));
+    CHECK(reference_has_legal_move(Position()));
+
+    Position pawn_drop_mate = from("3pk/5/4G/5/K4 b PG 1");
+    CHECK(!reference_is_legal(pawn_drop_mate, parse_usi_move("P*1b")));
+    CHECK(reference_is_legal(pawn_drop_mate, parse_usi_move("G*1b")));
+    CHECK(reference_is_checkmate(
+        from("3pk/4P/4G/5/K4 w G 1")));
+}
+
+TEST(legal_generator_matches_copy_make_reference_tree_in_order) {
+    // The opening reaches ordinary moves, captures and promotions. Depth
+    // five compares 571,312 complete ordered move lists while staying cheap.
+    CHECK(legal_tree_matches_reference(Position(), 5));
+
+    // Shallow drop-heavy and tactical roots cover the paths sparse opening
+    // plies do not reach without turning this into a second perft suite.
+    struct Fixture {
+        const char* sfen;
+        int depth;
+    };
+    const Fixture fixtures[] = {
+        {"4k/5/5/5/K4 b RBGSP 1", 1},
+        {"r3k/5/5/G4/K4 b - 1", 2},
+        {"k3b/5/2S2/5/K4 b - 1", 2},
+        {"+r3k/5/5/G4/K4 b - 1", 2},
+        {"k3+b/5/2S2/5/K4 b - 1", 2},
+        {"r3k/5/1G3/5/K4 b G 1", 2},
+        {"r1k1b/5/5/5/K4 b - 1", 2},
+        {"r3k/5/5/K4/5 b - 1", 2},
+        {"3pk/5/4G/5/K4 b PG 1", 2},
+        {"4k/5/g4/5/KP3 w pg 1", 2},
+    };
+    for (const Fixture& fixture : fixtures)
+        CHECK(legal_tree_matches_reference(from(fixture.sfen), fixture.depth));
+}
+
+TEST(slider_pins_restrict_moves_to_the_pin_line) {
+    Position rook = from("r3k/5/5/G4/K4 b - 1");
+    CHECK(!has(rook, "5d4c"));
+    CHECK(has(rook, "5d5c"));
+
+    Position bishop = from("k3b/5/2S2/5/K4 b - 1");
+    CHECK(!has(bishop, "3c4b"));
+    CHECK(has(bishop, "3c2b"));
+    CHECK(has(bishop, "3c4d"));
+
+    // Promoted sliders retain the same ray pinning power.
+    Position dragon = from("+r3k/5/5/G4/K4 b - 1");
+    CHECK(!has(dragon, "5d4c"));
+    CHECK(has(dragon, "5d5c"));
+
+    Position horse = from("k3+b/5/2S2/5/K4 b - 1");
+    CHECK(!has(horse, "3c4b"));
+    CHECK(has(horse, "3c2b"));
+    CHECK(has(horse, "3c4d"));
+}
+
+TEST(single_and_double_check_generate_only_valid_evasions) {
+    Position single = from("r3k/5/1G3/5/K4 b G 1");
+    CHECK(single.in_check());
+    CHECK(has(single, "4c5b"));  // interpose a board piece
+    CHECK(has(single, "G*5b"));  // interpose a drop
+    CHECK(has(single, "G*5c"));
+    CHECK(has(single, "G*5d"));
+    CHECK(!has(single, "4c4b")); // does not answer the rook check
+
+    // A horse's orthogonal step and a dragon's diagonal step are adjacent
+    // checks, not sliding checks with an interposition square.
+    const Position step_checks[] = {
+        from("4k/5/5/+b4/K4 b G 1"),
+        from("4k/5/5/1+r3/K4 b G 1"),
+    };
+    for (const Position& step_check : step_checks) {
+        CHECK(step_check.in_check());
+        MoveList evasions;
+        generate_legal(step_check, evasions);
+        for (Move m : evasions) CHECK(!is_drop(m));
+    }
+
+    Position double_check = from("r1k1b/5/5/5/K4 b - 1");
+    CHECK_EQ(popcount(double_check.attackers_to(
+                 double_check.king_square(BLACK), WHITE)),
+             2);
+    MoveList moves;
+    generate_legal(double_check, moves);
+    CHECK_EQ(moves.size(), 1);
+    for (Move m : moves) {
+        CHECK(!is_drop(m));
+        CHECK_EQ(int(from_sq(m)), int(double_check.king_square(BLACK)));
+    }
+}
+
+TEST(king_move_removes_its_origin_from_xray_occupancy) {
+    // The rook checks 5d. When the king considers retreating to 5e, its
+    // old square 5d must be removed before testing the rook ray.
+    Position pos = from("r3k/5/5/K4/5 b - 1");
+    CHECK(pos.in_check());
+    CHECK(!has(pos, "5d5e"));
+    CHECK_EQ(legal_moves(pos), std::string("5d4c 5d4d 5d4e"));
+
+    // Capturing the near rook does not make 5b safe: the rook on 5a is
+    // revealed behind the captured checker.
+    Position capture_xray = from("r3k/r4/K4/5/5 b - 1");
+    CHECK(capture_xray.in_check());
+    CHECK(!has(capture_xray, "5c5b"));
+}
+
+TEST(uchifuzume_fast_path_is_color_symmetric) {
+    Position black = from("3pk/5/4G/5/K4 b PG 1");
+    CHECK(!has(black, "P*1b"));
+    CHECK(has(black, "G*1b"));
+
+    // A non-king defender can capture the checking pawn, so this is not mate.
+    Position defended = from("3gk/5/4G/5/K4 b P 1");
+    CHECK(has(defended, "P*1b"));
+    defended.apply(parse_usi_move("P*1b"));
+    CHECK_EQ(legal_moves(defended), std::string("2a1b"));
+
+    Position white = from("4k/5/g4/5/KP3 w pg 1");
+    CHECK(!has(white, "P*5d"));
+    CHECK(has(white, "G*5d"));
 }

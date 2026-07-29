@@ -48,6 +48,41 @@ constexpr auto build_ray_next() {
 }
 inline constexpr auto RAY_NEXT = build_ray_next();
 
+// BETWEEN_BB[from][to]: squares strictly between two aligned squares.
+// Non-aligned squares, identical squares, and adjacent squares map to zero.
+constexpr auto build_between_bb() {
+    std::array<std::array<Bitboard, SQUARE_NB>, SQUARE_NB> t{};
+    for (int from = 0; from < SQUARE_NB; ++from)
+        for (int to = 0; to < SQUARE_NB; ++to) {
+            const int from_rank = from / FILE_NB;
+            const int from_file = from % FILE_NB;
+            const int to_rank = to / FILE_NB;
+            const int to_file = to % FILE_NB;
+            const int rank_delta = to_rank - from_rank;
+            const int file_delta = to_file - from_file;
+            const int abs_rank_delta =
+                rank_delta < 0 ? -rank_delta : rank_delta;
+            const int abs_file_delta =
+                file_delta < 0 ? -file_delta : file_delta;
+
+            if (rank_delta != 0 && file_delta != 0 &&
+                abs_rank_delta != abs_file_delta)
+                continue;
+
+            const int rank_step = (rank_delta > 0) - (rank_delta < 0);
+            const int file_step = (file_delta > 0) - (file_delta < 0);
+            int rank = from_rank + rank_step;
+            int file = from_file + file_step;
+            while (rank != to_rank || file != to_file) {
+                t[from][to] |= 1u << (rank * FILE_NB + file);
+                rank += rank_step;
+                file += file_step;
+            }
+        }
+    return t;
+}
+inline constexpr auto BETWEEN_BB = build_between_bb();
+
 // STEP_ATTACKS[color][piece type][sq]: attack set of the non-sliding
 // component. Bishop/rook have none; horse/dragon hold only their extra
 // king steps - their sliding component comes from the ray walkers below.

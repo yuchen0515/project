@@ -115,3 +115,27 @@ TEST(ray_next_edges) {
     CHECK_EQ(int(RAY_NEXT[4][22]), int(SQ_NONE));  // S from rank e
     CHECK_EQ(int(RAY_NEXT[0][22]), 17);
 }
+
+TEST(between_bb_strict_interior) {
+    // Orthogonal and diagonal lines contain only their interior squares.
+    CHECK_EQ(BETWEEN_BB[0][20], bb_of({5, 10, 15}));
+    CHECK_EQ(BETWEEN_BB[10][14], bb_of({11, 12, 13}));
+    CHECK_EQ(BETWEEN_BB[0][24], bb_of({6, 12, 18}));
+    CHECK_EQ(BETWEEN_BB[4][20], bb_of({8, 12, 16}));
+
+    // The table is symmetric for every square pair.
+    for (int from = 0; from < SQUARE_NB; ++from)
+        for (int to = 0; to < SQUARE_NB; ++to)
+            CHECK_EQ(BETWEEN_BB[from][to], BETWEEN_BB[to][from]);
+
+    // Adjacent aligned squares and non-aligned squares have no interior.
+    CHECK_EQ(BETWEEN_BB[0][1], Bitboard(0));
+    CHECK_EQ(BETWEEN_BB[0][5], Bitboard(0));
+    CHECK_EQ(BETWEEN_BB[0][6], Bitboard(0));
+    CHECK_EQ(BETWEEN_BB[0][7], Bitboard(0));
+    CHECK_EQ(BETWEEN_BB[12][12], Bitboard(0));
+
+    // Neither endpoint is ever part of the strict-between mask.
+    CHECK((BETWEEN_BB[0][20] & (square_bb(0) | square_bb(20))) == 0);
+    CHECK((BETWEEN_BB[24][0] & (square_bb(24) | square_bb(0))) == 0);
+}
