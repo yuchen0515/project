@@ -23,6 +23,7 @@ std::unique_ptr<Agent> make_agent(const std::string& name, uint64_t seed) {
             options.depth = std::atoi(name.c_str() + d + 2);
         options.quiescence = name.find("-noqs") == std::string::npos;
         options.transposition = name.find("-nott") == std::string::npos;
+        options.move_ordering = name.find("-noorder") == std::string::npos;
         // Opt-in, because measured against an outside engine these cost
         // more than they give; kept for tuning, not for playing.
         if (name.find("+pst") != std::string::npos) options.weights.placement = 100;
@@ -50,7 +51,9 @@ std::unique_ptr<Agent> make_agent(const std::string& name, uint64_t seed) {
 }
 
 std::vector<std::string> agent_names() {
-    return {"random", "greedy", "alphabeta[-dN][-noqs][-nott][+pst][+ks]", "mcts[-sN]", "fsf[-dN] (external)"};
+    return {"random", "greedy",
+            "alphabeta[-dN][-noqs][-nott][-noorder][+pst][+ks]",
+            "mcts[-sN]", "fsf[-dN] (external)"};
 }
 
 }  // namespace pioneer

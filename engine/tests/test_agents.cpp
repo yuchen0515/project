@@ -9,6 +9,29 @@
 #include "../arena/match.h"
 #include "test.h"
 
+namespace pioneer {
+
+struct AlphaBetaAgentTestAccess {
+    static int nonzero_killers(const AlphaBetaAgent& agent) {
+        int count = 0;
+        for (const auto& slots : agent.killers_)
+            for (Move m : slots)
+                if (m != MOVE_NONE) ++count;
+        return count;
+    }
+
+    static int nonzero_history(const AlphaBetaAgent& agent) {
+        int count = 0;
+        for (const auto& by_origin : agent.history_)
+            for (const auto& by_target : by_origin)
+                for (uint16_t score : by_target)
+                    if (score != 0) ++count;
+        return count;
+    }
+};
+
+}  // namespace pioneer
+
 using namespace pioneer;
 
 namespace {
@@ -180,6 +203,46 @@ TEST(positional_terms_stay_off_until_they_are_tuned) {
     tuned.weights.placement = 100;
     tuned.weights.king_safety = 100;
     CHECK_EQ(std::string(AlphaBetaAgent(tuned, 1).name()), "alphabeta-d4+pst+ks");
+}
+
+TEST(move_ordering_state_resets_for_every_new_game) {
+    AlphaBetaAgent agent(4, 1);
+    CHECK_EQ(AlphaBetaAgentTestAccess::nonzero_killers(agent), 0);
+    CHECK_EQ(AlphaBetaAgentTestAccess::nonzero_history(agent), 0);
+
+    agent.new_game(7);
+    CHECK(agent.choose(Game()) != MOVE_NONE);
+    CHECK(AlphaBetaAgentTestAccess::nonzero_killers(agent) > 0);
+    CHECK(AlphaBetaAgentTestAccess::nonzero_history(agent) > 0);
+
+    agent.new_game(8);
+    CHECK_EQ(AlphaBetaAgentTestAccess::nonzero_killers(agent), 0);
+    CHECK_EQ(AlphaBetaAgentTestAccess::nonzero_history(agent), 0);
+}
+
+TEST(noorder_disables_killer_and_history_state) {
+    AlphaBetaAgent::Options options;
+    options.depth = 4;
+    options.move_ordering = false;
+    AlphaBetaAgent noorder(options, 1);
+    CHECK_EQ(std::string(noorder.name()), "alphabeta-d4-noorder");
+
+    noorder.new_game(7);
+    CHECK(noorder.choose(Game()) != MOVE_NONE);
+    CHECK_EQ(AlphaBetaAgentTestAccess::nonzero_killers(noorder), 0);
+    CHECK_EQ(AlphaBetaAgentTestAccess::nonzero_history(noorder), 0);
+
+    auto from_factory = make_agent("alphabeta-d3-noorder", 2);
+    CHECK(from_factory != nullptr);
+    CHECK_EQ(std::string(from_factory->name()), "alphabeta-d3-noorder");
+}
+
+TEST(quiescence_does_not_update_killer_or_history_state) {
+    AlphaBetaAgent depth_one(1, 1);
+    depth_one.new_game(7);
+    CHECK(depth_one.choose(Game()) != MOVE_NONE);
+    CHECK_EQ(AlphaBetaAgentTestAccess::nonzero_killers(depth_one), 0);
+    CHECK_EQ(AlphaBetaAgentTestAccess::nonzero_history(depth_one), 0);
 }
 
 TEST(agents_are_reproducible_from_their_seed) {

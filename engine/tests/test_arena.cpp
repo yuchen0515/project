@@ -1,6 +1,8 @@
 #include <cmath>
 #include <string>
+#include <vector>
 
+#include "../agents/alphabeta_agent.h"
 #include "../agents/factory.h"
 #include "../agents/random_agent.h"
 #include "../arena/match.h"
@@ -17,6 +19,26 @@ class BrokenAgent : public Agent {
    public:
     const char* name() const override { return "broken"; }
     Move choose(const Game&) override { return make_move(0, 0, true); }
+};
+
+class RecordingAgent : public Agent {
+   public:
+    explicit RecordingAgent(Agent& inner) : inner_(inner) {}
+
+    const char* name() const override { return inner_.name(); }
+    Move choose(const Game& game) override {
+        const Move move = inner_.choose(game);
+        moves_.push_back(move);
+        return move;
+    }
+    void new_game(uint64_t seed) override { inner_.new_game(seed); }
+
+    const std::vector<Move>& moves() const { return moves_; }
+    void clear() { moves_.clear(); }
+
+   private:
+    Agent& inner_;
+    std::vector<Move> moves_;
 };
 
 bool near(double a, double b, double tolerance) {
@@ -94,6 +116,34 @@ TEST(a_match_replays_from_its_base_seed) {
     CHECK_EQ(first.wins_a, again.wins_a);
     CHECK_EQ(first.wins_b, again.wins_b);
     CHECK_EQ(first.unfinished, again.unfinished);
+}
+
+TEST(alphabeta_ordering_replays_every_move_from_the_same_seed) {
+    AlphaBetaAgent a(3, 1), b(3, 2);
+    RecordingAgent recorded_a(a), recorded_b(b);
+
+    const MatchResult first = play_match(recorded_a, recorded_b, 4, 500, 60);
+    const std::vector<Move> first_a_moves = recorded_a.moves();
+    const std::vector<Move> first_b_moves = recorded_b.moves();
+
+    recorded_a.clear();
+    recorded_b.clear();
+    const MatchResult again = play_match(recorded_a, recorded_b, 4, 500, 60);
+
+    CHECK_EQ(first.games, again.games);
+    CHECK_EQ(first.wins_a, again.wins_a);
+    CHECK_EQ(first.wins_b, again.wins_b);
+    CHECK_EQ(first.unfinished, again.unfinished);
+    CHECK_EQ(first.illegal, again.illegal);
+    CHECK_EQ(first.a_as_black_games, again.a_as_black_games);
+    CHECK_EQ(first.a_as_black_wins, again.a_as_black_wins);
+
+    CHECK_EQ(first_a_moves.size(), recorded_a.moves().size());
+    for (size_t i = 0; i < first_a_moves.size(); ++i)
+        CHECK_EQ(first_a_moves[i], recorded_a.moves()[i]);
+    CHECK_EQ(first_b_moves.size(), recorded_b.moves().size());
+    for (size_t i = 0; i < first_b_moves.size(); ++i)
+        CHECK_EQ(first_b_moves[i], recorded_b.moves()[i]);
 }
 
 TEST(greedy_beats_random_decisively) {
