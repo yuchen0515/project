@@ -7,14 +7,18 @@
 
 #pragma once
 
+#include <array>
 #include <random>
 #include <string>
+#include <vector>
 
 #include "agent.h"
 #include "random_agent.h"  // mix_seeds
 #include "transposition.h"
 
 namespace pioneer {
+
+struct AlphaBetaAgentTestAccess;
 
 // Depth at which quiescence stops chasing captures. Captures strictly
 // reduce the pieces on the board so the recursion terminates on its own;
@@ -29,6 +33,7 @@ class AlphaBetaAgent : public Agent {
         // Off is the control variant used to measure what each feature
         // is worth; neither is something you would play with.
         bool transposition = true;
+        bool move_ordering = true;
         size_t table_mb = 16;
         EvalWeights weights;
     };
@@ -46,14 +51,33 @@ class AlphaBetaAgent : public Agent {
     uint64_t nodes() const { return nodes_; }
 
    private:
+    static constexpr int KILLER_SLOT_NB = 2;
+    static constexpr int HISTORY_ORIGIN_NB = DROP_ORIGIN + HAND_TYPE_NB;
+    static constexpr int HISTORY_MAX = 65535;
+
+    using KillerTable = std::vector<std::array<Move, KILLER_SLOT_NB>>;
+    using HistoryTable =
+        std::array<std::array<std::array<uint16_t, SQUARE_NB>,
+                              HISTORY_ORIGIN_NB>,
+                   COLOR_NB>;
+
+    friend struct AlphaBetaAgentTestAccess;
+
     int search(const Position& pos, int depth, int alpha, int beta, int ply);
     int quiesce(const Position& pos, int alpha, int beta, int ply);
+    void order_moves(const Position& pos, const MoveList& moves, Move tt_move,
+                     int ply, bool use_heuristics,
+                     std::vector<Move>& out) const;
+    void record_quiet_cutoff(const Position& pos, Move m, int depth, int ply);
+    void age_history();
 
     Options options_;
     uint64_t seed_;
     std::string name_;
     std::mt19937_64 rng_;
     TranspositionTable table_;
+    KillerTable killers_;
+    HistoryTable history_{};
     uint64_t nodes_ = 0;
 };
 

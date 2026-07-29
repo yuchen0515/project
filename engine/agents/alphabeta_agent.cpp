@@ -12,7 +12,7 @@ namespace {
 // Most valuable victim, least valuable attacker: try the captures that
 // are most likely to be good first, so alpha-beta cuts off sooner. The
 // ordering only affects speed, never the result.
-int move_order_key(const Position& pos, Move m, Move tt_move) {
+int legacy_move_order_key(const Position& pos, Move m, Move tt_move) {
     // Whatever was best here last time is the best guess this time, and
     // it costs one comparison to try it first.
     if (m == tt_move) return 1 << 20;
@@ -27,22 +27,28 @@ int move_order_key(const Position& pos, Move m, Move tt_move) {
     return victim ? victim * 16 - attacker + promotion : promotion;
 }
 
-void order_moves(const Position& pos, const MoveList& moves, Move tt_move,
-                 std::vector<Move>& out) {
-    out.assign(moves.begin(), moves.end());
-    std::stable_sort(out.begin(), out.end(), [&](Move a, Move b) {
-        return move_order_key(pos, a, tt_move) > move_order_key(pos, b, tt_move);
-    });
-}
-
 bool is_capture(const Position& pos, Move m) {
     return !is_drop(m) && pos.piece_on(to_sq(m)) != NO_PIECE;
+}
+
+bool is_quiet(const Position& pos, Move m) {
+    return !is_capture(pos, m) && !is_promotion(m);
+}
+
+struct MoveOrderKey {
+    int tier;
+    int detail;
+};
+
+bool operator>(MoveOrderKey a, MoveOrderKey b) {
+    return a.tier != b.tier ? a.tier > b.tier : a.detail > b.detail;
 }
 
 std::string describe(const AlphaBetaAgent::Options& options) {
     std::string name = "alphabeta-d" + std::to_string(options.depth);
     if (!options.quiescence) name += "-noqs";
     if (!options.transposition) name += "-nott";
+    if (!options.move_ordering) name += "-noorder";
     if (options.weights.placement) name += "+pst";
     if (options.weights.king_safety) name += "+ks";
     return name;
@@ -57,6 +63,8 @@ AlphaBetaAgent::AlphaBetaAgent(Options options, uint64_t seed)
       rng_(mix_seeds(seed, 0)),
       table_(options.transposition ? options.table_mb : 1) {
     options_.depth = std::max(1, options_.depth);
+    killers_.assign(size_t(options_.depth + 1),
+                    std::array<Move, KILLER_SLOT_NB>{MOVE_NONE, MOVE_NONE});
 }
 
 AlphaBetaAgent::AlphaBetaAgent(int depth, uint64_t seed, bool quiescence)
@@ -75,6 +83,69 @@ void AlphaBetaAgent::new_game(uint64_t seed) {
     // on the games before it, which costs reproducibility for very
     // little search value.
     table_.clear();
+    for (auto& slots : killers_) slots.fill(MOVE_NONE);
+    history_ = {};
+}
+
+void AlphaBetaAgent::order_moves(const Position& pos, const MoveList& moves,
+                                 Move tt_move, int ply, bool use_heuristics,
+                                 std::vector<Move>& out) const {
+    out.assign(moves.begin(), moves.end());
+
+    // The control variant and quiescence both retain the exact pre-6.2
+    // ordering: TT move, then MVV-LVA with the existing promotion bonus.
+    if (!use_heuristics) {
+        std::stable_sort(out.begin(), out.end(), [&](Move a, Move b) {
+            return legacy_move_order_key(pos, a, tt_move) >
+                   legacy_move_order_key(pos, b, tt_move);
+        });
+        return;
+    }
+
+    auto key = [&](Move m) {
+        if (m == tt_move) return MoveOrderKey{4, 0};
+
+        // Captures and quiet promotions are tactical. Test this before
+        // killers: a move remembered as quiet may be a capture now.
+        if (is_capture(pos, m) || is_promotion(m))
+            return MoveOrderKey{
+                3, legacy_move_order_key(pos, m, MOVE_NONE)};
+
+        if (ply >= 0 && size_t(ply) < killers_.size()) {
+            if (m == killers_[ply][0]) return MoveOrderKey{2, 2};
+            if (m == killers_[ply][1]) return MoveOrderKey{2, 1};
+        }
+
+        return MoveOrderKey{
+            1, history_[pos.side_to_move()][origin_field(m)][to_sq(m)]};
+    };
+
+    std::stable_sort(out.begin(), out.end(),
+                     [&](Move a, Move b) { return key(a) > key(b); });
+}
+
+void AlphaBetaAgent::record_quiet_cutoff(const Position& pos, Move m, int depth,
+                                         int ply) {
+    if (!options_.move_ordering || !is_quiet(pos, m)) return;
+
+    if (ply >= 0 && size_t(ply) < killers_.size() &&
+        killers_[ply][0] != m) {
+        killers_[ply][1] = killers_[ply][0];
+        killers_[ply][0] = m;
+    }
+
+    const int capped_depth = std::min(std::max(depth, 1), 32);
+    const int bonus = capped_depth * capped_depth;
+    uint16_t& score =
+        history_[pos.side_to_move()][origin_field(m)][to_sq(m)];
+    score = uint16_t(std::min(HISTORY_MAX, int(score) + bonus));
+}
+
+void AlphaBetaAgent::age_history() {
+    if (!options_.move_ordering) return;
+    for (auto& by_origin : history_)
+        for (auto& by_target : by_origin)
+            for (uint16_t& score : by_target) score /= 2;
 }
 
 // Evaluating in the middle of an exchange reads whatever the last
@@ -101,7 +172,7 @@ int AlphaBetaAgent::quiesce(const Position& pos, int alpha, int beta, int ply) {
     }
 
     std::vector<Move> ordered;
-    order_moves(pos, moves, MOVE_NONE, ordered);
+    order_moves(pos, moves, MOVE_NONE, ply, false, ordered);
 
     for (Move m : ordered) {
         if (!in_check && !is_capture(pos, m)) continue;
@@ -152,7 +223,7 @@ int AlphaBetaAgent::search(const Position& pos, int depth, int alpha, int beta,
                                    : evaluate(pos, options_.weights);
 
     std::vector<Move> ordered;
-    order_moves(pos, moves, tt_move, ordered);
+    order_moves(pos, moves, tt_move, ply, options_.move_ordering, ordered);
 
     int best = -MATE_SCORE - 1;
     Move best_move = MOVE_NONE;
@@ -167,7 +238,10 @@ int AlphaBetaAgent::search(const Position& pos, int depth, int alpha, int beta,
             best_move = m;
         }
         if (best > alpha) alpha = best;
-        if (alpha >= beta) break;  // opponent will not allow this line
+        if (alpha >= beta) {
+            record_quiet_cutoff(pos, m, depth, ply);
+            break;  // opponent will not allow this line
+        }
     }
 
     if (options_.transposition) {
@@ -181,6 +255,7 @@ int AlphaBetaAgent::search(const Position& pos, int depth, int alpha, int beta,
 
 Move AlphaBetaAgent::choose(const Game& game) {
     nodes_ = 0;
+    age_history();
 
     MoveList moves;
     generate_legal(game.position(), moves);
@@ -194,7 +269,8 @@ Move AlphaBetaAgent::choose(const Game& game) {
     // one tries the previously best move first and cuts off sooner.
     for (int depth = 1; depth <= options_.depth; ++depth) {
         std::vector<Move> ordered;
-        order_moves(game.position(), moves, previous_best, ordered);
+        order_moves(game.position(), moves, previous_best, 0,
+                    options_.move_ordering, ordered);
 
         int best = -MATE_SCORE - 1;
         best_moves.clear();
