@@ -28,6 +28,9 @@ std::unique_ptr<Agent> make_agent(const std::string& name, uint64_t seed) {
         options.quiescence = name.find("-noqs") == std::string::npos;
         options.transposition = name.find("-nott") == std::string::npos;
         options.move_ordering = name.find("-noorder") == std::string::npos;
+        options.null_move = name.find("-nonull") == std::string::npos;
+        options.late_move_reductions =
+            name.find("-nolmr") == std::string::npos;
         // Opt-in, because measured against an outside engine these cost
         // more than they give; kept for tuning, not for playing.
         if (name.find("+pst") != std::string::npos) options.weights.placement = 100;
@@ -62,7 +65,8 @@ std::unique_ptr<Agent> make_agent(const std::string& name, uint64_t seed) {
 
 std::vector<std::string> agent_names() {
     return {"random", "greedy",
-            "alphabeta[-dN|-tN][-noqs][-nott][-noorder][+pst][+ks]",
+            "alphabeta[-dN|-tN][-noqs][-nott][-noorder]"
+            "[-nonull][-nolmr][+pst][+ks]",
             "mcts[-sN]", "fsf[-dN|-tN] (external)"};
 }
 

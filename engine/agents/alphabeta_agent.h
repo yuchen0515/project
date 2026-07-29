@@ -40,6 +40,10 @@ class AlphaBetaAgent : public Agent {
         // is worth; neither is something you would play with.
         bool transposition = true;
         bool move_ordering = true;
+        // Selective main-search pruning. The independent switches make
+        // each technique measurable against the exact pre-pruning tree.
+        bool null_move = true;
+        bool late_move_reductions = true;
         size_t table_mb = 16;
         EvalWeights weights;
     };
@@ -63,6 +67,9 @@ class AlphaBetaAgent : public Agent {
     static constexpr int HISTORY_MAX = 65535;
     static constexpr int MAX_TIMED_DEPTH = 64;
     static constexpr uint64_t TIME_CHECK_INTERVAL = 2048;
+    static constexpr int NULL_MOVE_REDUCTION = 2;
+    static constexpr int LMR_MIN_DEPTH = 3;
+    static constexpr size_t LMR_FIRST_INDEX = 4;
 
     using KillerTable = std::vector<std::array<Move, KILLER_SLOT_NB>>;
     using HistoryTable =
@@ -78,13 +85,15 @@ class AlphaBetaAgent : public Agent {
 
     Move choose_with_budget(const Game& game, int movetime_ms);
     void count_node();
-    int search(const Position& pos, int depth, int alpha, int beta, int ply);
+    int search(const Position& pos, int depth, int alpha, int beta, int ply,
+               bool allow_null);
     int quiesce(const Position& pos, int alpha, int beta, int ply);
     void order_moves(const Position& pos, const MoveList& moves, Move tt_move,
                      int ply, bool use_heuristics,
                      std::vector<Move>& out) const;
     void record_quiet_cutoff(const Position& pos, Move m, int depth, int ply);
     void age_history();
+    bool is_killer(Move m, int ply) const;
 
     Options options_;
     uint64_t seed_;

@@ -52,6 +52,8 @@ std::string describe(const AlphaBetaAgent::Options& options) {
     if (!options.quiescence) name += "-noqs";
     if (!options.transposition) name += "-nott";
     if (!options.move_ordering) name += "-noorder";
+    if (!options.null_move) name += "-nonull";
+    if (!options.late_move_reductions) name += "-nolmr";
     if (options.weights.placement) name += "+pst";
     if (options.weights.king_safety) name += "+ks";
     return name;
@@ -156,6 +158,11 @@ void AlphaBetaAgent::age_history() {
             for (uint16_t& score : by_target) score /= 2;
 }
 
+bool AlphaBetaAgent::is_killer(Move m, int ply) const {
+    return ply >= 0 && size_t(ply) < killers_.size() &&
+           (m == killers_[ply][0] || m == killers_[ply][1]);
+}
+
 void AlphaBetaAgent::count_node() {
     ++nodes_;
     static_assert((TIME_CHECK_INTERVAL & (TIME_CHECK_INTERVAL - 1)) == 0,
@@ -212,7 +219,7 @@ int AlphaBetaAgent::quiesce(const Position& pos, int alpha, int beta, int ply) {
 }
 
 int AlphaBetaAgent::search(const Position& pos, int depth, int alpha, int beta,
-                           int ply) {
+                           int ply, bool allow_null) {
     count_node();
 
     const int original_alpha = alpha;
@@ -245,16 +252,67 @@ int AlphaBetaAgent::search(const Position& pos, int depth, int alpha, int beta,
         return options_.quiescence ? quiesce(pos, alpha, beta, ply)
                                    : evaluate(pos, options_.weights);
 
+    const bool in_check = pos.in_check();
+
+    // A null move asks whether even giving the opponent an extra turn
+    // still exceeds beta. Its child is a scout search, and allow_null
+    // is false for exactly that node so two passes can never be
+    // consecutive. A real move below re-enables the technique.
+    const bool normal_beta =
+        beta > -MATE_THRESHOLD && beta < MATE_THRESHOLD;
+    if (options_.null_move && allow_null && depth >= 3 && !in_check &&
+        normal_beta) {
+        Position passed = pos;
+        passed.apply_null();
+        const int null_score =
+            -search(passed, depth - 1 - NULL_MOVE_REDUCTION,
+                    -beta, -beta + 1, ply + 1, false);
+
+        // A pass is not a legal mating move, so a mate-band result may
+        // never be published as proof. Search the real moves instead.
+        const bool mate_score =
+            null_score >= MATE_THRESHOLD || null_score <= -MATE_THRESHOLD;
+        if (null_score >= beta && !mate_score) return beta;
+    }
+
     std::vector<Move> ordered;
     order_moves(pos, moves, tt_move, ply, options_.move_ordering, ordered);
 
     int best = -MATE_SCORE - 1;
     Move best_move = MOVE_NONE;
+    bool has_unverified_reduction = false;
 
-    for (Move m : ordered) {
+    for (size_t move_index = 0; move_index < ordered.size(); ++move_index) {
+        const Move m = ordered[move_index];
         Position next = pos;
         next.apply(m);
-        const int score = -search(next, depth - 1, -beta, -alpha, ply + 1);
+
+        int score;
+        const bool reduce =
+            options_.late_move_reductions && depth >= LMR_MIN_DEPTH &&
+            !in_check && move_index >= LMR_FIRST_INDEX &&
+            is_quiet(pos, m) && m != tt_move && !is_killer(m, ply) &&
+            !next.in_check() && alpha < MATE_THRESHOLD &&
+            beta > -MATE_THRESHOLD;
+        if (reduce) {
+            score = -search(next, depth - 2, -alpha - 1, -alpha, ply + 1,
+                            true);
+
+            // A reduced search is only a scout. Anything that might
+            // improve alpha (and every mate-band value) is verified at
+            // the full depth and original window before it can affect
+            // the result or cause a cutoff.
+            const bool mate_score =
+                score >= MATE_THRESHOLD || score <= -MATE_THRESHOLD;
+            if (score > alpha || mate_score) {
+                score =
+                    -search(next, depth - 1, -beta, -alpha, ply + 1, true);
+            } else {
+                has_unverified_reduction = true;
+            }
+        } else {
+            score = -search(next, depth - 1, -beta, -alpha, ply + 1, true);
+        }
 
         if (score > best) {
             best = score;
@@ -271,7 +329,11 @@ int AlphaBetaAgent::search(const Position& pos, int depth, int alpha, int beta,
         const Bound bound = best <= original_alpha ? Bound::UPPER
                             : best >= beta         ? Bound::LOWER
                                                    : Bound::EXACT;
-        table_.store(pos.key(), depth, best, bound, best_move, ply);
+        // A reduced fail-low is deliberately not a full-depth proof.
+        // Do not let an EXACT/UPPER entry advertise it at nominal depth;
+        // a LOWER cutoff above was always verified at full depth.
+        if (!has_unverified_reduction || bound == Bound::LOWER)
+            table_.store(pos.key(), depth, best, bound, best_move, ply);
     }
     return best;
 }
@@ -343,7 +405,8 @@ Move AlphaBetaAgent::choose_with_budget(const Game& game, int movetime_ms) {
                 // bound rather than a score, and equal-scoring moves could
                 // not be collected for the tie-break below.
                 const int score =
-                    -search(next, depth - 1, -MATE_SCORE - 1, MATE_SCORE + 1, 1);
+                    -search(next, depth - 1, -MATE_SCORE - 1, MATE_SCORE + 1, 1,
+                            true);
 
                 if (score > best) {
                     best = score;

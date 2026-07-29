@@ -1,3 +1,5 @@
+#include <array>
+
 #include "../core/position.h"
 #include "test.h"
 
@@ -82,6 +84,49 @@ TEST(apply_quiet_move) {
     CHECK_EQ(int(pos.piece_on(parse_usi_square("5d"))), int(NO_PIECE));
     CHECK_EQ(int(type_of(pos.piece_on(parse_usi_square("5c")))), int(PAWN));
     CHECK_EQ(pos.sfen(), std::string("rbsgk/4p/P4/5/KGSBR w - 2"));
+}
+
+TEST(apply_null_only_toggles_side_ply_and_side_hash) {
+    Position pos = from("4k/5/2+P2/5/K4 b Rbgs 7");
+    const uint64_t original_key = pos.key();
+
+    std::array<Piece, SQUARE_NB> original_board{};
+    for (int square = 0; square < SQUARE_NB; ++square)
+        original_board[square] = pos.piece_on(Square(square));
+
+    std::array<std::array<int, HAND_TYPE_NB>, COLOR_NB> original_hands{};
+    for (int color = 0; color < COLOR_NB; ++color)
+        for (int type = 0; type < HAND_TYPE_NB; ++type)
+            original_hands[color][type] =
+                pos.hand_count(Color(color), hand_type(type));
+
+    auto check_material_unchanged = [&] {
+        for (int square = 0; square < SQUARE_NB; ++square)
+            CHECK_EQ(int(pos.piece_on(Square(square))),
+                     int(original_board[square]));
+        for (int color = 0; color < COLOR_NB; ++color)
+            for (int type = 0; type < HAND_TYPE_NB; ++type)
+                CHECK_EQ(pos.hand_count(Color(color), hand_type(type)),
+                         original_hands[color][type]);
+    };
+
+    pos.apply_null();
+    CHECK(pos.is_consistent());
+    check_material_unchanged();
+    CHECK_EQ(int(pos.side_to_move()), int(WHITE));
+    CHECK_EQ(pos.game_ply(), 8);
+    CHECK_EQ(pos.key(), original_key ^ zobrist::KEYS.side);
+    CHECK_EQ(pos.sfen(),
+             std::string("4k/5/2+P2/5/K4 w Rbgs 8"));
+
+    pos.apply_null();
+    CHECK(pos.is_consistent());
+    check_material_unchanged();
+    CHECK_EQ(int(pos.side_to_move()), int(BLACK));
+    CHECK_EQ(pos.game_ply(), 9);
+    CHECK_EQ(pos.key(), original_key);
+    CHECK_EQ(pos.sfen(),
+             std::string("4k/5/2+P2/5/K4 b Rbgs 9"));
 }
 
 TEST(capture_moves_piece_to_hand_unpromoted) {
