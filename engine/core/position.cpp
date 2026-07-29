@@ -253,6 +253,12 @@ void Position::apply(Move m) {
     ++ply_;
 }
 
+void Position::apply_null() {
+    side_ = ~side_;
+    key_ ^= zobrist::KEYS.side;
+    ++ply_;
+}
+
 uint64_t Position::compute_key() const {
     uint64_t k = 0;
     for (int s = 0; s < SQUARE_NB; ++s)

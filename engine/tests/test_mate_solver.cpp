@@ -110,12 +110,15 @@ struct AlphaProof {
     uint64_t nodes;
 };
 
-AlphaProof alpha_proof(const Position& pos, int max_plies) {
+AlphaProof alpha_proof(const Position& pos, int max_plies,
+                       bool search_pruning = true) {
     AlphaBetaAgent::Options options;
     options.depth = std::max(1, max_plies);
     options.quiescence = false;
     options.transposition = false;
     options.move_ordering = false;
+    options.null_move = search_pruning;
+    options.late_move_reductions = search_pruning;
     AlphaBetaAgent oracle(options, 1);
 
     const int score =
@@ -158,15 +161,19 @@ TEST(dfpn_tsume_suite_agrees_with_reference_and_alphabeta) {
             reference_winning_moves(pos, puzzle.plies, reference_nodes);
         CHECK_EQ(!reference.empty(), puzzle.mate);
 
-        const AlphaProof alpha = alpha_proof(pos, puzzle.plies);
-        CHECK_EQ(alpha.mate, puzzle.mate);
+        const AlphaProof pruned = alpha_proof(pos, puzzle.plies);
+        const AlphaProof unpruned =
+            alpha_proof(pos, puzzle.plies, false);
+        CHECK_EQ(pruned.mate, puzzle.mate);
+        CHECK_EQ(unpruned.mate, puzzle.mate);
 
         if (puzzle.mate) {
             const Move expected = parse_usi_move(puzzle.first_move);
             CHECK_EQ(result.first_move, expected);
             CHECK_EQ(reference.size(), size_t(1));
             CHECK_EQ(reference[0], expected);
-            CHECK_EQ(alpha.distance, puzzle.plies);
+            CHECK_EQ(pruned.distance, puzzle.plies);
+            CHECK_EQ(unpruned.distance, puzzle.plies);
 
             // The advertised length is minimal, not merely sufficient.
             const int shorter = std::max(0, puzzle.plies - 2);
@@ -177,8 +184,11 @@ TEST(dfpn_tsume_suite_agrees_with_reference_and_alphabeta) {
             uint64_t short_nodes = 0;
             CHECK(reference_winning_moves(pos, shorter, short_nodes).empty());
             CHECK(!alpha_proof(pos, shorter).mate);
+            CHECK(!alpha_proof(pos, shorter, false).mate);
         } else {
             CHECK_EQ(result.first_move, MOVE_NONE);
+            CHECK_EQ(pruned.distance, -1);
+            CHECK_EQ(unpruned.distance, -1);
         }
     }
 }

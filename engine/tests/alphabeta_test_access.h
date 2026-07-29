@@ -55,10 +55,15 @@ struct AlphaBetaAgentTestAccess {
 
     static int exact_score(AlphaBetaAgent& agent, const Position& pos,
                            int depth, int ply = 0) {
+        return window_score(agent, pos, depth, -MATE_SCORE - 1,
+                            MATE_SCORE + 1, ply);
+    }
+
+    static int window_score(AlphaBetaAgent& agent, const Position& pos,
+                            int depth, int alpha, int beta, int ply = 0) {
         agent.nodes_ = 0;
         agent.timing_active_ = false;
-        return agent.search(pos, depth, -MATE_SCORE - 1,
-                            MATE_SCORE + 1, ply);
+        return agent.search(pos, depth, alpha, beta, ply, true);
     }
 };
 

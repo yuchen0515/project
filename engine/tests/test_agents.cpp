@@ -241,6 +241,142 @@ TEST(time_mode_name_and_factory_precedence) {
     CHECK_EQ(std::string(time_then_depth->name()), "alphabeta-t17");
 }
 
+TEST(search_pruning_flags_have_canonical_names) {
+    AlphaBetaAgent::Options no_null;
+    no_null.null_move = false;
+    CHECK_EQ(std::string(AlphaBetaAgent(no_null, 1).name()),
+             "alphabeta-d4-nonull");
+
+    AlphaBetaAgent::Options no_lmr;
+    no_lmr.late_move_reductions = false;
+    CHECK_EQ(std::string(AlphaBetaAgent(no_lmr, 1).name()),
+             "alphabeta-d4-nolmr");
+
+    AlphaBetaAgent::Options neither;
+    neither.null_move = false;
+    neither.late_move_reductions = false;
+    CHECK_EQ(std::string(AlphaBetaAgent(neither, 1).name()),
+             "alphabeta-d4-nonull-nolmr");
+
+    auto factory_no_null = make_agent("alphabeta-d5-nonull", 2);
+    auto factory_no_lmr = make_agent("alphabeta-d5-nolmr", 3);
+    auto reversed_combination =
+        make_agent("alphabeta-d2-t17-nolmr-nonull-noorder", 4);
+    CHECK(factory_no_null != nullptr);
+    CHECK(factory_no_lmr != nullptr);
+    CHECK(reversed_combination != nullptr);
+    CHECK_EQ(std::string(factory_no_null->name()),
+             "alphabeta-d5-nonull");
+    CHECK_EQ(std::string(factory_no_lmr->name()),
+             "alphabeta-d5-nolmr");
+    CHECK_EQ(std::string(reversed_combination->name()),
+             "alphabeta-t17-noorder-nonull-nolmr");
+}
+
+TEST(disabling_search_pruning_preserves_the_frozen_depth_four_tree) {
+    struct Fixture {
+        const char* sfen;
+        const char* move;
+        uint64_t nodes;
+    };
+    constexpr Fixture fixtures[] = {
+        {"rbsgk/4p/5/P4/KGSBR b - 1", "4e3d", 9930},
+        {"rbg1k/2s2/3Bp/P1GR1/K1S2 b - 11", "2d2e", 9319},
+        {"3rk/g1b2/2G1p/P2R1/K1S2 b Sb 19", "3c3b", 48932},
+        {"3rk/g1G2/4p/P2R1/K1S2 w BSb 20", "2a2d", 109934},
+        {"k4/5/2+P2/5/4K w RBGSrbgs 40", "R*4e", 852108},
+        {"3pk/5/4G/5/K4 b PG 1", "G*1b", 8419},
+    };
+
+    for (const Fixture& fixture : fixtures) {
+        AlphaBetaAgent::Options options;
+        options.depth = 4;
+        options.null_move = false;
+        options.late_move_reductions = false;
+        AlphaBetaAgent control(options, 99);
+        control.new_game(99);
+
+        const Move chosen = control.choose(game_of(fixture.sfen));
+        CHECK_EQ(usi_move(chosen), std::string(fixture.move));
+        CHECK_EQ(control.nodes(), fixture.nodes);
+    }
+}
+
+TEST(search_pruning_is_deterministic_at_an_active_depth) {
+    AlphaBetaAgent first(6, 17);
+    AlphaBetaAgent second(6, 17);
+    first.new_game(99);
+    second.new_game(99);
+
+    const Game game;
+    const Move first_move = first.choose(game);
+    const Move second_move = second.choose(game);
+    CHECK_EQ(first_move, second_move);
+    CHECK_EQ(first.nodes(), second.nodes());
+
+    // This depth exercises both techniques in the start position; the
+    // control's larger frozen tree makes the test fail if the two equal
+    // runs merely bypass pruning.
+    AlphaBetaAgent::Options control_options;
+    control_options.depth = 6;
+    control_options.null_move = false;
+    control_options.late_move_reductions = false;
+    AlphaBetaAgent control(control_options, 17);
+    control.new_game(99);
+    CHECK(control.choose(game) != MOVE_NONE);
+    CHECK(first.nodes() < control.nodes());
+}
+
+TEST(null_move_is_never_searched_while_in_check) {
+    const Position checked = position_of("r3k/5/5/5/K4 b - 1");
+    CHECK(checked.in_check());
+
+    AlphaBetaAgent::Options enabled;
+    enabled.quiescence = false;
+    enabled.transposition = false;
+    enabled.move_ordering = false;
+    enabled.late_move_reductions = false;
+    AlphaBetaAgent with_null(enabled, 1);
+
+    AlphaBetaAgent::Options disabled = enabled;
+    disabled.null_move = false;
+    AlphaBetaAgent without_null(disabled, 1);
+
+    // At depth three only the checked root is eligible by depth; all
+    // descendants are too shallow. Equal trees therefore prove that no
+    // pass was attempted at the checked node.
+    const int with_score =
+        AlphaBetaAgentTestAccess::exact_score(with_null, checked, 3);
+    const int without_score =
+        AlphaBetaAgentTestAccess::exact_score(without_null, checked, 3);
+    CHECK_EQ(with_score, without_score);
+    CHECK_EQ(with_null.nodes(), without_null.nodes());
+}
+
+TEST(null_move_does_not_cut_a_mate_band_window) {
+    const Position pos;
+
+    AlphaBetaAgent::Options enabled;
+    enabled.quiescence = false;
+    enabled.transposition = false;
+    enabled.move_ordering = false;
+    enabled.late_move_reductions = false;
+    AlphaBetaAgent with_null(enabled, 1);
+
+    AlphaBetaAgent::Options disabled = enabled;
+    disabled.null_move = false;
+    AlphaBetaAgent without_null(disabled, 1);
+
+    constexpr int alpha = -MATE_SCORE - 1;
+    constexpr int beta = -MATE_THRESHOLD;
+    const int with_score = AlphaBetaAgentTestAccess::window_score(
+        with_null, pos, 3, alpha, beta);
+    const int without_score = AlphaBetaAgentTestAccess::window_score(
+        without_null, pos, 3, alpha, beta);
+    CHECK_EQ(with_score, without_score);
+    CHECK_EQ(with_null.nodes(), without_null.nodes());
+}
+
 TEST(timed_search_returns_the_last_complete_iteration) {
     Game game;
 

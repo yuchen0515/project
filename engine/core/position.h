@@ -93,6 +93,11 @@ class Position {
     // m must be pseudo-legal for this position (asserted in debug builds).
     void apply(Move m);
 
+    // Search-only pass: switch the side to move without changing the
+    // board or hands. The caller must enforce null-move search rules
+    // (in particular, never call this while the mover is in check).
+    void apply_null();
+
     // Internal invariants, including incremental key == recomputed key.
     bool is_consistent() const;
 
