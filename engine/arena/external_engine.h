@@ -31,6 +31,8 @@ struct ExternalEngineSpec {
 
 // Fairy-Stockfish 14.x playing minishogi at a fixed depth.
 ExternalEngineSpec fairy_stockfish_spec(int depth);
+// Fairy-Stockfish 14.x playing minishogi for a fixed time per move.
+ExternalEngineSpec fairy_stockfish_movetime_spec(int movetime_ms);
 
 class ExternalEngine : public Agent {
    public:

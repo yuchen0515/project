@@ -69,7 +69,21 @@ void UsiEngine::go(const std::string& args, std::ostream& out) {
         return;
     }
 
-    const Move move = agent_->choose(game_);
+    // movetime is a one-call override. Other clock fields remain
+    // intentionally unsupported until increment/byoyomi allocation is
+    // designed; they fall back to the agent's configured mode.
+    int movetime_ms = 0;
+    std::istringstream limits(args);
+    while (limits >> token) {
+        if (token == "movetime") {
+            int parsed = 0;
+            if (limits >> parsed && parsed > 0) movetime_ms = parsed;
+        }
+    }
+
+    const Move move = movetime_ms > 0
+                          ? agent_->choose(game_, movetime_ms)
+                          : agent_->choose(game_);
     out << "bestmove " << (move == MOVE_NONE ? "resign" : usi_move(move))
         << std::endl;
 }

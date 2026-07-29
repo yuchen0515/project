@@ -1,3 +1,4 @@
+#include <chrono>
 #include <string>
 
 #include "../agents/alphabeta_agent.h"
@@ -27,6 +28,33 @@ struct AlphaBetaAgentTestAccess {
                 for (uint16_t score : by_target)
                     if (score != 0) ++count;
         return count;
+    }
+
+    static void use_node_clock(AlphaBetaAgent& agent) {
+        agent.now_ = [&agent] {
+            return AlphaBetaAgent::SearchClock::time_point{} +
+                   std::chrono::milliseconds(
+                       static_cast<int64_t>(agent.nodes_));
+        };
+    }
+
+    static void count_clock_calls(AlphaBetaAgent& agent, int& calls) {
+        agent.now_ = [&calls] {
+            ++calls;
+            return AlphaBetaAgent::SearchClock::time_point{};
+        };
+    }
+
+    static int completed_depth(const AlphaBetaAgent& agent) {
+        return agent.completed_depth_;
+    }
+
+    static bool timed_out(const AlphaBetaAgent& agent) {
+        return agent.timed_out_;
+    }
+
+    static uint64_t time_check_interval() {
+        return AlphaBetaAgent::TIME_CHECK_INTERVAL;
     }
 };
 
@@ -243,6 +271,103 @@ TEST(quiescence_does_not_update_killer_or_history_state) {
     CHECK(depth_one.choose(Game()) != MOVE_NONE);
     CHECK_EQ(AlphaBetaAgentTestAccess::nonzero_killers(depth_one), 0);
     CHECK_EQ(AlphaBetaAgentTestAccess::nonzero_history(depth_one), 0);
+}
+
+TEST(time_mode_name_and_factory_precedence) {
+    AlphaBetaAgent::Options timed;
+    timed.depth = 2;
+    timed.movetime_ms = 17;
+    CHECK_EQ(std::string(AlphaBetaAgent(timed, 1).name()),
+             "alphabeta-t17");
+
+    auto depth_then_time =
+        make_agent("alphabeta-d2-t17-noorder", 2);
+    auto time_then_depth = make_agent("alphabeta-t17-d2", 3);
+    CHECK(depth_then_time != nullptr);
+    CHECK(time_then_depth != nullptr);
+    CHECK_EQ(std::string(depth_then_time->name()),
+             "alphabeta-t17-noorder");
+    CHECK_EQ(std::string(time_then_depth->name()), "alphabeta-t17");
+}
+
+TEST(timed_search_returns_the_last_complete_iteration) {
+    Game game;
+
+    AlphaBetaAgent fixed_depth_two(2, 9);
+    fixed_depth_two.new_game(11);
+    const Move expected = fixed_depth_two.choose(game);
+    const uint64_t depth_two_nodes = fixed_depth_two.nodes();
+
+    AlphaBetaAgent fixed_depth_three(3, 9);
+    fixed_depth_three.new_game(11);
+    fixed_depth_three.choose(game);
+    const uint64_t depth_three_nodes = fixed_depth_three.nodes();
+
+    const uint64_t interval =
+        AlphaBetaAgentTestAccess::time_check_interval();
+    const uint64_t timeout_poll =
+        (2 * depth_two_nodes / interval + 1) * interval;
+    CHECK(timeout_poll < depth_three_nodes);
+
+    AlphaBetaAgent::Options options;
+    // Under the test clock one millisecond equals one visited node.
+    // The chosen poll lies after twice the completed depth-two work, so
+    // the half-budget gate permits depth three, which then aborts at
+    // exactly that poll.
+    options.movetime_ms = static_cast<int>(timeout_poll);
+    AlphaBetaAgent timed(options, 9);
+    AlphaBetaAgentTestAccess::use_node_clock(timed);
+    timed.new_game(11);
+    const Move actual = timed.choose(game);
+
+    CHECK(AlphaBetaAgentTestAccess::timed_out(timed));
+    CHECK_EQ(AlphaBetaAgentTestAccess::completed_depth(timed), 2);
+    CHECK_EQ(actual, expected);
+
+    MoveList legal;
+    generate_legal(game.position(), legal);
+    CHECK(legal.contains(actual));
+}
+
+TEST(fixed_depth_search_never_reads_the_wall_clock) {
+    AlphaBetaAgent fixed(4, 1);
+    int clock_calls = 0;
+    AlphaBetaAgentTestAccess::count_clock_calls(fixed, clock_calls);
+    fixed.new_game(7);
+    CHECK(fixed.choose(Game()) != MOVE_NONE);
+    CHECK_EQ(clock_calls, 0);
+}
+
+TEST(timed_search_stops_early_after_a_proven_mate) {
+    AlphaBetaAgent::Options options;
+    options.movetime_ms = 1000000;
+    AlphaBetaAgent timed(options, 1);
+    AlphaBetaAgentTestAccess::use_node_clock(timed);
+    timed.new_game(7);
+
+    const Game mate_in_one = game_of("k2r1/5/1B3/5/4K b G 1");
+    CHECK_EQ(usi_move(timed.choose(mate_in_one)), std::string("G*5b"));
+    CHECK_EQ(AlphaBetaAgentTestAccess::completed_depth(timed), 1);
+    CHECK(!AlphaBetaAgentTestAccess::timed_out(timed));
+}
+
+TEST(real_movetime_returns_promptly_with_a_legal_move) {
+    constexpr int BUDGET_MS = 100;
+    AlphaBetaAgent::Options options;
+    options.movetime_ms = BUDGET_MS;
+    AlphaBetaAgent timed(options, 1);
+    timed.new_game(7);
+    Game game;
+
+    const auto start = std::chrono::steady_clock::now();
+    const Move move = timed.choose(game);
+    const auto elapsed = std::chrono::steady_clock::now() - start;
+
+    MoveList legal;
+    generate_legal(game.position(), legal);
+    CHECK(legal.contains(move));
+    CHECK(AlphaBetaAgentTestAccess::completed_depth(timed) > 0);
+    CHECK(elapsed < std::chrono::milliseconds(BUDGET_MS * 2));
 }
 
 TEST(agents_are_reproducible_from_their_seed) {

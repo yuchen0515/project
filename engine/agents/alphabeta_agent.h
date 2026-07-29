@@ -8,6 +8,8 @@
 #pragma once
 
 #include <array>
+#include <chrono>
+#include <functional>
 #include <random>
 #include <string>
 #include <vector>
@@ -29,6 +31,10 @@ class AlphaBetaAgent : public Agent {
    public:
     struct Options {
         int depth = 4;
+        // Zero selects the reproducible fixed-depth mode. A positive
+        // value searches successively deeper until this wall-clock
+        // budget expires.
+        int movetime_ms = 0;
         bool quiescence = true;
         // Off is the control variant used to measure what each feature
         // is worth; neither is something you would play with.
@@ -44,6 +50,7 @@ class AlphaBetaAgent : public Agent {
 
     const char* name() const override { return name_.c_str(); }
     Move choose(const Game& game) override;
+    Move choose(const Game& game, int movetime_ms) override;
     void new_game(uint64_t seed) override;
 
     // Nodes visited by the last choose(), for measuring the effect of
@@ -54,15 +61,23 @@ class AlphaBetaAgent : public Agent {
     static constexpr int KILLER_SLOT_NB = 2;
     static constexpr int HISTORY_ORIGIN_NB = DROP_ORIGIN + HAND_TYPE_NB;
     static constexpr int HISTORY_MAX = 65535;
+    static constexpr int MAX_TIMED_DEPTH = 64;
+    static constexpr uint64_t TIME_CHECK_INTERVAL = 2048;
 
     using KillerTable = std::vector<std::array<Move, KILLER_SLOT_NB>>;
     using HistoryTable =
         std::array<std::array<std::array<uint16_t, SQUARE_NB>,
                               HISTORY_ORIGIN_NB>,
                    COLOR_NB>;
+    using SearchClock = std::chrono::steady_clock;
+    using TimeSource = std::function<SearchClock::time_point()>;
+
+    struct SearchTimeout {};
 
     friend struct AlphaBetaAgentTestAccess;
 
+    Move choose_with_budget(const Game& game, int movetime_ms);
+    void count_node();
     int search(const Position& pos, int depth, int alpha, int beta, int ply);
     int quiesce(const Position& pos, int alpha, int beta, int ply);
     void order_moves(const Position& pos, const MoveList& moves, Move tt_move,
@@ -79,6 +94,12 @@ class AlphaBetaAgent : public Agent {
     KillerTable killers_;
     HistoryTable history_{};
     uint64_t nodes_ = 0;
+    TimeSource now_ = [] { return SearchClock::now(); };
+    SearchClock::time_point deadline_{};
+    SearchClock::time_point half_deadline_{};
+    bool timing_active_ = false;
+    bool timed_out_ = false;
+    int completed_depth_ = 0;
 };
 
 }  // namespace pioneer

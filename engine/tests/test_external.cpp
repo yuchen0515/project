@@ -35,6 +35,13 @@ TEST(external_engine_survives_a_missing_binary) {
     CHECK_EQ(engine.choose(game), MOVE_NONE);
 }
 
+TEST(fairy_stockfish_movetime_spec_names_its_budget) {
+    const ExternalEngineSpec spec = fairy_stockfish_movetime_spec(17);
+    CHECK_EQ(spec.label, std::string("fsf-t17"));
+    CHECK_EQ(spec.depth, 0);
+    CHECK_EQ(spec.movetime_ms, 17);
+}
+
 TEST(external_engine_plays_legal_minishogi) {
     if (!fairy_stockfish_available()) {
         std::printf("skipping %s: fairy-stockfish not installed\n",

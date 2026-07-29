@@ -34,8 +34,8 @@ class UsiEngine {
 
     Game game_;
     std::unique_ptr<Agent> agent_;
-    // Successive games in one session differ, but the session as a whole
-    // replays identically - which is what makes a reported bug useful.
+    // Successive games in one session differ. Fixed-work searches replay
+    // the session identically; wall-clock "go movetime" searches cannot.
     uint64_t game_seed_ = 0;
 };
 
