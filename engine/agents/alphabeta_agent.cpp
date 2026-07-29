@@ -45,7 +45,10 @@ bool operator>(MoveOrderKey a, MoveOrderKey b) {
 }
 
 std::string describe(const AlphaBetaAgent::Options& options) {
-    std::string name = "alphabeta-d" + std::to_string(options.depth);
+    std::string name =
+        options.movetime_ms > 0
+            ? "alphabeta-t" + std::to_string(options.movetime_ms)
+            : "alphabeta-d" + std::to_string(options.depth);
     if (!options.quiescence) name += "-noqs";
     if (!options.transposition) name += "-nott";
     if (!options.move_ordering) name += "-noorder";
@@ -59,11 +62,13 @@ std::string describe(const AlphaBetaAgent::Options& options) {
 AlphaBetaAgent::AlphaBetaAgent(Options options, uint64_t seed)
     : options_(options),
       seed_(seed),
-      name_(describe(options)),
       rng_(mix_seeds(seed, 0)),
       table_(options.transposition ? options.table_mb : 1) {
     options_.depth = std::max(1, options_.depth);
-    killers_.assign(size_t(options_.depth + 1),
+    options_.movetime_ms = std::max(0, options_.movetime_ms);
+    name_ = describe(options_);
+    const int killer_depth = std::max(options_.depth, MAX_TIMED_DEPTH);
+    killers_.assign(size_t(killer_depth + 1),
                     std::array<Move, KILLER_SLOT_NB>{MOVE_NONE, MOVE_NONE});
 }
 
@@ -85,6 +90,9 @@ void AlphaBetaAgent::new_game(uint64_t seed) {
     table_.clear();
     for (auto& slots : killers_) slots.fill(MOVE_NONE);
     history_ = {};
+    timing_active_ = false;
+    timed_out_ = false;
+    completed_depth_ = 0;
 }
 
 void AlphaBetaAgent::order_moves(const Position& pos, const MoveList& moves,
@@ -148,11 +156,26 @@ void AlphaBetaAgent::age_history() {
             for (uint16_t& score : by_target) score /= 2;
 }
 
+void AlphaBetaAgent::count_node() {
+    ++nodes_;
+    static_assert((TIME_CHECK_INTERVAL & (TIME_CHECK_INTERVAL - 1)) == 0,
+                  "time check interval must be a power of two");
+    if (timing_active_ && (nodes_ & (TIME_CHECK_INTERVAL - 1)) == 0 &&
+        now_() >= deadline_) {
+        timed_out_ = true;
+        // A timed move must always come from a complete iteration. If
+        // the smallest iteration itself exhausts an extremely small
+        // budget, finish that one layer and return it; later iterations
+        // unwind immediately.
+        if (completed_depth_ > 0) throw SearchTimeout{};
+    }
+}
+
 // Evaluating in the middle of an exchange reads whatever the last
 // capture left behind, so the search keeps going until the position is
 // quiet. Without this, a depth-N search happily hangs a rook on ply N+1.
 int AlphaBetaAgent::quiesce(const Position& pos, int alpha, int beta, int ply) {
-    ++nodes_;
+    count_node();
 
     MoveList moves;
     generate_legal(pos, moves);
@@ -190,7 +213,7 @@ int AlphaBetaAgent::quiesce(const Position& pos, int alpha, int beta, int ply) {
 
 int AlphaBetaAgent::search(const Position& pos, int depth, int alpha, int beta,
                            int ply) {
-    ++nodes_;
+    count_node();
 
     const int original_alpha = alpha;
     Move tt_move = MOVE_NONE;
@@ -254,48 +277,103 @@ int AlphaBetaAgent::search(const Position& pos, int depth, int alpha, int beta,
 }
 
 Move AlphaBetaAgent::choose(const Game& game) {
+    return choose_with_budget(game, options_.movetime_ms);
+}
+
+Move AlphaBetaAgent::choose(const Game& game, int movetime_ms) {
+    return choose_with_budget(game, std::max(0, movetime_ms));
+}
+
+Move AlphaBetaAgent::choose_with_budget(const Game& game, int movetime_ms) {
     nodes_ = 0;
+    completed_depth_ = 0;
+    timed_out_ = false;
+
+    // Start the budget before any per-move work, so history aging and
+    // root move generation are honestly included in wall time.
+    timing_active_ = movetime_ms > 0;
+    if (timing_active_) {
+        const SearchClock::time_point start = now_();
+        const std::chrono::milliseconds budget(movetime_ms);
+        deadline_ = start + budget;
+        half_deadline_ = start + budget / 2;
+    }
+
     age_history();
 
     MoveList moves;
     generate_legal(game.position(), moves);
-    if (moves.empty()) return MOVE_NONE;
+    if (moves.empty()) {
+        timing_active_ = false;
+        return MOVE_NONE;
+    }
 
-    std::vector<Move> best_moves;
+    // Defensive initialization; timed search deliberately lets depth
+    // one finish even if an extremely small budget expires inside it,
+    // so every normal return below publishes a complete iteration.
+    std::vector<Move> completed_best_moves{moves[0]};
     Move previous_best = MOVE_NONE;
+    const int depth_limit =
+        timing_active_ ? MAX_TIMED_DEPTH : options_.depth;
 
     // Iterative deepening. It costs a fraction of the total nodes and
     // pays for itself: each pass leaves the table primed, so the next
     // one tries the previously best move first and cuts off sooner.
-    for (int depth = 1; depth <= options_.depth; ++depth) {
+    for (int depth = 1; depth <= depth_limit; ++depth) {
+        // Once a complete result exists, do not spend the second half of
+        // the budget starting a deeper iteration that is unlikely to
+        // finish. The hard deadline below still stops an iteration that
+        // grows faster than expected.
+        if (timing_active_ && completed_depth_ > 0 &&
+            now_() >= half_deadline_)
+            break;
+
         std::vector<Move> ordered;
         order_moves(game.position(), moves, previous_best, 0,
                     options_.move_ordering, ordered);
 
         int best = -MATE_SCORE - 1;
-        best_moves.clear();
+        std::vector<Move> iteration_best_moves;
 
-        for (Move m : ordered) {
-            Position next = game.position();
-            next.apply(m);
-            // Full window at the root: a tightened one would return a
-            // bound rather than a score, and equal-scoring moves could
-            // not be collected for the tie-break below.
-            const int score =
-                -search(next, depth - 1, -MATE_SCORE - 1, MATE_SCORE + 1, 1);
+        try {
+            for (Move m : ordered) {
+                Position next = game.position();
+                next.apply(m);
+                // Full window at the root: a tightened one would return a
+                // bound rather than a score, and equal-scoring moves could
+                // not be collected for the tie-break below.
+                const int score =
+                    -search(next, depth - 1, -MATE_SCORE - 1, MATE_SCORE + 1, 1);
 
-            if (score > best) {
-                best = score;
-                best_moves.assign(1, m);
-            } else if (score == best) {
-                best_moves.push_back(m);
+                if (score > best) {
+                    best = score;
+                    iteration_best_moves.assign(1, m);
+                } else if (score == best) {
+                    iteration_best_moves.push_back(m);
+                }
             }
+        } catch (const SearchTimeout&) {
+            break;
         }
-        previous_best = best_moves.front();
+
+        // Publish only after every root move completed. A timeout above
+        // leaves the last fully searched iteration untouched.
+        completed_best_moves = std::move(iteration_best_moves);
+        previous_best = completed_best_moves.front();
+        completed_depth_ = depth;
+
+        if (timing_active_ && timed_out_) break;
+
+        // A mate score from a complete full-window root iteration is a
+        // proof, not a heuristic. Only timed mode stops here: fixed-depth
+        // mode retains its historical tree and replay behaviour exactly.
+        if (timing_active_ && best >= MATE_THRESHOLD) break;
     }
 
-    std::uniform_int_distribution<size_t> pick(0, best_moves.size() - 1);
-    return best_moves[pick(rng_)];
+    timing_active_ = false;
+    std::uniform_int_distribution<size_t> pick(0,
+                                               completed_best_moves.size() - 1);
+    return completed_best_moves[pick(rng_)];
 }
 
 }  // namespace pioneer

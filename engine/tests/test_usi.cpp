@@ -22,6 +22,27 @@ struct Session {
     }
 };
 
+class MovetimeSpyAgent : public Agent {
+   public:
+    const char* name() const override { return "movetime-spy"; }
+
+    Move choose(const Game& game) override {
+        last_movetime_ms = 0;
+        MoveList legal;
+        generate_legal(game.position(), legal);
+        return legal.empty() ? MOVE_NONE : legal[0];
+    }
+
+    Move choose(const Game& game, int movetime_ms) override {
+        last_movetime_ms = movetime_ms;
+        MoveList legal;
+        generate_legal(game.position(), legal);
+        return legal.empty() ? MOVE_NONE : legal[0];
+    }
+
+    int last_movetime_ms = -1;
+};
+
 bool contains(const std::string& haystack, const std::string& needle) {
     return haystack.find(needle) != std::string::npos;
 }
@@ -84,6 +105,21 @@ TEST(usi_go_returns_a_legal_move) {
     MoveList legal;
     generate_legal(s.engine.game().position(), legal);
     CHECK(legal.contains(played));
+}
+
+TEST(usi_go_movetime_is_a_one_call_override) {
+    auto spy = std::make_unique<MovetimeSpyAgent>();
+    MovetimeSpyAgent* observed = spy.get();
+    UsiEngine engine(std::move(spy));
+    std::ostringstream out;
+
+    engine.handle("position startpos", out);
+    engine.handle("go movetime 37", out);
+    CHECK_EQ(observed->last_movetime_ms, 37);
+
+    // A later bare go must not inherit the previous command's budget.
+    engine.handle("go", out);
+    CHECK_EQ(observed->last_movetime_ms, 0);
 }
 
 TEST(usi_go_resigns_when_the_game_is_over) {

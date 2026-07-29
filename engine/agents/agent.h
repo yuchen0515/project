@@ -22,10 +22,21 @@ class Agent {
     // game is not already over.
     virtual Move choose(const Game& game) = 0;
 
+    // A one-call wall-clock override used by USI "go movetime". Agents
+    // without time control keep their normal choose() behaviour. The
+    // override is deliberately not persistent: a later bare "go" uses
+    // the agent's configured mode again.
+    virtual Move choose(const Game& game, int movetime_ms) {
+        (void)movetime_ms;
+        return choose(game);
+    }
+
     // Called before each game. The seed comes from the driver and is
-    // the only source of randomness an agent may use: replaying a match
-    // with the same seeds must reproduce it move for move. Deterministic
-    // agents ignore it.
+    // the only source of deliberate randomness an agent may use.
+    // Fixed-work agents therefore replay move for move from the same
+    // seeds. Wall-clock searches are inherently scheduling-dependent
+    // and do not make that replay guarantee. Deterministic agents ignore
+    // the seed.
     virtual void new_game(uint64_t seed) { (void)seed; }
 };
 

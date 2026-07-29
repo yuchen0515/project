@@ -26,6 +26,13 @@ ExternalEngineSpec fairy_stockfish_spec(int depth) {
     return spec;
 }
 
+ExternalEngineSpec fairy_stockfish_movetime_spec(int movetime_ms) {
+    ExternalEngineSpec spec = fairy_stockfish_spec(0);
+    spec.label = "fsf-t" + std::to_string(movetime_ms);
+    spec.movetime_ms = movetime_ms;
+    return spec;
+}
+
 ExternalEngine::ExternalEngine(ExternalEngineSpec spec) : spec_(std::move(spec)) {
     // Writing to an engine that has died raises SIGPIPE, which by
     // default kills us along with it. Ignoring it turns that into an

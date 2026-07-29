@@ -1,4 +1,5 @@
-// Playing agents against each other, reproducibly.
+// Playing agents against each other. Fixed-work agents are reproducible;
+// wall-clock agents are deliberately not.
 
 #pragma once
 
@@ -20,6 +21,9 @@ struct GameRecord {
     Outcome outcome = Outcome::ONGOING;
     Termination termination = Termination::PLY_LIMIT;
     int plies = 0;
+    // For fixed-work agents the seed is sufficient to replay this game.
+    // A wall-clock search can cross its deadline at a different node on
+    // another run, so this record does not promise timed replay.
     uint64_t seed = 0;
     std::string final_sfen;
     // Set when an agent returned a move that was not legal, which is a
@@ -52,8 +56,8 @@ struct MatchResult {
 };
 
 // Colours alternate game by game, and each game gets its own seed
-// derived from base_seed, so the whole match replays from that one
-// number.
+// derived from base_seed. That one number replays a fixed-work match;
+// it does not make a wall-clock match deterministic.
 MatchResult play_match(Agent& a, Agent& b, int games, uint64_t base_seed = 1,
                        int max_plies = DEFAULT_MAX_PLIES);
 

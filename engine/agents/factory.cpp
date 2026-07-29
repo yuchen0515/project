@@ -21,6 +21,10 @@ std::unique_ptr<Agent> make_agent(const std::string& name, uint64_t seed) {
         AlphaBetaAgent::Options options;
         if (const size_t d = name.find("-d"); d != std::string::npos)
             options.depth = std::atoi(name.c_str() + d + 2);
+        // A time budget takes precedence over a depth token. describe()
+        // emits only the mode that actually controls the search.
+        if (const size_t t = name.find("-t"); t != std::string::npos)
+            options.movetime_ms = std::atoi(name.c_str() + t + 2);
         options.quiescence = name.find("-noqs") == std::string::npos;
         options.transposition = name.find("-nott") == std::string::npos;
         options.move_ordering = name.find("-noorder") == std::string::npos;
@@ -42,6 +46,12 @@ std::unique_ptr<Agent> make_agent(const std::string& name, uint64_t seed) {
     // depth. An external reference is what gives the internal ladder an
     // absolute position rather than just an order.
     if (name.rfind("fsf", 0) == 0) {
+        if (const size_t t = name.find("-t"); t != std::string::npos) {
+            const int movetime_ms = std::atoi(name.c_str() + t + 2);
+            if (movetime_ms > 0)
+                return std::make_unique<ExternalEngine>(
+                    fairy_stockfish_movetime_spec(movetime_ms));
+        }
         int depth = 6;
         if (const size_t d = name.find("-d"); d != std::string::npos)
             depth = std::atoi(name.c_str() + d + 2);
@@ -52,8 +62,8 @@ std::unique_ptr<Agent> make_agent(const std::string& name, uint64_t seed) {
 
 std::vector<std::string> agent_names() {
     return {"random", "greedy",
-            "alphabeta[-dN][-noqs][-nott][-noorder][+pst][+ks]",
-            "mcts[-sN]", "fsf[-dN] (external)"};
+            "alphabeta[-dN|-tN][-noqs][-nott][-noorder][+pst][+ks]",
+            "mcts[-sN]", "fsf[-dN|-tN] (external)"};
 }
 
 }  // namespace pioneer
